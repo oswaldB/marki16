@@ -1,0 +1,13 @@
+
+> marki15-backend@1.0.0 start
+> node server.js
+
+warn: DeprecationWarning: The Parse Server option 'allowClientClassCreation' default will change to 'false' in a future version.
+warn: DeprecationWarning: The Parse Server option 'allowExpiredAuthDataToken' default will change to 'false' in a future version.
+warn: DeprecationWarning: The Parse Server option 'encodeParseObjectInCloudFunction' default will change to 'true' in a future version.
+Server running on port 1555
+Parse Server available at http://localhost:1555/parse
+Health check available at http://localhost:1555/healthy
+
+WARNING, Unable to connect to 'http://127.0.0.1:1555/parse'. Cloud code and push notifications may be unavailable!
+

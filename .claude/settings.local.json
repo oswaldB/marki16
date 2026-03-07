@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:ui.nuxt.com)",
+      "Bash(npm show:*)",
+      "Bash(npm list:*)",
+      "Bash(npm info:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(nslookup:*)",
+      "Bash(dig SRV:*)",
+      "Bash(echo:*)",
+      "Bash(sudo:*)",
+      "Bash(nc:*)",
+      "Bash(timeout 8 openssl s_client:*)",
+      "Bash(pgrep:*)",
+      "Bash(kill 95517:*)",
+      "Bash(ss:*)",
+      "Bash(npx openspec:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec instructions:*)",
+      "Bash(openspec list:*)"
+    ]
+  }
+}

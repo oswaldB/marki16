@@ -1,0 +1,12 @@
+warn: DeprecationWarning: The Parse Server option 'allowClientClassCreation' default will change to 'false' in a future version.
+warn: DeprecationWarning: The Parse Server option 'allowExpiredAuthDataToken' default will change to 'false' in a future version.
+warn: DeprecationWarning: The Parse Server option 'encodeParseObjectInCloudFunction' default will change to 'true' in a future version.
+Server running on port 1555
+Parse Server available at http://localhost:1555/parse
+Parse Dashboard available at http://localhost:1555/parse-dashboard
+Health check available at http://localhost:1555/healthy
+(node:93454) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+WARNING, Unable to connect to 'http://127.0.0.1:1555/parse'. Cloud code and push notifications may be unavailable!
+

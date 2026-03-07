@@ -1,0 +1,29 @@
+{
+  "name": "marki15-frontend",
+  "version": "1.0.0",
+  "description": "Marki15 Frontend - Nuxt 3 Application",
+  "scripts": {
+    "dev": "nuxt dev --port 5001",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "nuxt": "^4.3.1",
+    "parse": "^3.3.0"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.5.1",
+    "@pinia/nuxt": "^0.11.3",
+    "pinia": "^2.1.7",
+    "tailwindcss": "^4.2.1"
+  },
+  "keywords": [
+    "nuxt",
+    "frontend",
+    "marki15"
+  ],
+  "author": "Marki15 Team",
+  "license": "MIT"
+}

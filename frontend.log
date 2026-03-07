@@ -1,0 +1,18 @@
+
+> marki15-frontend@1.0.0 dev
+> nuxt dev --port 5001
+
+│
+●  Nuxt 4.3.1 (with Nitro 2.13.1, Vite 7.3.1 and Vue 3.5.29)
+
+  ➜ Local:    http://localhost:5001/
+  ➜ Network:  use --host to expose
+
+  ➜ DevTools: press Shift + Alt + D in the browser (v3.2.2)
+
+ℹ Nuxt Icon server bundle mode is set to local
+✔ Vite client built in 96ms
+✔ Vite server built in 73ms
+[nitro] ✔ Nuxt Nitro server built in 1770ms
+ℹ Vite client warmed up in 6ms
+ℹ hmr update /pages/import.vue, /assets/css/main.css, /pages/import.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs
