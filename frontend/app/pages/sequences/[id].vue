@@ -52,21 +52,6 @@
       <span class="text-sm text-gray-500">{{ validationObligatoire ? 'Validation obligatoire activée' : 'Validation obligatoire désactivée' }}</span>
     </div>
 
-    <!-- ── Lien de paiement ── -->
-    <div class="flex items-center gap-3">
-      <span class="text-sm font-medium text-gray-700 w-36 shrink-0">Lien de paiement</span>
-      <UInput
-        :value="lienPaiement"
-        readonly
-        class="flex-1 font-mono text-xs"
-        placeholder="Aucun lien configuré"
-      />
-      <UButton variant="outline" size="sm" @click="ouvrirLienModal">
-        <UIcon name="i-heroicons-pencil-square" class="size-4" />
-        Construire
-      </UButton>
-    </div>
-
     <!-- ── Section EMAILS ── -->
     <UCard>
       <template #header>
@@ -218,18 +203,34 @@
                 class="mb-2"
               />
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div v-for="group in filteredVars" :key="group.groupe" class="space-y-2">
-                  <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ group.groupe }}</p>
-                  <div class="flex flex-wrap gap-1">
-                    <button
-                      v-for="v in group.vars"
-                      :key="v"
-                      class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
-                      @click="copyVariable(v)"
-                    >
-                      {{ v }}
-                    </button>
-                  </div>
+                <div v-for="group in getVariablesForEmail(email._key)" :key="group.groupe" class="space-y-2">
+                  <!-- Masquer le groupe MULTIPLE si le format est 'single' -->
+                  <template v-if="!(group.groupe === 'MULTIPLE' && email.activeScenario === 'single')">
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center gap-1">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ group.groupe }}</p>
+                        <!-- Bouton d'édition pour les liens de paiement -->
+                        <UButton
+                          v-if="group.groupe === 'LIENS DE PAIEMENT'"
+                          variant="ghost"
+                          size="2xs"
+                          icon="i-heroicons-pencil-square"
+                          @click="ouvrirLienModal"
+                          class="p-0 h-4 w-4"
+                        />
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                      <button
+                        v-for="v in group.vars"
+                        :key="v.isPaymentLink ? v.name : v"
+                        class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
+                        @click="v.isPaymentLink ? copyPaymentLink(v) : copyVariable(v)"
+                      >
+                        {{ v.isPaymentLink ? v.display : v }}
+                      </button>
+                    </div>
+                  </template>
                 </div>
               </div>
               <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → copié · Ctrl+V</p>
@@ -423,65 +424,98 @@
     ════════════════════════════════════════════ -->
     <UDrawer v-model:open="showLienModal" direction="right">
       <template #header>
-        <p class="font-semibold">Construire le lien de paiement</p>
+        <p class="font-semibold">Gestion des liens de paiement</p>
       </template>
 
       <template #body>
         <div class="flex flex-col gap-4 p-4">
-          <!-- URL + aperçu -->
+          <!-- Liste des liens de paiement existants -->
           <div>
-            <label class="text-xs text-gray-500 mb-1 block">URL avec variables</label>
-            <textarea
-              ref="lienPaiementTextareaEl"
-              v-model="lienPaiementEdit"
-              class="w-full border border-gray-300 rounded-md p-2 font-mono text-sm resize-y min-h-24 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              placeholder="https://paiement.exemple.com?facture=[[nfacture]]&montant=[[reste_a_payer]]"
-            />
-            <div v-if="lienPaiementEdit" class="bg-gray-50 rounded p-2 mt-2">
-              <p class="text-xs text-gray-500 mb-1">Aperçu (valeurs d'exemple)</p>
-              <p class="text-xs text-sky-700 font-mono break-all">{{ lienPaiementApercu }}</p>
-            </div>
-          </div>
-
-          <!-- Variables -->
-          <div class="border border-gray-100 rounded-lg bg-gray-50 p-2">
-            <p class="text-xs font-semibold text-gray-500 mb-2">Variables</p>
-            <UInput
-              v-model="lienVarsSearch"
-              size="xs"
-              placeholder="Rechercher..."
-              icon="i-heroicons-magnifying-glass"
-              class="mb-2"
-            />
-            <div class="space-y-2">
-              <div v-for="group in filteredLienVars" :key="group.groupe">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ group.groupe }}</p>
-                <div class="flex flex-wrap gap-1">
-                  <button
-                    v-for="v in group.vars"
-                    :key="v"
-                    class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
-                    @click="insererVariableEnLien(v)"
-                  >
-                    {{ v }}
-                  </button>
+            <p class="text-xs font-semibold text-gray-500 mb-2">Liens de paiement existants</p>
+            <div v-if="liensPaiement.length > 0" class="space-y-2">
+              <div v-for="lien in liensPaiement" :key="lien.id" class="border border-gray-200 rounded-lg p-2">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium">{{ lien.nom }}</p>
+                    <p class="text-xs text-gray-500 break-all">{{ lien.url }}</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <UButton
+                      variant="ghost"
+                      size="2xs"
+                      icon="i-heroicons-pencil"
+                      @click="editerLienPaiement(lien)"
+                    />
+                    <UButton
+                      variant="ghost"
+                      size="2xs"
+                      icon="i-heroicons-trash"
+                      color="red"
+                      @click="supprimerLienPaiement(lien.id)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → inséré à la position du curseur</p>
+            <p v-else class="text-xs text-gray-400">Aucun lien de paiement existant.</p>
           </div>
+
+          <!-- Séparateur -->
+          <div class="border-t border-gray-200"></div>
+
+          <!-- Création/Édition d'un lien de paiement -->
+          <div>
+            <p class="text-xs font-semibold text-gray-500 mb-2">
+              {{ editingLienId ? 'Modifier le lien de paiement' : 'Créer un nouveau lien de paiement' }}
+            </p>
+            <div class="space-y-2">
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Nom du lien</label>
+                <UInput
+                  v-model="nouveauLienNom"
+                  placeholder="Nom du lien de paiement"
+                  class="w-full"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">URL avec variables</label>
+                <textarea
+                  ref="lienPaiementTextareaEl"
+                  v-model="lienPaiementEdit"
+                  class="w-full border border-gray-300 rounded-md p-2 font-mono text-sm resize-y min-h-24 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="https://paiement.exemple.com?facture=[[nfacture]]&montant=[[reste_a_payer]]"
+                />
+                <div v-if="lienPaiementEdit" class="bg-gray-50 rounded p-2 mt-2">
+                  <p class="text-xs text-gray-500 mb-1">Aperçu (valeurs d'exemple)</p>
+                  <p class="text-xs text-sky-700 font-mono break-all">{{ lienPaiementApercu }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
         </div>
       </template>
 
       <template #footer>
-        <div class="flex justify-between p-4 w-full">
-          <UButton variant="outline" size="sm" @click="copyToClipboard(lienPaiementEdit)" class="w-full">
-            Copier le lien
+        <div class="flex justify-end p-4 w-full gap-2">
+          <UButton
+            v-if="editingLienId"
+            variant="outline"
+            size="sm"
+            @click="annulerEditionLien"
+            class="flex-1"
+          >
+            Annuler
           </UButton>
-          <div class="flex gap-2 w-full">
-            <UButton color="neutral" variant="ghost" @click="showLienModal = false" class="w-full">Annuler</UButton>
-            <UButton @click="enregistrerLienPaiement" class="w-full">Enregistrer</UButton>
-          </div>
+          <UButton
+            variant="outline"
+            size="sm"
+            @click="enregistrerNouveauLienPaiement"
+            class="flex-1"
+          >
+            {{ editingLienId ? 'Mettre à jour' : 'Créer' }}
+          </UButton>
         </div>
       </template>
     </UDrawer>
@@ -618,6 +652,7 @@ const groupesRegles = ref([]) // Nouveau state pour les groupes de règles
 const attributionAutomatique = ref(false) // Nouveau state pour le toggle
 const validationObligatoire = ref(false) // Nouveau state pour la validation obligatoire
 const smtpProfiles = ref([])
+const liensPaiement = ref([])
 
 // Aperçu règles
 const apercuConcernes = ref(0)
@@ -638,6 +673,18 @@ const varsSearch = ref('')
 // Variables popover (lien paiement)
 const lienVarsSearch = ref('')
 
+// Variables de relance filtrées pour l'email actuel
+const filteredRelanceVars = computed(() => {
+  return ALL_VARIABLES.value.filter(g => g.groupe.startsWith('RELANCE'))
+})
+
+// Variables pour l'email actuel (filtrées par email)
+function getVariablesForEmail(emailKey) {
+  const relanceVars = getRelanceVariablesForEmail(emailKey)
+  const otherVars = ALL_VARIABLES.value.filter(g => !g.groupe.startsWith('RELANCE'))
+  return [...otherVars, ...relanceVars]
+}
+
 // Email visibility
 const collapsedEmails = ref({})
 
@@ -649,6 +696,8 @@ const impayesConcernes = ref([])
 const showLienModal = ref(false)
 const lienPaiementEdit = ref('')
 const lienPaiementTextareaEl = ref(null)
+const nouveauLienNom = ref('')
+const editingLienId = ref(null)
 
 const showIaModal = ref(false)
 const iaResponse = ref('')
@@ -722,7 +771,41 @@ const VARIABLES = [
   { groupe: 'PROPRIETAIRE', vars: ['proprietaire_nom', 'proprietaire_email', 'proprietaire_telephone', 'proprietaire_adresse'] },
   { groupe: 'APPORTEUR',   vars: ['apporteur_nom', 'apporteur_email', 'apporteur_telephone', 'apporteur_societe'] },
   { groupe: 'DOSSIER',  vars: ['numero_dossier', 'employe_intervention', 'date_debut_mission'] },
+  { groupe: 'MULTIPLE', vars: ['total_impayes', 'nfactures_liste', 'ndossier_liste'] },
 ]
+
+// Variables pour les emails précédents (relances)
+// Fonction pour obtenir les variables de relance pour un email spécifique
+function getRelanceVariablesForEmail(emailKey) {
+  const currentIndex = emailsSorted.value.findIndex(e => e._key === emailKey)
+  if (currentIndex === -1) return []
+  
+  // Ne retourner que les variables des emails précédents
+  return emailsSorted.value.slice(0, currentIndex).map((email, index) => {
+    const emailIndex = index + 1
+    return {
+      groupe: `RELANCE ${emailIndex}`,
+      vars: [
+        `relance.${emailIndex}.objet`,
+        `relance.${emailIndex}.dateEnvoi`
+      ]
+    }
+  })
+}
+
+const LIENS_DE_PAIEMENT_VARS = computed(() => {
+  return liensPaiement.value.map(lien => ({
+    name: `lien_paiement_${lien.id}`,
+    display: lien.nom,
+    url: lien.url,
+    isPaymentLink: true // Flag explicite pour identifier les liens de paiement
+  }))
+})
+
+const ALL_VARIABLES = computed(() => [
+  ...VARIABLES,
+  { groupe: 'LIENS DE PAIEMENT', vars: LIENS_DE_PAIEMENT_VARS.value },
+])
 
 const EXEMPLE_VARS = {
   nfacture: 'FA-2024-01', ref_piece: 'REF-001', date_piece: '01/01/2024',
@@ -801,18 +884,25 @@ const smtpOptions = computed(() => [
 
 const filteredVars = computed(() => {
   const s = varsSearch.value.toLowerCase()
-  if (!s) return VARIABLES
-  return VARIABLES
+  if (!s) return ALL_VARIABLES.value
+  return ALL_VARIABLES.value
     .map(g => ({ ...g, vars: g.vars.filter(v => v.includes(s)) }))
     .filter(g => g.vars.length > 0)
 })
 
 const filteredLienVars = computed(() => {
   const s = lienVarsSearch.value.toLowerCase()
-  if (!s) return VARIABLES
-  return VARIABLES
+  if (!s) return ALL_VARIABLES.value
+  return ALL_VARIABLES.value
     .map(g => ({ ...g, vars: g.vars.filter(v => v.includes(s)) }))
     .filter(g => g.vars.length > 0)
+})
+
+const liensPaiementOptions = computed(() => {
+  return liensPaiement.value.map(lien => ({
+    value: lien.url,
+    label: lien.nom,
+  }))
 })
 
 const lienPaiementApercu = computed(() => {
@@ -852,6 +942,17 @@ async function loadAllOptions() {
     for (const regle of groupe.regles) {
       await loadOptionsForChamp(regle.champ, regle)
     }
+  }
+}
+
+// Charge les liens de paiement
+async function chargerLiensPaiement() {
+  try {
+    const liens = await $parse.Cloud.run('listLiensPaiement')
+    liensPaiement.value = liens
+  } catch (err) {
+    console.error('Erreur lors du chargement des liens de paiement:', err)
+    toast.add({ title: 'Erreur', description: 'Impossible de charger les liens de paiement', color: 'red' })
   }
 }
 
@@ -955,6 +1056,9 @@ async function charger() {
     sq.ascending('nom')
     sq.limit(50)
     smtpProfiles.value = await sq.find()
+
+    // Charger les liens de paiement
+    await chargerLiensPaiement()
 
     // Charger les options dynamiques pour toutes les règles
     await loadAllOptions()
@@ -1123,7 +1227,14 @@ function onSmtpChange(email, scenario, val) {
 
 // ── Variables ─────────────────────────────────────────────────
 async function copyVariable(varName) {
-  await navigator.clipboard.writeText(`[[${varName}]]`)
+  const textToCopy = `[[${varName}]]`
+  await navigator.clipboard.writeText(textToCopy)
+  toast.add({ title: 'Copié', description: 'Collez avec Ctrl+V dans l\'éditeur', color: 'green', timeout: 2000 })
+}
+
+async function copyPaymentLink(paymentLink) {
+  const textToCopy = paymentLink.url
+  await navigator.clipboard.writeText(textToCopy)
   toast.add({ title: 'Copié', description: 'Collez avec Ctrl+V dans l\'éditeur', color: 'green', timeout: 2000 })
 }
 
@@ -1140,9 +1251,70 @@ async function copyToClipboard(text) {
 
 // ── Lien de paiement modal ────────────────────────────────────
 function ouvrirLienModal() {
-  lienPaiementEdit.value = lienPaiement.value
+  nouveauLienNom.value = ''
+  lienPaiementEdit.value = ''
+  editingLienId.value = null
   lienVarsSearch.value = ''
   showLienModal.value = true
+}
+
+function editerLienPaiement(lien) {
+  editingLienId.value = lien.id
+  nouveauLienNom.value = lien.nom
+  lienPaiementEdit.value = lien.url
+  showLienModal.value = true
+}
+
+function annulerEditionLien() {
+  editingLienId.value = null
+  nouveauLienNom.value = ''
+  lienPaiementEdit.value = ''
+}
+
+async function supprimerLienPaiement(lienId) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce lien de paiement ?')) return
+  
+  try {
+    await $parse.Cloud.run('deleteLienPaiement', { lienId })
+    await chargerLiensPaiement()
+    toast.add({ title: 'Lien supprimé', color: 'green' })
+  } catch (err) {
+    console.error('Erreur lors de la suppression du lien de paiement:', err)
+    toast.add({ title: 'Erreur', description: 'Impossible de supprimer le lien de paiement', color: 'red' })
+  }
+}
+
+async function enregistrerNouveauLienPaiement() {
+  if (!nouveauLienNom.value.trim() || !lienPaiementEdit.value.trim()) {
+    toast.add({ title: 'Erreur', description: 'Veuillez remplir tous les champs', color: 'red' })
+    return
+  }
+  
+  try {
+    const lienData = {
+      nom: nouveauLienNom.value.trim(),
+      url: lienPaiementEdit.value.trim()
+    }
+    
+    if (editingLienId.value) {
+      // Mise à jour d'un lien existant
+      await $parse.Cloud.run('updateLienPaiement', { 
+        lienId: editingLienId.value,
+        ...lienData 
+      })
+      toast.add({ title: 'Lien mis à jour', color: 'green' })
+    } else {
+      // Création d'un nouveau lien
+      await $parse.Cloud.run('createLienPaiement', lienData)
+      toast.add({ title: 'Lien créé', color: 'green' })
+    }
+    
+    await chargerLiensPaiement()
+    annulerEditionLien()
+  } catch (err) {
+    console.error('Erreur lors de l\'enregistrement du lien de paiement:', err)
+    toast.add({ title: 'Erreur', description: err.message || 'Impossible d\'enregistrer le lien de paiement', color: 'red' })
+  }
 }
 
 function insererVariableEnLien(varName) {
@@ -1161,14 +1333,9 @@ function insererVariableEnLien(varName) {
   }
 }
 
-function enregistrerLienPaiement() {
-  lienPaiement.value = lienPaiementEdit.value
-  showLienModal.value = false
-}
-
 // ── IA modal ──────────────────────────────────────────────────
 async function copyPromptIA() {
-  const vars = VARIABLES.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
+  const allVars = ALL_VARIABLES.value.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
   const prompt = `Tu es un expert en relance de factures impayées pour le secteur immobilier.
 Génère une séquence de ${emails.value.length || 3} emails de relance progressivement fermes.
 
@@ -1199,7 +1366,7 @@ IMPORTANT: Retourne UNIQUEMENT un tableau YAML valide. Structure attendue :
       corps: |
         [Corps Markdown pour 1 impayé avec apporteur]
 
-Variables disponibles : ${vars}
+Variables disponibles : ${allVars}
 
 Exemple complet :
 ---
@@ -1359,7 +1526,7 @@ async function copyChatGptPrompt(fmt) {
     .slice(0, idx)
     .map((e, i) => `Email ${i + 1} (J+${e.delai}) : ${getScenario(e, fmt).objet || '(sans objet)'}`)
     .join('\n')
-  const vars = VARIABLES.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
+  const vars = ALL_VARIABLES.value.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
   const prompt = `Rédige un email de relance de facture impayée pour le secteur immobilier.
 Contexte du payeur : ${scenarioLabels[fmt]}.${emailsPrecedents ? `\nEmails précédents :\n${emailsPrecedents}\n` : ''}
 Email ${idx + 1} (J+${email?.delai ?? 0}) - Objet prévu : ${currentScenario?.objet || '...'}

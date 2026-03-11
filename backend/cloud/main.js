@@ -3,6 +3,52 @@
 const syncImpayes = require('./jobs/syncImpayes');
 const envoyerRelancesJob = require('./jobs/envoyerRelances');
 
+// ─── Gestion des liens de paiement ────────────────────────────────────────────
+
+// Créer un nouveau lien de paiement
+Parse.Cloud.define('createLienPaiement', async (request) => {
+  await isCallerAdmin(request);
+  const { nom, url } = request.params;
+  if (!nom || !url) throw new Error('Nom et URL requis');
+
+  const LienPaiement = Parse.Object.extend('LienPaiement');
+  const lien = new LienPaiement();
+  lien.set('nom', nom);
+  lien.set('url', url);
+  await lien.save(null, { useMasterKey: true });
+
+  return { id: lien.id };
+});
+
+// Lister tous les liens de paiement
+Parse.Cloud.define('listLiensPaiement', async (request) => {
+  await isCallerAdmin(request);
+
+  const LienPaiement = Parse.Object.extend('LienPaiement');
+  const query = new Parse.Query(LienPaiement);
+  const liens = await query.find({ useMasterKey: true });
+
+  return liens.map(lien => ({
+    id: lien.id,
+    nom: lien.get('nom'),
+    url: lien.get('url'),
+  }));
+});
+
+// Supprimer un lien de paiement
+Parse.Cloud.define('deleteLienPaiement', async (request) => {
+  await isCallerAdmin(request);
+  const { lienId } = request.params;
+  if (!lienId) throw new Error('lienId requis');
+
+  const LienPaiement = Parse.Object.extend('LienPaiement');
+  const query = new Parse.Query(LienPaiement);
+  const lien = await query.get(lienId, { useMasterKey: true });
+  await lien.destroy({ useMasterKey: true });
+
+  return { ok: true };
+});
+
 // ─── Gestion des utilisateurs ─────────────────────────────────────────────────
 
 /**

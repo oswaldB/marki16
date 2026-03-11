@@ -27,7 +27,37 @@
   ➜ DevTools: press Shift + Alt + D in the browser (v3.2.2)
 
 ℹ Nuxt Icon server bundle mode is set to local
-✔ Vite client built in 92ms
-✔ Vite server built in 108ms
-[nitro] ✔ Nuxt Nitro server built in 1844ms
-ℹ Vite client warmed up in 6ms
+✔ Vite client built in 117ms
+✔ Vite server built in 127ms
+[nitro] ✔ Nuxt Nitro server built in 2592ms
+ℹ Vite client warmed up in 8ms
+ℹ hmr update /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs
+[nuxt] ℹ Compiled router.options.mjs in 1099.81ms
+[nuxt] ℹ Compiled plugins.server.mjs in 1868.53ms
+[nuxt] ℹ Compiled plugins.client.mjs in 1892.8ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 1911.17ms
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x2)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x3)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x4)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x5)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x6)
+[nuxt] ℹ Compiled plugins.server.mjs in 1858.5ms
+[nuxt] ℹ Compiled plugins.client.mjs in 1863.34ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 1865.86ms
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x7)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x8)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x9)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x10)
+[nuxt] ℹ Compiled router.options.mjs in 710.26ms
+[nuxt] ℹ Compiled plugins.server.mjs in 1311.09ms
+[nuxt] ℹ Compiled plugins.client.mjs in 1314.3ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 1317.1ms
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x11)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x12)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x13)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x14)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x15)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x16)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x17)
+ℹ hmr update /pages/sequences/[id].vue, /assets/css/main.css, /pages/sequences/[id].vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Foswald%2FDesktop%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x18)

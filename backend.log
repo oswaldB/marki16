@@ -19,764 +19,745 @@ Health check available at http://localhost:1555/healthy
 [cron] Scheduler optimisation relances actif (toutes les minutes)
 [cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:02:00.952Z
+[cron] Heure actuelle: 2026-03-11T16:32:00.401Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:03:00.976Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[cron] Mise à jour des options dynamiques...
-[updateDynamicOptions] Début de la mise à jour des options dynamiques
-[updateDynamicOptions] Mise à jour des options pour statut_impaye depuis Impaye.statut
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
-[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
-[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
-[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
-[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
-[updateDynamicOptions] Trouvé 1 valeurs distinctes pour statut_impaye
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 2,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[updateDynamicOptions] Options statut_impaye mises à jour avec 1 valeurs
-[updateDynamicOptions] Mise à jour des options pour statut_relance depuis Relance.statut
-[updateDynamicOptions] Trouvé 1 valeurs distinctes pour statut_relance
-[updateDynamicOptions] Options statut_relance mises à jour avec 1 valeurs
-[updateDynamicOptions] Mise à jour des options pour statut_dossier depuis Impaye.statut_dossier
-[updateDynamicOptions] Trouvé 7 valeurs distinctes pour statut_dossier
-[updateDynamicOptions] Options statut_dossier mises à jour avec 7 valeurs
-[updateDynamicOptions] Mise à jour des options pour payeur_type depuis Impaye.payeur_type
-[updateDynamicOptions] Trouvé 3 valeurs distinctes pour payeur_type
-[updateDynamicOptions] Options payeur_type mises à jour avec 3 valeurs
-[updateDynamicOptions] Mise à jour des options pour payeur_type_personne depuis Impaye.payeur_type_personne
-[updateDynamicOptions] Trouvé 2 valeurs distinctes pour payeur_type_personne
-[updateDynamicOptions] Options payeur_type_personne mises à jour avec 2 valeurs
-[updateDynamicOptions] Mise à jour des options pour proprietaire_type_personne depuis Impaye.proprietaire_type_personne
-[updateDynamicOptions] Trouvé 2 valeurs distinctes pour proprietaire_type_personne
-[updateDynamicOptions] Options proprietaire_type_personne mises à jour avec 2 valeurs
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour ville depuis Impaye.ville
-[updateDynamicOptions] Trouvé 17 valeurs distinctes pour ville
-[updateDynamicOptions] Toutes les valeurs pour ville mises à jour (17 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour code_postal depuis Impaye.code_postal
-[updateDynamicOptions] Trouvé 19 valeurs distinctes pour code_postal
-[updateDynamicOptions] Toutes les valeurs pour code_postal mises à jour (19 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour entreprise depuis Impaye.entreprise
-[updateDynamicOptions] Trouvé 0 valeurs distinctes pour entreprise
-[updateDynamicOptions] Toutes les valeurs pour entreprise mises à jour (0 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_societe depuis Impaye.apporteur_societe
-[updateDynamicOptions] Trouvé 0 valeurs distinctes pour apporteur_societe
-[updateDynamicOptions] Toutes les valeurs pour apporteur_societe mises à jour (0 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_nom depuis Impaye.payeur_nom
-[updateDynamicOptions] Trouvé 63 valeurs distinctes pour payeur_nom
-[updateDynamicOptions] Toutes les valeurs pour payeur_nom mises à jour (63 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_email depuis Impaye.payeur_email
-[updateDynamicOptions] Trouvé 40 valeurs distinctes pour payeur_email
-[updateDynamicOptions] Toutes les valeurs pour payeur_email mises à jour (40 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_telephone depuis Impaye.payeur_telephone
-[updateDynamicOptions] Trouvé 1 valeurs distinctes pour payeur_telephone
-[updateDynamicOptions] Toutes les valeurs pour payeur_telephone mises à jour (1 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_nom depuis Impaye.apporteur_nom
-[updateDynamicOptions] Trouvé 43 valeurs distinctes pour apporteur_nom
-[updateDynamicOptions] Toutes les valeurs pour apporteur_nom mises à jour (43 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_email depuis Impaye.apporteur_email
-[updateDynamicOptions] Trouvé 28 valeurs distinctes pour apporteur_email
-[updateDynamicOptions] Toutes les valeurs pour apporteur_email mises à jour (28 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_telephone depuis Impaye.apporteur_telephone
-[updateDynamicOptions] Trouvé 1 valeurs distinctes pour apporteur_telephone
-[updateDynamicOptions] Toutes les valeurs pour apporteur_telephone mises à jour (1 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_nom depuis Impaye.proprietaire_nom
-[updateDynamicOptions] Trouvé 82 valeurs distinctes pour proprietaire_nom
-[updateDynamicOptions] Toutes les valeurs pour proprietaire_nom mises à jour (82 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_email depuis Impaye.proprietaire_email
-[updateDynamicOptions] Trouvé 25 valeurs distinctes pour proprietaire_email
-[updateDynamicOptions] Toutes les valeurs pour proprietaire_email mises à jour (25 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_telephone depuis Impaye.proprietaire_telephone
-[updateDynamicOptions] Trouvé 2 valeurs distinctes pour proprietaire_telephone
-[updateDynamicOptions] Toutes les valeurs pour proprietaire_telephone mises à jour (2 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour adresse_bien depuis Impaye.adresse_bien
-[updateDynamicOptions] Trouvé 83 valeurs distinctes pour adresse_bien
-[updateDynamicOptions] Toutes les valeurs pour adresse_bien mises à jour (83 valeurs)
-[updateDynamicOptions] Mise à jour de toutes les valeurs pour numero_lot depuis Impaye.numero_lot
-[updateDynamicOptions] Trouvé 30 valeurs distinctes pour numero_lot
-[updateDynamicOptions] Toutes les valeurs pour numero_lot mises à jour (30 valeurs)
-[updateDynamicOptions] Toutes les options mises à jour avec succès
-info: Ran cloud function updateDynamicOptions for user undefined with:
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
   Input: {}
-  Result: {"success":true,"message":"Options dynamiques mises à jour avec succès","updatedTypes":["statut_impaye","statut_relance","statut_dossier","payeur_type","payeur_type_personne","proprietaire_type_personne","ville","code_postal","entreprise","apporteur_societe","payeur_nom","payeur_email","payeur_telephone","apporteur_nom","apporteur_email","apporteur_telephone","proprietaire_nom","proprietaire_email","proprietaire_telephone","adresse_bien","numero_lot"]} {"functionName":"updateDynamicOptions","params":{}}
-[cron] Options dynamiques mises à jour avec succès: Options dynamiques mises à jour avec succès
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:04:00.007Z
+[cron] Heure actuelle: 2026-03-11T16:33:00.427Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:05:00.024Z
+[cron] Heure actuelle: 2026-03-11T16:34:00.456Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:06:00.042Z
+[cron] Heure actuelle: 2026-03-11T16:35:00.471Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:07:00.061Z
+[cron] Heure actuelle: 2026-03-11T16:36:00.495Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:08:00.079Z
+[cron] Heure actuelle: 2026-03-11T16:37:00.512Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:09:00.093Z
+[cron] Heure actuelle: 2026-03-11T16:38:00.532Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:10:00.112Z
+[cron] Heure actuelle: 2026-03-11T16:39:00.552Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:11:00.135Z
+[cron] Heure actuelle: 2026-03-11T16:40:00.570Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:12:00.158Z
+[cron] Heure actuelle: 2026-03-11T16:41:00.583Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:13:00.180Z
+[cron] Heure actuelle: 2026-03-11T16:42:00.604Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:14:00.199Z
+[cron] Heure actuelle: 2026-03-11T16:43:00.620Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:15:00.213Z
+[cron] Heure actuelle: 2026-03-11T16:44:00.637Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:16:00.230Z
+[cron] Heure actuelle: 2026-03-11T16:45:00.656Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 45 relances pending trouvées pour 2 emails
-[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com', 'contact@syndictdac.fr' ]
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
 [optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
 [optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
 [optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
 [optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
 [optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
-[optimizeRelances]   contact@syndictdac.fr_1_4SBTguLvFx: 8 relance(s) - IDs: OSVFaIo8tZ, 5ZutpE9NBh, goWfWdLTsM, Bx7iEwT88k, scDLGyVon1, N8nw1uuzJO, lwTh6cwcnW, ljVpkogYU5
-[optimizeRelances]   contact@syndictdac.fr_2_4SBTguLvFx: 8 relance(s) - IDs: eDrDld9fnj, Hxxu6ecBys, g75X02IBpi, C27V8OWAvr, n1oNyMmGjC, pKYaSH7YbV, zoiSu8IhiT, hNu6jjjTFx
-[optimizeRelances]   contact@syndictdac.fr_3_4SBTguLvFx: 8 relance(s) - IDs: 0g3wesVQ5V, vQTf6GTmPH, a7aRkQKsBK, F8tnkyVG6q, wPcH5p44fI, JlqBuSASI1, 1RNcIurgSl, WUL6QizwGM
-[optimizeRelances]   contact@syndictdac.fr_0_4SBTguLvFx: 8 relance(s) - IDs: 0ogpf2igM5, 6F6sQlgIG3, TmY7BHQJ12, 4LuVUZ0azm, GZcNbIEtkp, zLZdTKm1xU, D4Tbi81fD8, jnwpnnFhNz
-[optimizeRelances]   contact@syndictdac.fr_4_4SBTguLvFx: 8 relance(s) - IDs: wPA3sqgCm2, tiO9HwGbby, EUKy912Qm5, CLf6if0Oad, mfCzkjW4lY, OQIsgfLl0y, he9uAH7ruS, KQKHWIEiUC
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 2,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
-warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
-warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
-Server running on port 1555
-Parse Server available at https://dev.api.markidiags.com:8444/parse
-Parse Dashboard available at http://localhost:1555/parse-dashboard
-Health check available at http://localhost:1555/healthy
-[cron] Scheduler sync impayés actif (toutes les heures)
-[cron] Scheduler envoi relances actif (tous les jours à 18h)
-[cron] Scheduler optimisation relances actif (toutes les minutes)
-[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
-warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
-warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
-Server running on port 1555
-Parse Server available at https://dev.api.markidiags.com:8444/parse
-Parse Dashboard available at http://localhost:1555/parse-dashboard
-Health check available at http://localhost:1555/healthy
-[cron] Scheduler sync impayés actif (toutes les heures)
-[cron] Scheduler envoi relances actif (tous les jours à 18h)
-[cron] Scheduler optimisation relances actif (toutes les minutes)
-[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
-warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
-warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
-Server running on port 1555
-Parse Server available at https://dev.api.markidiags.com:8444/parse
-Parse Dashboard available at http://localhost:1555/parse-dashboard
-Health check available at http://localhost:1555/healthy
-[cron] Scheduler sync impayés actif (toutes les heures)
-[cron] Scheduler envoi relances actif (tous les jours à 18h)
-[cron] Scheduler optimisation relances actif (toutes les minutes)
-[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:17:00.510Z
+[cron] Heure actuelle: 2026-03-11T16:46:00.683Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:18:00.527Z
+[cron] Heure actuelle: 2026-03-11T16:47:00.698Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:19:00.550Z
+[cron] Heure actuelle: 2026-03-11T16:48:00.715Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:20:00.566Z
+[cron] Heure actuelle: 2026-03-11T16:49:00.735Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:21:00.580Z
+[cron] Heure actuelle: 2026-03-11T16:50:00.755Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:22:00.593Z
+[cron] Heure actuelle: 2026-03-11T16:51:00.775Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:23:00.609Z
+[cron] Heure actuelle: 2026-03-11T16:52:00.788Z
 [optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
 [optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
 [optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
 }
 [cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:24:00.629Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:25:00.654Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:26:00.673Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:27:00.689Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:28:00.705Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation des relances (anti-spam)...
-[cron] Heure actuelle: 2026-03-11T13:29:00.718Z
-[optimizeRelances] Début optimisation (anti-spam)...
-[optimizeRelances] 0 relances pending trouvées pour 0 emails
-[optimizeRelances] Adresses email uniques: []
-[optimizeRelances] Répartition détaillée des relances:
-[optimizeRelances] Optimisation terminée: {
-  contactsProcessed: 0,
-  relancesConsolidated: 0,
-  relancesOptimized: 0,
-  errors: 0
-}
-[cron] Optimisation terminée: {
-  contactsProcessed: 0,
+  contactsProcessed: 1,
   relancesConsolidated: 0,
   relancesOptimized: 0,
   errors: 0
