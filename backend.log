@@ -762,3 +762,247 @@ info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
   relancesOptimized: 0,
   errors: 0
 }
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:53:00.807Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:54:00.833Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
+info: Ran cloud function listLiensPaiement for user 0j8Kb1HEcC with:
+  Input: {}
+  Result: [{"id":"KQyBTBxx6o","nom":"toto","url":"https://coucou.com?id=[[payeur_nom]]&lol=[[proprietaire_email]]"}] {"functionName":"listLiensPaiement","params":{},"user":"0j8Kb1HEcC"}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:55:00.851Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:56:00.871Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:57:00.889Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:58:00.913Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-11T16:59:00.939Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 5 relances pending trouvées pour 1 emails
+[optimizeRelances] Adresses email uniques: [ 'accueil@progedi.com' ]
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   accueil@progedi.com_1_4SBTguLvFx: 1 relance(s) - IDs: 3Un0p9I3oY
+[optimizeRelances]   accueil@progedi.com_0_4SBTguLvFx: 1 relance(s) - IDs: mzPDICxAYA
+[optimizeRelances]   accueil@progedi.com_3_4SBTguLvFx: 1 relance(s) - IDs: XFPYU4c0O1
+[optimizeRelances]   accueil@progedi.com_4_4SBTguLvFx: 1 relance(s) - IDs: 6L9RIbU9ND
+[optimizeRelances]   accueil@progedi.com_2_4SBTguLvFx: 1 relance(s) - IDs: xmZNGg9Elx
+[optimizeRelances] 5 groupe(s) pour accueil@progedi.com
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_1: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_0: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_3: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_4: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Groupe accueil@progedi.com_4SBTguLvFx_2: 1 relance(s)
+[optimizeRelances] → 1 seule relance, pas de consolidation
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 1,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  errors: 0
+}

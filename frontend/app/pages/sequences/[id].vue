@@ -100,10 +100,6 @@
               <div class="flex items-center justify-between mb-1">
                 <label class="text-xs text-gray-500">Contenu par format</label>
                 <div class="flex gap-1">
-                  <UButton size="xs" variant="ghost" :disabled="!lienPaiement" @click="copyLienPaiement">
-                    <UIcon name="i-heroicons-link" class="size-4" />
-                    Lien
-                  </UButton>
                   <UButton size="xs" variant="ghost" @click="openChatGptModal(idx)">
                     <UIcon name="i-heroicons-sparkles" class="size-4" />
                     IA
@@ -462,6 +458,34 @@
 
           <!-- Séparateur -->
           <div class="border-t border-gray-200"></div>
+
+          <!-- Variables (filtrées pour exclure les liens de paiement) -->
+          <div class="border border-gray-100 rounded-lg bg-gray-50 p-2">
+            <p class="text-xs font-semibold text-gray-500 mb-2">Variables</p>
+            <UInput
+              v-model="lienVarsSearch"
+              size="xs"
+              placeholder="Rechercher..."
+              icon="i-heroicons-magnifying-glass"
+              class="mb-2"
+            />
+            <div class="space-y-2">
+              <div v-for="group in filteredLienVars" :key="group.groupe">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ group.groupe }}</p>
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    v-for="v in group.vars"
+                    :key="v.isPaymentLink ? v.name : v"
+                    class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
+                    @click="!v.isPaymentLink && insererVariableEnLien(v)"
+                  >
+                    {{ v.isPaymentLink ? v.display : v }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → inséré à la position du curseur</p>
+          </div>
 
           <!-- Création/Édition d'un lien de paiement -->
           <div>
@@ -892,9 +916,20 @@ const filteredVars = computed(() => {
 
 const filteredLienVars = computed(() => {
   const s = lienVarsSearch.value.toLowerCase()
-  if (!s) return ALL_VARIABLES.value
-  return ALL_VARIABLES.value
-    .map(g => ({ ...g, vars: g.vars.filter(v => v.includes(s)) }))
+  const allVars = ALL_VARIABLES.value
+    .map(g => ({ ...g, vars: g.vars.filter(v => {
+      // Exclure les variables qui sont des liens de paiement (isPaymentLink = true)
+      if (v && typeof v === 'object' && v.isPaymentLink) return false
+      return true
+    }) }))
+    .filter(g => g.vars.length > 0)
+  
+  if (!s) return allVars
+  return allVars
+    .map(g => ({ ...g, vars: g.vars.filter(v => {
+      const varName = typeof v === 'object' ? v.name || v.display : v
+      return varName && varName.toLowerCase().includes(s)
+    }) }))
     .filter(g => g.vars.length > 0)
 })
 
