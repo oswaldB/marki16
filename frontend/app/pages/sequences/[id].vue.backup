@@ -1,0 +1,860 @@
+<template>
+  <div class="p-6 space-y-6">
+
+    <!-- ── Header ── -->
+    <div class="flex items-center gap-4">
+      <NuxtLink to="/sequences" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+        <UIcon name="i-heroicons-arrow-left" class="size-4" />
+        Retour
+      </NuxtLink>
+      <UInput
+        v-model="nom"
+        class="flex-1 text-xl font-semibold"
+        placeholder="Nom de la séquence"
+      />
+      <UButton icon="i-heroicons-floppy-disk" :loading="saving" @click="sauvegarder">
+        Enregistrer
+      </UButton>
+    </div>
+
+    <!-- ── Lien de paiement ── -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-medium text-gray-700 w-36 shrink-0">Lien de paiement</span>
+      <UInput
+        :value="lienPaiement"
+        readonly
+        class="flex-1 font-mono text-xs"
+        placeholder="Aucun lien configuré"
+      />
+      <UButton variant="outline" size="sm" @click="ouvrirLienModal">
+        <UIcon name="i-heroicons-pencil-square" class="size-4" />
+        Construire
+      </UButton>
+    </div>
+
+    <!-- ── Section EMAILS ── -->
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-gray-800">EMAILS DE RELANCE</span>
+          <UButton variant="outline" size="sm" @click="showIaModal = true">
+            <UIcon name="i-heroicons-sparkles" class="size-4" />
+            Générer par IA
+          </UButton>
+        </div>
+      </template>
+
+      <div class="space-y-4">
+        <div v-if="loading" class="text-center py-6 text-gray-400">Chargement...</div>
+
+        <UCard
+          v-for="(email, idx) in emailsSorted"
+          :key="email._key"
+          class="border border-gray-100"
+        >
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-sm text-gray-700">Email {{ idx + 1 }} — J+{{ email.delai }}</span>
+              <div class="flex items-center gap-2">
+                <UButton :icon="collapsedEmails[email._key] ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'" variant="ghost" size="xs" @click="toggleEmailVisibility(email._key)" />
+                <UButton icon="i-heroicons-trash" color="red" variant="ghost" size="xs" @click="supprimerEmail(email._key)" />
+              </div>
+            </div>
+          </template>
+
+          <div class="space-y-2" v-show="!collapsedEmails[email._key]">
+            <!-- Délai -->
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">J+</label>
+              <UInput v-model.number="email.delai" type="number" min="0" class="w-full" />
+            </div>
+
+            <!-- Profil expéditeur -->
+            <div>
+              <div v-if="smtpOptions.length > 0">
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs text-gray-500">Profil expéditeur</label>
+                  <UButton size="xs" variant="link" class="text-xs" @click="showSmtpModal = true">
+                    + Créer un profil
+                  </UButton>
+                </div>
+                <USelect v-model="email.smtp" :items="smtpOptions" @change="onSmtpChange(email, $event)" class="w-full" />
+              </div>
+              <div v-else>
+                <UAlert
+                  icon="i-heroicons-exclamation-triangle"
+                  color="amber"
+                  variant="soft"
+                  title="Aucun profil expéditeur configuré"
+                  description="Créez un profil expéditeur pour envoyer des emails."
+                  class="text-xs"
+                >
+                  <template #description>
+                    <div class="flex items-center gap-2">
+                      <span>Créez un profil expéditeur pour envoyer des emails.</span>
+                      <UButton size="xs" variant="solid" @click="showSmtpModal = true">
+                        Créer un profil
+                      </UButton>
+                    </div>
+                  </template>
+                </UAlert>
+              </div>
+            </div>
+
+            <!-- À -->
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">À</label>
+              <UInput v-model="email.to" placeholder="[[payeur_email]]" class="w-full" />
+            </div>
+
+            <!-- CC -->
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">CC</label>
+              <UInput v-model="email.cc" class="w-full" />
+            </div>
+
+            <!-- Objet -->
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">Objet</label>
+              <UInput v-model="email.objet" placeholder="Relance — [[nfacture]]" class="w-full" />
+            </div>
+
+            <!-- Ligne 3 : Corps -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs text-gray-500">Corps</label>
+                <div class="flex gap-1">
+                  <UButton size="xs" variant="ghost" :disabled="!lienPaiement" @click="copyLienPaiement">
+                    <UIcon name="i-heroicons-link" class="size-4" />
+                    Lien
+                  </UButton>
+                  <UButton size="xs" variant="ghost" @click="openChatGptModal(idx)">
+                    <UIcon name="i-heroicons-sparkles" class="size-4" />
+                    IA
+                  </UButton>
+                </div>
+              </div>
+              <div class="border border-gray-200 rounded-md overflow-hidden">
+                <ToastuiEditor
+                  :ref="el => { if (el) editorRefs[email._key] = el }"
+                  :initial-value="email.corps"
+                  :options="editorOptions"
+                  initial-edit-type="wysiwyg"
+                />
+              </div>
+            </div>
+
+            <!-- Variables -->
+            <div class="border border-gray-100 rounded-lg bg-gray-50 p-2">
+              <p class="text-xs font-semibold text-gray-500 mb-2">Variables</p>
+              <UInput
+                v-model="varsSearch"
+                size="xs"
+                placeholder="Rechercher..."
+                icon="i-heroicons-magnifying-glass"
+                class="mb-2"
+              />
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="group in filteredVars" :key="group.groupe" class="space-y-2">
+                  <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ group.groupe }}</p>
+                  <div class="flex flex-wrap gap-1">
+                    <button
+                      v-for="v in group.vars"
+                      :key="v"
+                      class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
+                      @click="copyVariable(v)"
+                    >
+                      {{ v }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → copié · Ctrl+V</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UButton variant="outline" icon="i-heroicons-plus" @click="ajouterEmail">
+          Ajouter un email
+        </UButton>
+      </div>
+    </UCard>
+
+    <!-- ── Section RÈGLES ── -->
+    <UCard>
+      <template #header>
+        <span class="font-semibold text-gray-800">RÈGLES D'ATTRIBUTION AUTOMATIQUE</span>
+      </template>
+
+      <div class="space-y-3">
+        <div
+          v-for="(regle, idx) in regles"
+          :key="idx"
+          class="flex items-center gap-2 flex-wrap"
+        >
+          <USelect
+            v-model="regle.champ"
+            :items="champOptions"
+            class="w-44"
+          />
+          <USelect
+            v-model="regle.operateur"
+            :items="operateurOptions"
+            class="w-36"
+          />
+          <UInput v-model="regle.valeur" placeholder="Valeur" class="flex-1 min-w-24" />
+          <UButton icon="i-heroicons-trash" color="red" variant="ghost" size="xs" @click="regles.splice(idx, 1)" />
+        </div>
+
+        <div class="flex items-center gap-3 pt-1 flex-wrap">
+          <USelect
+            v-model="reglesType"
+            :items="[{ label: 'Incluant', value: 'incluant' }, { label: 'Excluant', value: 'excluant' }]"
+            class="w-36"
+          />
+          <UButton
+            variant="outline"
+            icon="i-heroicons-plus"
+            size="sm"
+            @click="regles.push({ champ: 'payeur_type', operateur: 'egal', valeur: '' })"
+          >
+            Ajouter un filtre
+          </UButton>
+        </div>
+
+        <!-- Aperçu live -->
+        <div class="pt-2 flex items-center gap-4 text-sm flex-wrap">
+          <span class="text-green-600 font-medium"><UIcon name="i-heroicons-check-circle" class="size-4" /> {{ apercuConcernes }} impayés concernés</span>
+          <span class="text-red-500 font-medium"><UIcon name="i-heroicons-x-circle" class="size-4" /> {{ apercuExclus }} exclus</span>
+          <NuxtLink
+            v-if="apercuConcernes > 0"
+            :to="`/impayes?sequence=${route.params.id}`"
+            class="text-sky-600 hover:underline text-sm"
+          >
+            Voir les {{ apercuConcernes }} impayés
+          </NuxtLink>
+        </div>
+      </div>
+    </UCard>
+
+    <!-- ════════════════════════════════════════════
+         DRAWER : Lien de paiement
+    ════════════════════════════════════════════ -->
+    <UDrawer v-model:open="showLienModal" direction="right">
+      <template #header>
+        <p class="font-semibold">Construire le lien de paiement</p>
+      </template>
+
+      <template #body>
+        <div class="flex flex-col gap-4 p-4">
+          <!-- URL + aperçu -->
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block">URL avec variables</label>
+            <textarea
+              ref="lienPaiementTextareaEl"
+              v-model="lienPaiementEdit"
+              class="w-full border border-gray-300 rounded-md p-2 font-mono text-sm resize-y min-h-24 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              placeholder="https://paiement.exemple.com?facture=[[nfacture]]&montant=[[reste_a_payer]]"
+            />
+            <div v-if="lienPaiementEdit" class="bg-gray-50 rounded p-2 mt-2">
+              <p class="text-xs text-gray-500 mb-1">Aperçu (valeurs d'exemple)</p>
+              <p class="text-xs text-sky-700 font-mono break-all">{{ lienPaiementApercu }}</p>
+            </div>
+          </div>
+
+          <!-- Variables -->
+          <div class="border border-gray-100 rounded-lg bg-gray-50 p-2">
+            <p class="text-xs font-semibold text-gray-500 mb-2">Variables</p>
+            <UInput
+              v-model="lienVarsSearch"
+              size="xs"
+              placeholder="Rechercher..."
+              icon="i-heroicons-magnifying-glass"
+              class="mb-2"
+            />
+            <div class="space-y-2">
+              <div v-for="group in filteredLienVars" :key="group.groupe">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ group.groupe }}</p>
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    v-for="v in group.vars"
+                    :key="v"
+                    class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors"
+                    @click="insererVariableEnLien(v)"
+                  >
+                    {{ v }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → inséré à la position du curseur</p>
+          </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-between p-4 w-full">
+          <UButton variant="outline" size="sm" @click="copyToClipboard(lienPaiementEdit)" class="w-full">
+            Copier le lien
+          </UButton>
+          <div class="flex gap-2 w-full">
+            <UButton color="neutral" variant="ghost" @click="showLienModal = false" class="w-full">Annuler</UButton>
+            <UButton @click="enregistrerLienPaiement" class="w-full">Enregistrer</UButton>
+          </div>
+        </div>
+      </template>
+    </UDrawer>
+
+    <!-- ════════════════════════════════════════════
+         MODAL : Générer par IA
+    ════════════════════════════════════════════ -->
+    <UModal v-model:open="showIaModal" title="Générer les emails par IA">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-heroicons-sparkles" class="size-5" />
+          <span>Générer les emails par IA</span>
+        </div>
+      </template>
+      <template #body>
+        <div class="space-y-3">
+          <p class="text-sm text-gray-600">
+            Copiez le prompt, collez-le dans ChatGPT, puis collez la réponse YAML ici.
+          </p>
+          <UButton variant="outline" size="sm" @click="copyPromptIA">
+            <UIcon name="i-heroicons-clipboard" class="size-4" />
+            Copier le prompt
+          </UButton>
+          <div class="w-full">
+            <label class="text-xs text-gray-500 mb-1 block">Réponse YAML de ChatGPT</label>
+            <UTextarea v-model="iaResponse" :rows="8" placeholder='---
+- delai: 7
+  objet: "..."
+  corps: |
+    # Corps en Markdown
+    ...' class="w-full" />
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton color="neutral" variant="ghost" @click="showIaModal = false" class="w-full">Annuler</UButton>
+          <UButton @click="validerIA" class="w-full">
+            <UIcon name="i-heroicons-check" class="size-4" />
+            Valider et remplacer les emails
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- ════════════════════════════════════════════
+         MODAL : Demander à ChatGPT (par email)
+    ════════════════════════════════════════════ -->
+    <UModal v-model:open="showChatGptModal" :title="`Demander à ChatGPT — Email ${chatGptEmailIdx + 1}`">
+      <template #body>
+        <div class="space-y-3">
+          <p class="text-sm text-gray-600">
+            Copiez le prompt, collez-le dans ChatGPT, puis collez le corps de l'email en Markdown ici.
+          </p>
+          <UButton variant="outline" size="sm" @click="copyChatGptPrompt">
+            <UIcon name="i-heroicons-clipboard" class="size-4" />
+            Copier le prompt
+          </UButton>
+          <div class="w-full">
+            <label class="text-xs text-gray-500 mb-1 block">Corps de l'email (Markdown)</label>
+            <UTextarea v-model="chatGptResponse" :rows="8" placeholder="# Titre
+
+Corps en Markdown avec tableau si nécessaire..." class="w-full" />
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton color="neutral" variant="ghost" @click="showChatGptModal = false" class="w-full">Annuler</UButton>
+          <UButton @click="insererReponseChatGpt" class="w-full">
+            <UIcon name="i-heroicons-check" class="size-4" />
+            Insérer dans l'éditeur
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- ════════════════════════════════════════════
+         DRAWER : Créer profil SMTP
+    ════╕════════════════════════════════════════════ -->
+    <SmtpDrawer
+      v-model="showSmtpModal"
+      :mode-edition="false"
+      @saved="onSmtpSaved"
+    />
+
+  </div>
+</template>
+
+<script setup>
+import ToastuiEditor from '~/components/ToastuiEditor.vue'
+import yaml from 'js-yaml'
+
+const { $parse } = useNuxtApp()
+const route = useRoute()
+const toast = useToast()
+
+// ── State ──────────────────────────────────────────────────────
+const loading = ref(true)
+const saving = ref(false)
+const savingSmtp = ref(false)
+
+const sequence = ref(null)
+const nom = ref('')
+const lienPaiement = ref('')
+const emails = ref([])
+const regles = ref([])
+const reglesType = ref('incluant')
+const smtpProfiles = ref([])
+
+// Aperçu règles
+const apercuConcernes = ref(0)
+const apercuExclus = ref(0)
+
+// Variables (emails)
+const varsSearch = ref('')
+
+// Variables popover (lien paiement)
+const lienVarsSearch = ref('')
+
+// Email visibility
+const collapsedEmails = ref({})
+
+// Modals
+const showLienModal = ref(false)
+const lienPaiementEdit = ref('')
+const lienPaiementTextareaEl = ref(null)
+
+const showIaModal = ref(false)
+const iaResponse = ref('')
+
+const showChatGptModal = ref(false)
+const chatGptEmailIdx = ref(0)
+const chatGptResponse = ref('')
+
+const showSmtpModal = ref(false)
+const smtpCreateForEmailKey = ref(null)
+
+// Toast UI editor refs
+const editorRefs = {}
+
+// ── Constants ──────────────────────────────────────────────────
+const VARIABLES = [
+  { groupe: 'PAYEUR',   vars: ['payeur_nom', 'payeur_email', 'payeur_telephone', 'payeur_type'] },
+  { groupe: 'FACTURE',  vars: ['nfacture', 'ref_piece', 'date_piece', 'reste_a_payer', 'montant_total', 'date_echeance'] },
+  { groupe: 'BIEN',     vars: ['adresse_bien', 'code_postal', 'ville', 'numero_lot', 'etage', 'porte', 'batiment', 'residence'] },
+  { groupe: 'PROPRIETAIRE', vars: ['proprietaire_nom', 'proprietaire_email', 'proprietaire_telephone', 'proprietaire_adresse'] },
+  { groupe: 'APPORTEUR',   vars: ['apporteur_nom', 'apporteur_email', 'apporteur_telephone', 'apporteur_societe'] },
+  { groupe: 'DOSSIER',  vars: ['numero_dossier', 'employe_intervention', 'date_debut_mission'] },
+]
+
+const EXEMPLE_VARS = {
+  nfacture: 'FA-2024-01', ref_piece: 'REF-001', date_piece: '01/01/2024',
+  reste_a_payer: '1200', montant_total: '1500', date_echeance: '31/01/2024',
+  payeur_nom: 'Jean Dupont', payeur_email: 'jean@example.com',
+  payeur_telephone: '0612345678', payeur_type: 'Propriétaire',
+  adresse_bien: '123 rue de la Paix', code_postal: '75001', ville: 'Paris',
+  numero_lot: 'A12', numero_dossier: 'DOS-001',
+  employe_intervention: 'Marie Martin', date_debut_mission: '01/01/2024',
+}
+
+const champOptions = [
+  { label: 'Type payeur', value: 'payeur_type' },
+  { label: 'Reste à payer', value: 'reste_a_payer' },
+  { label: 'Statut', value: 'statut' },
+  { label: 'Statut dossier', value: 'statut_dossier' },
+]
+
+const operateurOptions = [
+  { label: 'est égal à', value: 'egal' },
+  { label: 'supérieur à', value: 'superieur' },
+  { label: 'inférieur à', value: 'inferieur' },
+  { label: 'contient', value: 'contient' },
+]
+
+const editorOptions = {
+  minHeight: '200px',
+  language: 'fr',
+  usageStatistics: false,
+  hideModeSwitch: true,
+}
+
+// ── Computed ───────────────────────────────────────────────────
+const emailsSorted = computed(() =>
+  [...emails.value].sort((a, b) => a.delai - b.delai)
+)
+
+const smtpOptions = computed(() => [
+  ...smtpProfiles.value.map(p => ({
+    value: p.id,
+    label: p.get('nom_affiche') || p.get('nom'),
+  })),
+])
+
+const filteredVars = computed(() => {
+  const s = varsSearch.value.toLowerCase()
+  if (!s) return VARIABLES
+  return VARIABLES
+    .map(g => ({ ...g, vars: g.vars.filter(v => v.includes(s)) }))
+    .filter(g => g.vars.length > 0)
+})
+
+const filteredLienVars = computed(() => {
+  const s = lienVarsSearch.value.toLowerCase()
+  if (!s) return VARIABLES
+  return VARIABLES
+    .map(g => ({ ...g, vars: g.vars.filter(v => v.includes(s)) }))
+    .filter(g => g.vars.length > 0)
+})
+
+const lienPaiementApercu = computed(() => {
+  let url = lienPaiementEdit.value
+  for (const [k, v] of Object.entries(EXEMPLE_VARS)) {
+    url = url.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), v)
+  }
+  return url
+})
+
+// ── Chargement ────────────────────────────────────────────────
+async function charger() {
+  loading.value = true
+  try {
+    const q = new $parse.Query('Sequence')
+    const seq = await q.get(route.params.id)
+    sequence.value = seq
+    nom.value = seq.get('nom') || ''
+    lienPaiement.value = seq.get('lien_paiement') || ''
+    emails.value = (seq.get('emails') || []).map((e, i) => ({
+      ...e,
+      _key: `email_${i}_${seq.id}`,
+    }))
+    regles.value = (seq.get('regles') || []).map(r => ({ ...r }))
+    reglesType.value = seq.get('regles_type') || 'incluant'
+
+    const sq = new $parse.Query('SmtpProfile')
+    sq.ascending('nom')
+    sq.limit(50)
+    smtpProfiles.value = await sq.find()
+
+    await calculerApercu()
+  } catch (err) {
+    toast.add({ title: 'Erreur de chargement', description: err.message, color: 'red' })
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Sauvegarde ────────────────────────────────────────────────
+async function sauvegarder() {
+  saving.value = true
+  try {
+    // Sync editor HTML before saving
+    for (const email of emails.value) {
+      const editor = editorRefs[email._key]
+      if (editor) {
+        try { email.corps = editor.getInstance().getHTML() } catch {}
+      }
+    }
+    sequence.value.set('nom', nom.value)
+    sequence.value.set('lien_paiement', lienPaiement.value)
+    sequence.value.set('emails', emails.value.map(({ _key, ...rest }) => rest))
+    sequence.value.set('regles', regles.value)
+    sequence.value.set('regles_type', reglesType.value)
+    await sequence.value.save()
+    toast.add({ title: 'Séquence enregistrée', color: 'green' })
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── Emails ────────────────────────────────────────────────────
+function ajouterEmail() {
+  emails.value.push({
+    _key: `email_new_${Date.now()}`,
+    delai: 0,
+    smtp: '',
+    to: '[[payeur_email]]',
+    cc: '',
+    objet: '',
+    corps: '',
+  })
+}
+
+function supprimerEmail(key) {
+  const idx = emails.value.findIndex(e => e._key === key)
+  if (idx !== -1) emails.value.splice(idx, 1)
+}
+
+function toggleEmailVisibility(key) {
+  if (collapsedEmails.value[key]) {
+    delete collapsedEmails.value[key]
+  } else {
+    collapsedEmails.value[key] = true
+  }
+}
+
+function onSmtpChange(emailObj, val) {
+  if (val === '__create__') {
+    smtpCreateForEmailKey.value = emailObj._key
+    emailObj.smtp = ''
+    showSmtpModal.value = true
+  }
+}
+
+// ── Variables ─────────────────────────────────────────────────
+async function copyVariable(varName) {
+  await navigator.clipboard.writeText(`[[${varName}]]`)
+  toast.add({ title: 'Copié', description: 'Collez avec Ctrl+V dans l\'éditeur', color: 'green', timeout: 2000 })
+}
+
+async function copyLienPaiement() {
+  if (!lienPaiement.value) return
+  await navigator.clipboard.writeText(lienPaiement.value)
+  toast.add({ title: 'Lien copié', description: 'Collez avec Ctrl+V dans l\'éditeur', color: 'green', timeout: 2000 })
+}
+
+async function copyToClipboard(text) {
+  await navigator.clipboard.writeText(text)
+  toast.add({ title: 'Copié', color: 'green', timeout: 2000 })
+}
+
+// ── Lien de paiement modal ────────────────────────────────────
+function ouvrirLienModal() {
+  lienPaiementEdit.value = lienPaiement.value
+  lienVarsSearch.value = ''
+  showLienModal.value = true
+}
+
+function insererVariableEnLien(varName) {
+  const el = lienPaiementTextareaEl.value
+  const v = `[[${varName}]]`
+  if (el) {
+    const s = el.selectionStart ?? lienPaiementEdit.value.length
+    const e = el.selectionEnd ?? lienPaiementEdit.value.length
+    lienPaiementEdit.value = lienPaiementEdit.value.slice(0, s) + v + lienPaiementEdit.value.slice(e)
+    nextTick(() => {
+      el.selectionStart = el.selectionEnd = s + v.length
+      el.focus()
+    })
+  } else {
+    lienPaiementEdit.value += v
+  }
+}
+
+function enregistrerLienPaiement() {
+  lienPaiement.value = lienPaiementEdit.value
+  showLienModal.value = false
+}
+
+// ── IA modal ──────────────────────────────────────────────────
+async function copyPromptIA() {
+  const vars = VARIABLES.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
+  const prompt = `Tu es un expert en relance de factures impayées pour le secteur immobilier.
+Génère une séquence de ${emails.value.length || 3} emails de relance progressivement fermes.
+
+IMPORTANT: Retourne UNIQUEMENT un tableau YAML valide avec la structure suivante:
+---
+- delai: [nombre]
+  objet: "[objet de l'email]"
+  corps: |
+    [Corps de l'email en Markdown]
+
+- delai: [nombre]
+  objet: "[objet de l'email]"
+  corps: |
+    [Corps de l'email en Markdown]
+
+Variables disponibles : ${vars}
+
+Exemple complet:
+---
+- delai: 7
+  objet: "Rappel : Facture [[nfacture]]"
+  corps: |
+    # Rappel de paiement
+
+    Bonjour [[payeur_nom]],
+
+    Votre facture [[nfacture]] est en retard de paiement.
+
+    [Lien de paiement]([[lien_paiement]])
+
+    ## Détails du paiement
+
+    | Facture | Date d'échéance | Montant TTC | Reste à payer |
+    |---------|-----------------|-------------|---------------|
+    | [[nfacture]] | [[date_echeance]] | [[montant_total]] € | [[reste_a_payer]] € |
+
+- delai: 14
+  objet: "Mise en demeure"
+  corps: |
+    # Mise en demeure
+
+    Bonjour [[payeur_nom]],
+
+    Dernier rappel avant actions.
+`
+  await copyToClipboard(prompt)
+}
+
+function validerIA() {
+  try {
+    // Parse YAML instead of JSON
+    const parsed = yaml.load(iaResponse.value)
+    if (!Array.isArray(parsed)) throw new Error('Attendu un tableau YAML')
+    
+    const newEmails = parsed.map((e, i) => {
+      if (!e.objet && !e.corps) throw new Error(`Email ${i + 1} invalide`)
+      return {
+        _key: `email_ia_${i}_${Date.now()}`,
+        delai: e.delai ?? 0,
+        smtp: '',
+        to: '[[payeur_email]]',
+        cc: '',
+        objet: e.objet || '',
+        corps: e.corps || '',
+      }
+    })
+    
+    // Set the emails
+    emails.value = newEmails
+    
+    // Update editors with Markdown content using setMarkdown
+    nextTick(() => {
+      newEmails.forEach(email => {
+        const editor = editorRefs[email._key]
+        if (editor) {
+          try {
+            editor.getInstance().setMarkdown(email.corps)
+          } catch (editorErr) {
+            console.error('Erreur lors de la mise à jour de l\'éditeur:', editorErr)
+          }
+        }
+      })
+    })
+    
+    showIaModal.value = false
+    iaResponse.value = ''
+    toast.add({ title: `${newEmails.length} email(s) générés`, color: 'green' })
+  } catch (err) {
+    toast.add({ title: 'YAML invalide', description: err.message, color: 'red' })
+  }
+}
+
+// ── ChatGPT modal (par email) ─────────────────────────────────
+function openChatGptModal(idx) {
+  chatGptEmailIdx.value = idx
+  chatGptResponse.value = ''
+  showChatGptModal.value = true
+}
+
+async function copyChatGptPrompt() {
+  const idx = chatGptEmailIdx.value
+  const email = emailsSorted.value[idx]
+  const emailsPrecedents = emailsSorted.value
+    .slice(0, idx)
+    .map((e, i) => `Email ${i + 1} (J+${e.delai}) : ${e.objet}`)
+    .join('\n')
+  const vars = VARIABLES.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
+  const prompt = `Rédige un email de relance de facture impayée pour le secteur immobilier.${emailsPrecedents ? `\nEmails précédents :\n${emailsPrecedents}\n` : ''}
+Email ${idx + 1} (J+${email?.delai ?? 0}) - Objet prévu : ${email?.objet || '...'}
+Variables disponibles : ${vars}
+
+IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet) :
+
+# Titre de l'email
+
+Bonjour [[payeur_nom]],
+
+Votre facture [[nfacture]] est en retard.
+
+[Lien de paiement]([[lien_paiement]])
+
+## Détails du paiement
+
+| Facture | Date d'échéance | Montant TTC | Reste à payer |
+|---------|-----------------|-------------|---------------|
+| [[nfacture]] | [[date_echeance]] | [[montant_total]] € | [[reste_a_payer]] € |
+
+Cordialement,
+[[apporteur_nom]]
+`
+  await copyToClipboard(prompt)
+}
+
+function insererReponseChatGpt() {
+  const idx = chatGptEmailIdx.value
+  const email = emailsSorted.value[idx]
+  if (email) {
+    // Use setMarkdown instead of direct HTML assignment
+    const editor = editorRefs[email._key]
+    if (editor) {
+      try {
+        editor.getInstance().setMarkdown(chatGptResponse.value)
+        // Also update the email.corps with the HTML version
+        email.corps = editor.getInstance().getHTML()
+      } catch (editorErr) {
+        console.error('Erreur lors de la mise à jour de l\'éditeur:', editorErr)
+        // Fallback to direct assignment if setMarkdown fails
+        email.corps = chatGptResponse.value
+      }
+    } else {
+      // Fallback if editor not available
+      email.corps = chatGptResponse.value
+    }
+  }
+  showChatGptModal.value = false
+  chatGptResponse.value = ''
+}
+
+// ── SMTP Drawer ────────────────────────────────────────────────
+function onSmtpSaved(profile) {
+  smtpProfiles.value.push(profile)
+  // Auto-select on the email that triggered creation
+  if (smtpCreateForEmailKey.value) {
+    const email = emails.value.find(e => e._key === smtpCreateForEmailKey.value)
+    if (email) email.smtp = profile.id
+  }
+  smtpCreateForEmailKey.value = null
+}
+
+// ── Aperçu règles (debounce) ──────────────────────────────────
+async function calculerApercu() {
+  try {
+    const q = new $parse.Query('Impaye')
+    for (const regle of regles.value) {
+      if (!regle.champ || regle.valeur === '') continue
+      if (regle.operateur === 'egal') q.equalTo(regle.champ, regle.valeur)
+      if (regle.operateur === 'superieur') q.greaterThan(regle.champ, Number(regle.valeur))
+      if (regle.operateur === 'inferieur') q.lessThan(regle.champ, Number(regle.valeur))
+      if (regle.operateur === 'contient') q.contains(regle.champ, regle.valeur)
+    }
+    const [concernes, total] = await Promise.all([
+      q.count(),
+      new $parse.Query('Impaye').count(),
+    ])
+    apercuConcernes.value = concernes
+    apercuExclus.value = total - concernes
+  } catch {}
+}
+
+let debounceTimer = null
+watch(regles, () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(calculerApercu, 600)
+}, { deep: true })
+
+onMounted(() => {
+  charger()
+})
+
+onUnmounted(() => {
+  clearTimeout(debounceTimer)
+})
+</script>

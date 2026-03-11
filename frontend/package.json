@@ -1,9 +1,9 @@
 {
-  "name": "marki15-frontend",
+  "name": "marki-frontend",
   "version": "1.0.0",
-  "description": "Marki15 Frontend - Nuxt 3 Application",
+  "description": "Marki Frontend - Nuxt 4 Application",
   "scripts": {
-    "dev": "nuxt dev --port 5001",
+    "dev": "nuxt dev --port 5000 --host 0.0.0.0",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -14,16 +14,23 @@
     "parse": "^3.3.0"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/vue3": "^6.1.20",
     "@nuxt/ui": "^4.5.1",
     "@pinia/nuxt": "^0.11.3",
-    "pinia": "^2.1.7",
-    "tailwindcss": "^4.2.1"
+    "@toast-ui/vue-editor": "^3.2.3",
+    "chart.js": "^4.5.1",
+    "pinia": "^3.0.4",
+    "tailwindcss": "^4.2.1",
+    "vue-chartjs": "^5.3.3"
   },
   "keywords": [
     "nuxt",
     "frontend",
-    "marki15"
+    "marki"
   ],
-  "author": "Marki15 Team",
+  "author": "Marki Team",
   "license": "MIT"
 }

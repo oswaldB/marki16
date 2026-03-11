@@ -312,6 +312,6 @@ if (import.meta.dev && !import.meta.nitro && import.meta.hot) {
 }
 /** client-end **/
 
-import cfg0 from "/home/oswald/marki16/frontend/app.config.ts"
+import cfg0 from "/home/oswald/Desktop/marki16/frontend/app/app.config.ts"
 
 export default /*@__PURE__*/ defuFn(cfg0, inlineConfig)

@@ -30,7 +30,7 @@ export { requestIdleCallback, cancelIdleCallback } from '#app/compat/idle-callba
 export { setInterval } from '#app/compat/interval';
 export { definePageMeta } from '../node_modules/nuxt/dist/pages/runtime/composables';
 export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
-export { useAuthStore } from '../stores/auth';
+export { useDynamicOptions } from '../app/composables/useDynamicOptions';
 export { defineLocale, extendLocale } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineLocale';
 export { extractShortcuts, defineShortcuts } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineShortcuts';
 export { useFileUpload } from '../node_modules/@nuxt/ui/dist/runtime/composables/useFileUpload';
@@ -48,5 +48,7 @@ export { fieldGroupInjectionKey, useFieldGroup } from '../node_modules/@nuxt/ui/
 export { formOptionsInjectionKey, formBusInjectionKey, formStateInjectionKey, formFieldInjectionKey, inputIdInjectionKey, formInputsInjectionKey, formLoadingInjectionKey, formErrorsInjectionKey, useFormField } from '../node_modules/@nuxt/ui/dist/runtime/composables/useFormField';
 export { localeContextInjectionKey, useLocale } from '../node_modules/@nuxt/ui/dist/runtime/composables/useLocale';
 export { portalTargetInjectionKey, usePortal } from '../node_modules/@nuxt/ui/dist/runtime/composables/usePortal';
+export { useAuthStore } from '../app/stores/auth';
 export { useColorMode } from '../node_modules/@nuxtjs/color-mode/dist/runtime/composables';
+export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
 export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

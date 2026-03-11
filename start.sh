@@ -27,6 +27,14 @@ port_in_use() {
 # Arrêter les serveurs existants
 echo "🔄 Arrêt des serveurs existants..."
 
+# Arrêter Caddy
+CADDY_PIDS=$(pgrep -f "caddy" 2>/dev/null)
+if [ -n "$CADDY_PIDS" ]; then
+    echo "   Arrêt de Caddy (PIDs: $CADDY_PIDS)"
+    sudo caddy stop 2>/dev/null || kill $CADDY_PIDS 2>/dev/null
+    sleep 2
+fi
+
 # Arrêter le backend
 BACKEND_PIDS=$(pgrep -f "node server.js" 2>/dev/null)
 if [ -n "$BACKEND_PIDS" ]; then
@@ -63,8 +71,8 @@ if port_in_use 1555; then
     fi
 fi
 
-if port_in_use 5001; then
-    echo "⚠️  Le port 5001 est déjà utilisé"
+if port_in_use 5000; then
+    echo "⚠️  Le port 5000 est déjà utilisé"
     read -p "   Voulez-vous continuer quand même ? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -114,13 +122,13 @@ npm run dev > ../frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "   Frontend démarré (PID: $FRONTEND_PID)"
 echo "   📝 Logs: frontend.log"
-echo "   🌐 URL: http://localhost:5001"
+echo "   🌐 URL: http://localhost:5000"
 
 # Attendre que le frontend soit prêt
 sleep 8
 
 # Vérifier que le frontend répond
-if curl -s http://localhost:5001 > /dev/null; then
+if curl -s http://localhost:5000 > /dev/null; then
     echo "   ✅ Frontend est opérationnel"
 else
     echo "   ⚠️  Frontend ne répond pas encore (peut prendre plus de temps)"
@@ -129,14 +137,33 @@ fi
 # Retour à la racine
 cd ..
 
+# Démarrer Caddy
+echo "🌐 Démarrage de Caddy..."
+if command -v caddy &> /dev/null; then
+    sudo caddy start --config ./Caddyfile
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Caddy démarré"
+        echo "   🌐 Frontend: https://dev.markidiags.com"
+        echo "   🌐 API: https://dev.api.markidiags.com:8444/parse"
+    else
+        echo "   ⚠️  Impossible de démarrer Caddy"
+    fi
+else
+    echo "   ⚠️  Caddy n'est pas installé"
+fi
+
 echo ""
 echo "===================================="
 echo "🎉 Serveurs démarrés avec succès!"
 echo ""
 echo "📋 Résumé:"
 echo "   Backend:  http://localhost:1555/parse"
-echo "   Frontend: http://localhost:5001"
+echo "   Frontend: http://localhost:5000"
 echo "   Health:   http://localhost:1555/healthy"
+echo ""
+echo "🌐 Avec Caddy (si installé):"
+echo "   Frontend: https://dev.markidiags.com"
+echo "   API:      https://dev.api.markidiags.com:8444/parse"
 echo ""
 echo "📝 Commandes utiles:"
 echo "   ./start.sh          - Démarrer les serveurs"
@@ -169,7 +196,7 @@ while true; do
         echo "⚠️  Backend ne répond plus"
     fi
     
-    if ! curl -s http://localhost:5001 > /dev/null; then
+    if ! curl -s http://localhost:5000 > /dev/null; then
         echo "⚠️  Frontend ne répond plus"
     fi
 done

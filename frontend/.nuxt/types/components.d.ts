@@ -14,7 +14,13 @@ type HydrationStrategies = {
 type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }> & T
 
 interface _GlobalComponents {
-  NaiveTest: typeof import("../../components/NaiveTest.vue")['default']
+  DrawerAssignSequence: typeof import("../../app/components/DrawerAssignSequence.vue")['default']
+  ImpayeDrawerPdf: typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']
+  NaiveTest: typeof import("../../app/components/NaiveTest.vue")['default']
+  PdfIframe: typeof import("../../app/components/PdfIframe.vue")['default']
+  RelanceDrawer: typeof import("../../app/components/RelanceDrawer.vue")['default']
+  SmtpDrawer: typeof import("../../app/components/SmtpDrawer.vue")['default']
+  ToastuiEditor: typeof import("../../app/components/ToastuiEditor.vue")['default']
   UColorModeAvatar: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeAvatar.vue")['default']
   UColorModeButton: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeButton.vue")['default']
   UColorModeImage: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeImage.vue")['default']
@@ -162,7 +168,13 @@ interface _GlobalComponents {
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
-  LazyNaiveTest: LazyComponent<typeof import("../../components/NaiveTest.vue")['default']>
+  LazyDrawerAssignSequence: LazyComponent<typeof import("../../app/components/DrawerAssignSequence.vue")['default']>
+  LazyImpayeDrawerPdf: LazyComponent<typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']>
+  LazyNaiveTest: LazyComponent<typeof import("../../app/components/NaiveTest.vue")['default']>
+  LazyPdfIframe: LazyComponent<typeof import("../../app/components/PdfIframe.vue")['default']>
+  LazyRelanceDrawer: LazyComponent<typeof import("../../app/components/RelanceDrawer.vue")['default']>
+  LazySmtpDrawer: LazyComponent<typeof import("../../app/components/SmtpDrawer.vue")['default']>
+  LazyToastuiEditor: LazyComponent<typeof import("../../app/components/ToastuiEditor.vue")['default']>
   LazyUColorModeAvatar: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeAvatar.vue")['default']>
   LazyUColorModeButton: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeButton.vue")['default']>
   LazyUColorModeImage: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeImage.vue")['default']>

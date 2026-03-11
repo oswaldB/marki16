@@ -86,6 +86,26 @@ else
     echo "   Aucun Parse Server en cours d'exécution"
 fi
 
+# Arrêter Caddy
+echo "🌐 Arrêt de Caddy..."
+CADDY_PIDS=$(pgrep -f "caddy" 2>/dev/null)
+if [ -n "$CADDY_PIDS" ]; then
+    echo "   Trouvé Caddy PIDs: $CADDY_PIDS"
+    sudo caddy stop 2>/dev/null || kill $CADDY_PIDS 2>/dev/null
+    sleep 2
+    
+    # Vérifier si les processus sont toujours en cours
+    for PID in $CADDY_PIDS; do
+        if kill -0 $PID 2>/dev/null; then
+            echo "   Forçant l'arrêt du PID $PID..."
+            kill -9 $PID 2>/dev/null
+        fi
+    done
+    echo "   ✅ Caddy arrêté"
+else
+    echo "   Aucun Caddy en cours d'exécution"
+fi
+
 echo ""
 echo "===================================="
 echo "✅ Tous les serveurs ont été arrêtés"

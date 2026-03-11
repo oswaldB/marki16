@@ -18,10 +18,10 @@
         "./types/nitro-imports"
       ],
       "~/*": [
-        "../*"
+        "../app/*"
       ],
       "@/*": [
-        "../*"
+        "../app/*"
       ],
       "~~/*": [
         "../*"
@@ -147,6 +147,7 @@
     "../node_modules/@nuxt/fonts/node_modules",
     "../node_modules/@nuxtjs/color-mode/node_modules",
     "../node_modules/@nuxt/ui/node_modules",
+    "../node_modules/@pinia/nuxt/node_modules",
     "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
     "../dist"

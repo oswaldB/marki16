@@ -1,7 +1,7 @@
 
 import type { AppConfigInput, CustomAppConfig } from 'nuxt/schema'
 import type { Defu } from 'defu'
-import cfg0 from "../../app.config"
+import cfg0 from "../../app/app.config"
 
 declare global {
   const defineAppConfig: <C extends AppConfigInput> (config: C) => C

@@ -1,37 +1,36 @@
 ## 1. Dépendances & Configuration
 
-- [ ] 1.1 Ajouter `pg` (^8) à `backend/package.json` et lancer `npm install`
-- [ ] 1.2 Vérifier que `EXTERNAL_DB_URI` est présent dans `.env` (connexion PostgreSQL)
-- [ ] 1.3 Documenter dans le code le mapping colonnes PostgreSQL → champs Parse
+- [x] 1.1 Ajouter `pg` (^8), `ssh2-sftp-client` (^9) et `node-cron` (^3) à `backend/package.json` et lancer `npm install`
+- [x] 1.2 Vérifier que `EXTERNAL_DB_URI`, `FTP_HOST`, `FTP_PORT`, `FTP_USERNAME`, `FTP_PASSWORD` sont présents dans `.env`
 
-## 2. Cloud Job — Sync Contacts
+## 2. Module de sync — syncImpayes.js
 
-- [ ] 2.1 Créer `backend/cloud/jobs/syncContacts.js` : connexion pg, query contacts, upsert Parse `Contact` (source: db_externe, externe_id)
-- [ ] 2.2 Respecter la règle : ne pas écraser `email`/`telephone` si déjà renseignés dans Parse
-- [ ] 2.3 Enregistrer le job dans `cloud/main.js` via `Parse.Cloud.job('syncContacts', ...)`
-- [ ] 2.4 Tester manuellement via le Parse Dashboard (Jobs > Run)
+- [x] 2.1 Créer `backend/cloud/jobs/syncImpayes.js` : fonction pure exportée qui exécute la requête SQL complète (GcoPiece + Dossier + Interlocuteurs) et retourne `{ impayes, contacts, errors }`
+- [x] 2.2 Ajouter `payeur_id_externe` et `apporteur_id_externe` à la requête SQL (`MAX(CASE WHEN role='Payeur' THEN iloc."idInterlocuteur" END)`)
+- [x] 2.3 Pour chaque ligne : upsert `Contact` payeur (via `payeur_id_externe`) puis `Contact` apporteur (via `apporteur_id_externe`) si présent
+- [x] 2.4 Respecter la règle : ne pas écraser `email`/`telephone` si déjà renseignés dans Parse
+- [x] 2.5 Upsert `Impaye` via `externe_id = nfacture`, lier au `Contact` payeur via pointer
+- [x] 2.6 Ne pas écraser `statut` si différent de `impaye` (modification manuelle)
 
-## 3. Cloud Job — Sync Impayés
+## 3. Cloud Function — syncNow
 
-- [ ] 3.1 Créer `backend/cloud/jobs/syncImpayes.js` : query factures, upsert Parse `Impaye` (source: db_externe, externe_id)
-- [ ] 3.2 Lier chaque `Impaye` à son `Contact` payeur via pointer
-- [ ] 3.3 Ne pas écraser `statut` si différent de `impayé` (modification manuelle)
-- [ ] 3.4 Enregistrer le job dans `cloud/main.js` et tester via le Dashboard
+- [x] 3.1 Créer `Parse.Cloud.define('syncNow', ...)` dans `cloud/main.js` : appelle le module `syncImpayes.js` et retourne le résumé
+- [x] 3.2 Ajouter un flag en mémoire (`isSyncing`) pour éviter les exécutions concurrentes
+- [x] 3.3 Vérifier l'authentification de l'appelant (`request.user` obligatoire)
 
-## 4. Cloud Function — syncNow
+## 4. Cron horaire
 
-- [ ] 4.1 Créer la Cloud Function `syncNow` dans `cloud/main.js` : exécute syncContacts + syncImpayes séquentiellement
-- [ ] 4.2 Ajouter un flag en mémoire (`isSyncing`) pour éviter les exécutions concurrentes
-- [ ] 4.3 Retourner le résumé `{ contactsSynced, impayes Synced, errors }`
-- [ ] 4.4 Vérifier l'authentification de l'appelant (`request.user` obligatoire)
+- [x] 4.1 Ajouter `node-cron` dans `server.js` : `cron.schedule('0 * * * *', syncImpayes)` après démarrage de Parse Server
+- [ ] 4.2 Vérifier dans les logs que le cron se déclenche bien toutes les heures
 
-## 5. Cron horaire Parse
+## 5. Endpoint proxy PDF
 
-- [ ] 5.1 Configurer le scheduler Parse dans `server.js` pour exécuter `syncContacts` et `syncImpayes` toutes les heures
-- [ ] 5.2 Vérifier l'apparition des jobs dans le Parse Dashboard > Jobs
+- [x] 5.1 Créer `GET /api/pdf/:impayelId` dans `server.js` : lire `Impaye.url_pdf`, ouvrir connexion SFTP, streamer le fichier, fermer la connexion
+- [x] 5.2 Retourner 404 si l'impayé n'existe pas ou si `url_pdf` est null
+- [ ] 5.3 Tester manuellement avec un impayé connu
 
 ## 6. Frontend — Bouton Synchroniser
 
-- [ ] 6.1 Créer `frontend/pages/contacts.vue` avec le bouton "Synchroniser tous"
-- [ ] 6.2 Appeler `$parse.Cloud.run('syncNow')` au clic, afficher un état de chargement
-- [ ] 6.3 Afficher une notification de succès (ex. "42 contacts synchronisés") ou d'erreur
+- [x] 6.1 Créer `frontend/pages/contacts.vue` avec le bouton "Synchroniser"
+- [x] 6.2 Appeler `$parse.Cloud.run('syncNow')` au clic, afficher un état de chargement
+- [x] 6.3 Afficher une notification de succès (ex. "42 impayés synchronisés") ou d'erreur
