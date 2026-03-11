@@ -150,15 +150,16 @@ async function createConsolidatedRelance(groupe) {
     scenarios[0] ||
     {};
 
-  console.log(`[optimizeRelances] Scénario utilisé pour email_index=${emailIndex}: format=${scenario.format}, smtp=${scenario.smtp}`);
+  // SMTP : priorité scenario.smtp, fallback emailDef.smtp
+  const smtpId = scenario.smtp || emailDef.smtp || null;
+  console.log(`[optimizeRelances] email_index=${emailIndex} format=${scenario.format} smtpId=${smtpId}`);
 
-  // Charger le profil SMTP du scénario
   let smtpProfil = null;
-  if (scenario.smtp) {
+  if (smtpId) {
     try {
-      smtpProfil = await new Parse.Query('SmtpProfile').get(scenario.smtp, { useMasterKey: true });
+      smtpProfil = await new Parse.Query('SmtpProfile').get(smtpId, { useMasterKey: true });
     } catch (e) {
-      console.warn(`[optimizeRelances] SmtpProfile ${scenario.smtp} introuvable:`, e.message);
+      console.warn(`[optimizeRelances] SmtpProfile ${smtpId} introuvable:`, e.message);
     }
   }
 
@@ -182,13 +183,6 @@ async function createConsolidatedRelance(groupe) {
   consolidated.set('manuelle',    false);
   consolidated.set('optimisee',   true);
   if (smtpProfil) consolidated.set('smtpProfil', smtpProfil);
-
-  // Tableau de pointers vers les impayés
-  consolidated.set('impayes', groupe.map(r => {
-    const impaye = r.get('impaye');
-    if (!impaye) throw new Error(`Relance ${r.id} n'a pas de champ impaye`);
-    return { __type: 'Pointer', className: 'Impaye', objectId: impaye.id };
-  }));
 
   // Métadonnées de traçabilité
   consolidated.set('metadata', {

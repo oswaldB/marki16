@@ -297,22 +297,7 @@ Parse.Cloud.beforeDelete('Sequence', async (request) => {
   if (relances.length) await Parse.Object.saveAll(relances, { useMasterKey: true });
 });
 
-// ─── Hook : annuler les relances si impayé passé à payé ──────────────────────
-
-Parse.Cloud.afterSave('Impaye', async (request) => {
-  const impaye = request.object;
-  const original = request.original;
-  if (impaye.get('statut') === 'payé' && original?.get('statut') !== 'payé') {
-    const q = new Parse.Query('Relance');
-    q.equalTo('impaye', impaye);
-    q.equalTo('statut', 'pending');
-    const relances = await q.find({ useMasterKey: true });
-    for (const r of relances) r.set('statut', 'annulé');
-    if (relances.length) await Parse.Object.saveAll(relances, { useMasterKey: true });
-  }
-});
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+/// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const MOIS_FR = [
   'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
