@@ -419,9 +419,40 @@ async function syncImpayes({ trigger = 'cron' } = {}) {
         await impaye.save(null, { useMasterKey: true });
         if (isNewImpaye) stats.impayes_created++; else stats.impayes_updated++;
 
+        // Log individuel pour cet impayé
+        try {
+          const activite = new Parse.Object('Activite');
+          activite.set('type', 'sync_impaye');
+          activite.set('operation', isNewImpaye ? 'created' : 'updated');
+          activite.set('nfacture', row.nfacture);
+          activite.set('impaye_id', impaye.id);
+          activite.set('montant', row.resteapayer != null ? Number(row.resteapayer) : null);
+          activite.set('payeur_nom', row.payeur_nom || null);
+          activite.set('date_piece', row.datepiece ? new Date(row.datepiece) : null);
+          activite.set('trigger', trigger);
+          activite.set('timestamp', new Date());
+          await activite.save(null, { useMasterKey: true });
+        } catch (logErr) {
+          console.error(`[syncImpayes] Erreur log activite pour ${row.nfacture}:`, logErr.message);
+        }
+
       } catch (err) {
         console.error(`[syncImpayes] Erreur nfacture=${row.nfacture}:`, err.message);
         stats.errors.push({ nfacture: row.nfacture, error: err.message });
+
+        // Log individuel pour l'erreur
+        try {
+          const activite = new Parse.Object('Activite');
+          activite.set('type', 'sync_impaye');
+          activite.set('operation', 'error');
+          activite.set('nfacture', row.nfacture);
+          activite.set('error_message', err.message);
+          activite.set('trigger', trigger);
+          activite.set('timestamp', new Date());
+          await activite.save(null, { useMasterKey: true });
+        } catch (logErr) {
+          console.error(`[syncImpayes] Erreur log activite erreur pour ${row.nfacture}:`, logErr.message);
+        }
       }
     }
 

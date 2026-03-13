@@ -1,0 +1,1 @@
+import{bn as s,a5 as a,a9 as r,bo as c}from"./CUQYlPAI.js";const d=s(async()=>{let e,t;const{$parse:n}=a();if(!n.User.current())return r("/login");try{if(!([e,t]=c(()=>n.Cloud.run("checkAdminRole")),e=await e,t(),e))return r("/")}catch{return r("/")}});export{d as default};

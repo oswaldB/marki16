@@ -210,6 +210,24 @@ Parse.Cloud.define('syncNow', async (request) => {
   }
 });
 
+// ─── verifyPaidInvoicesNow — vérification manuelle des paiements ────────────
+
+let isVerifying = false;
+
+Parse.Cloud.define('verifyPaidInvoicesNow', async (request) => {
+  if (!request.user) throw new Error('Authentification requise');
+  if (isVerifying) throw new Error('Une vérification est déjà en cours');
+
+  isVerifying = true;
+  try {
+    const verifyPaidInvoices = require('./jobs/verifyPaidInvoices');
+    const stats = await verifyPaidInvoices({ trigger: 'manual' });
+    return stats;
+  } finally {
+    isVerifying = false;
+  }
+});
+
 // ─── construireDestinataires ──────────────────────────────────────────────────
 // Remplace [[payeur_email]] et [[apporteur_email]] en concaténant l'email
 // de la personne morale et celui du contact personne physique si présent.

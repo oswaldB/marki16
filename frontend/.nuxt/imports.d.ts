@@ -30,7 +30,14 @@ export { requestIdleCallback, cancelIdleCallback } from '#app/compat/idle-callba
 export { setInterval } from '#app/compat/interval';
 export { definePageMeta } from '../node_modules/nuxt/dist/pages/runtime/composables';
 export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
+export { useContactEditor } from '../app/composables/useContactEditor';
+export { useContactsStoreComposable, useContactsEntitesComposable, useContactsParticuliersComposable, useContactsSyncComposable } from '../app/composables/useContactsStore';
 export { useDynamicOptions } from '../app/composables/useDynamicOptions';
+export { useIaSequence } from '../app/composables/useIaSequence';
+export { useImpayesStoreComposable } from '../app/composables/useImpayesStore';
+export { useLiensPaiement } from '../app/composables/useLiensPaiement';
+export { SCENARIO_FORMATS, VARIABLES, EXEMPLE_VARS, champOptions, operateurOptions, groupeLogiqueOptions, scenarioTabs, editorOptions, getScenario, getCurrentCorps, updateCorps, switchScenario, useSequenceEditor } from '../app/composables/useSequenceEditor';
+export { useSequenceRules } from '../app/composables/useSequenceRules';
 export { defineLocale, extendLocale } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineLocale';
 export { extractShortcuts, defineShortcuts } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineShortcuts';
 export { useFileUpload } from '../node_modules/@nuxt/ui/dist/runtime/composables/useFileUpload';
@@ -49,6 +56,8 @@ export { formOptionsInjectionKey, formBusInjectionKey, formStateInjectionKey, fo
 export { localeContextInjectionKey, useLocale } from '../node_modules/@nuxt/ui/dist/runtime/composables/useLocale';
 export { portalTargetInjectionKey, usePortal } from '../node_modules/@nuxt/ui/dist/runtime/composables/usePortal';
 export { useAuthStore } from '../app/stores/auth';
+export { useContactsStore } from '../app/stores/contactsStore';
+export { useImpayesStore } from '../app/stores/impayesStore';
 export { useColorMode } from '../node_modules/@nuxtjs/color-mode/dist/runtime/composables';
 export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
 export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

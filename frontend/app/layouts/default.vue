@@ -93,7 +93,9 @@ const navItems = [
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
   { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
+  { to: '/recalcitrants', label: 'Récalcitrants', icon: 'i-heroicons-exclamation-triangle' },
   { to: '/import-logs', label: 'Logs import', icon: 'i-heroicons-document-text' },
+  { to: '/activites', label: 'Activités', icon: 'i-heroicons-clock' },
 ]
 
 const settingsItems = [

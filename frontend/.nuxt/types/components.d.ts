@@ -14,13 +14,23 @@ type HydrationStrategies = {
 type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }> & T
 
 interface _GlobalComponents {
+  ContactDeleteModal: typeof import("../../app/components/ContactDeleteModal.vue")['default']
+  ContactsDrawer: typeof import("../../app/components/ContactsDrawer.vue")['default']
+  ContactsEntitesTable: typeof import("../../app/components/ContactsEntitesTable.vue")['default']
   DrawerAssignSequence: typeof import("../../app/components/DrawerAssignSequence.vue")['default']
+  DrawerLienPaiement: typeof import("../../app/components/DrawerLienPaiement.vue")['default']
   ImpayeDrawerPdf: typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']
+  ModalChatGptEmail: typeof import("../../app/components/ModalChatGptEmail.vue")['default']
+  ModalIaSequence: typeof import("../../app/components/ModalIaSequence.vue")['default']
   NaiveTest: typeof import("../../app/components/NaiveTest.vue")['default']
   PdfIframe: typeof import("../../app/components/PdfIframe.vue")['default']
   RelanceDrawer: typeof import("../../app/components/RelanceDrawer.vue")['default']
+  SequenceEmailCard: typeof import("../../app/components/SequenceEmailCard.vue")['default']
+  SequenceRulesSection: typeof import("../../app/components/SequenceRulesSection.vue")['default']
   SmtpDrawer: typeof import("../../app/components/SmtpDrawer.vue")['default']
   ToastuiEditor: typeof import("../../app/components/ToastuiEditor.vue")['default']
+  ToggleSwitch: typeof import("../../app/components/ToggleSwitch.vue")['default']
+  VariablesPicker: typeof import("../../app/components/VariablesPicker.vue")['default']
   UColorModeAvatar: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeAvatar.vue")['default']
   UColorModeButton: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeButton.vue")['default']
   UColorModeImage: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeImage.vue")['default']
@@ -168,13 +178,23 @@ interface _GlobalComponents {
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+  LazyContactDeleteModal: LazyComponent<typeof import("../../app/components/ContactDeleteModal.vue")['default']>
+  LazyContactsDrawer: LazyComponent<typeof import("../../app/components/ContactsDrawer.vue")['default']>
+  LazyContactsEntitesTable: LazyComponent<typeof import("../../app/components/ContactsEntitesTable.vue")['default']>
   LazyDrawerAssignSequence: LazyComponent<typeof import("../../app/components/DrawerAssignSequence.vue")['default']>
+  LazyDrawerLienPaiement: LazyComponent<typeof import("../../app/components/DrawerLienPaiement.vue")['default']>
   LazyImpayeDrawerPdf: LazyComponent<typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']>
+  LazyModalChatGptEmail: LazyComponent<typeof import("../../app/components/ModalChatGptEmail.vue")['default']>
+  LazyModalIaSequence: LazyComponent<typeof import("../../app/components/ModalIaSequence.vue")['default']>
   LazyNaiveTest: LazyComponent<typeof import("../../app/components/NaiveTest.vue")['default']>
   LazyPdfIframe: LazyComponent<typeof import("../../app/components/PdfIframe.vue")['default']>
   LazyRelanceDrawer: LazyComponent<typeof import("../../app/components/RelanceDrawer.vue")['default']>
+  LazySequenceEmailCard: LazyComponent<typeof import("../../app/components/SequenceEmailCard.vue")['default']>
+  LazySequenceRulesSection: LazyComponent<typeof import("../../app/components/SequenceRulesSection.vue")['default']>
   LazySmtpDrawer: LazyComponent<typeof import("../../app/components/SmtpDrawer.vue")['default']>
   LazyToastuiEditor: LazyComponent<typeof import("../../app/components/ToastuiEditor.vue")['default']>
+  LazyToggleSwitch: LazyComponent<typeof import("../../app/components/ToggleSwitch.vue")['default']>
+  LazyVariablesPicker: LazyComponent<typeof import("../../app/components/VariablesPicker.vue")['default']>
   LazyUColorModeAvatar: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeAvatar.vue")['default']>
   LazyUColorModeButton: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeButton.vue")['default']>
   LazyUColorModeImage: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/color-mode/ColorModeImage.vue")['default']>

@@ -91,8 +91,19 @@
 
             <!-- Facture → lien -->
             <template #nfacture-cell="{ row }">
+              <div v-if="row.original.impayes && row.original.impayes.length > 1" class="flex flex-wrap gap-1 text-sm font-mono">
+                <span v-for="(imp, index) in row.original.impayes" :key="imp.id">
+                  <NuxtLink
+                    :to="`/impayes/${imp.id}`"
+                    class="text-sky-700 hover:underline"
+                  >
+                    {{ imp.nfacture }}
+                  </NuxtLink>
+                  <span v-if="index < row.original.impayes.length - 1">, </span>
+                </span>
+              </div>
               <NuxtLink
-                v-if="row.original.impayelId"
+                v-else-if="row.original.impayelId"
                 :to="`/impayes/${row.original.impayelId}`"
                 class="text-sky-700 hover:underline text-sm font-mono"
               >
@@ -103,9 +114,19 @@
 
             <!-- Statut -->
             <template #statut-cell="{ row }">
-              <UBadge :color="STATUT_CONFIG[row.original.statut]?.color ?? 'neutral'" variant="subtle" size="xs">
-                {{ STATUT_CONFIG[row.original.statut]?.label ?? row.original.statut }}
-              </UBadge>
+              <div class="flex items-center gap-2">
+                <UBadge :color="STATUT_CONFIG[row.original.statut]?.color ?? 'neutral'" variant="subtle" size="xs">
+                  {{ STATUT_CONFIG[row.original.statut]?.label ?? row.original.statut }}
+                </UBadge>
+                <UButton
+                  v-if="row.original.statut === 'pending' || row.original.statut === 'échec' || row.original.statut === 'optimisee'"
+                  icon="i-heroicons-pencil-square"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  @click="ouvrirDrawer(row, false)"
+                />
+              </div>
             </template>
 
           </UTable>
@@ -169,7 +190,7 @@
                 <p class="text-xs text-gray-500 truncate">{{ row.to }}</p>
                 <div class="flex gap-1 pt-1">
                   <UButton
-                    v-if="row.statut === 'pending' || row.statut === 'échec'"
+                    v-if="row.statut === 'pending' || row.statut === 'échec' || row.statut === 'optimisee'"
                     icon="i-heroicons-pencil-square"
                     color="neutral"
                     variant="ghost"
@@ -405,6 +426,12 @@
               <UInput v-model="drawerTo" :disabled="drawerReadonly" class="w-full" />
             </div>
           </div>
+          
+          <!-- Case à cocher pour appliquer à tous les emails suivants -->
+          <div v-if="!drawerReadonly" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+            <UCheckbox v-model="applyToAllFollowing.value" />
+            <span class="text-sm text-gray-600">Appliquer ce destinataire à tous les emails suivants</span>
+          </div>
           <div>
             <label class="text-xs text-gray-500 mb-1 block">CC</label>
             <UInput v-model="drawerCc" :disabled="drawerReadonly" class="w-full" />
@@ -459,6 +486,9 @@
               <PdfIframe :impaye-id="imp.id" />
             </div>
           </div>
+          <div v-if="!relanceDrawer?.impayes || relanceDrawer?.impayes.length === 0" class="text-center py-4 text-gray-400 text-sm">
+            Aucun PDF disponible pour cette relance
+          </div>
 
         </div>
       </template>
@@ -477,10 +507,12 @@
 
 <script setup>
 import { h } from 'vue'
-import { UButton } from '#components'
+import { UButton, UCheckbox } from '#components'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
+import PdfIframe from '~/components/PdfIframe.vue'
+
 const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3').then(m => m.default ?? m))
 
 const { $parse } = useNuxtApp()
@@ -494,6 +526,7 @@ const sequences = ref([])
 const selection = ref([])
 const annulantGroupe = ref(false)
 const validantGroupe = ref(false)
+
 
 // Filtres
 const filtreStatut = ref('tous')
@@ -516,6 +549,8 @@ const savingDrawer = ref(false)
 const validantDrawer = ref(false)
 const editorDrawerRef = ref(null)
 const editorVisible = ref(false)
+const applyToAllFollowing = ref(false) // État de la case à cocher
+const originalToValue = ref('') // Valeur originale du champ To pour détecter les changements
 
 // Validation workflow
 const relanceCourante = ref(null)
@@ -543,10 +578,11 @@ const peutPasser = computed(() => {
 
 // ── Constants ──────────────────────────────────────────────────
 const STATUT_CONFIG = {
-  pending:  { label: 'En attente', color: 'neutral' },
-  'envoyé': { label: 'Envoyé',     color: 'green'   },
-  'échec':  { label: 'Échec',      color: 'red'     },
-  'annulé': { label: 'Annulé',     color: 'orange'  },
+  pending:   { label: 'En attente', color: 'neutral' },
+  'envoyé':  { label: 'Envoyé',     color: 'green'   },
+  'échec':   { label: 'Échec',      color: 'red'     },
+  'annulé':  { label: 'Annulé',     color: 'orange'  },
+  'optimisee': { label: 'Optimisée', color: 'purple' },
 }
 
 function sortableHeader(label) {
@@ -572,7 +608,27 @@ const colonnes = [
   { accessorKey: 'email_index', header: sortableHeader('Relance n°'), cell: ({ row }) => row.original.email_index != null ? `n° ${row.original.email_index + 1}` : '—' },
   { accessorKey: 'objet',       header: sortableHeader('Objet') },
   { accessorKey: 'to',          header: sortableHeader('Destinataire') },
-  { accessorKey: 'nfacture',    header: sortableHeader('Facture') },
+  {
+    accessorKey: 'nfacture',
+    header: sortableHeader('Facture'),
+    cell: ({ row }) => {
+      const r = row.original
+      
+      // Si plusieurs factures, afficher toutes les numéros de facture
+      if (r.impayes && r.impayes.length > 1) {
+        const invoiceNumbers = r.impayes.map(imp => imp.nfacture).join(', ')
+        return h('div', { class: 'text-sm font-mono' }, invoiceNumbers)
+      }
+      
+      if (r.impayelId) {
+        return h(NuxtLink, {
+          to: `/impayes/${r.impayelId}`,
+          class: 'text-sky-700 hover:underline text-sm font-mono'
+        }, r.nfacture)
+      }
+      return h('span', { class: 'text-sm text-gray-400' }, r.nfacture)
+    }
+  },
   { accessorKey: 'statut',      header: sortableHeader('Statut') },
   {
     id: 'actions',
@@ -582,12 +638,10 @@ const colonnes = [
       const r = row.original
       const btns = []
       if (r.statut === 'pending') {
-        btns.push(h(UButton, { icon: 'i-heroicons-pencil-square', color: 'neutral', variant: 'ghost', size: 'xs', onClick: () => ouvrirDrawer(r, false) }))
         btns.push(h(UButton, { icon: 'i-heroicons-trash', color: 'red', variant: 'ghost', size: 'xs', onClick: () => annulerRelance(r) }))
       } else if (r.statut === 'envoyé') {
         btns.push(h(UButton, { icon: 'i-heroicons-eye', color: 'neutral', variant: 'ghost', size: 'xs', onClick: () => ouvrirDrawer(r, true) }))
       } else if (r.statut === 'échec') {
-        btns.push(h(UButton, { icon: 'i-heroicons-pencil-square', color: 'neutral', variant: 'ghost', size: 'xs', onClick: () => ouvrirDrawer(r, false) }))
         btns.push(h(UButton, { icon: 'i-heroicons-arrow-path', color: 'sky', variant: 'ghost', size: 'xs', onClick: () => reessayerRelance(r) }))
       }
       return h('div', { class: 'flex items-center gap-1' }, btns)
@@ -651,19 +705,16 @@ const calendarOptions = computed(() => ({
   initialView: 'dayGridMonth',
   locale: 'fr',
   headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+  displayEventTime: false, // Masquer l'affichage de l'heure
   events: relancesFiltrees.value.map(r => {
-    // Trouver la date la plus récente parmi toutes les relances pour afficher tout sur un seul jour
-    const toutesLesDates = relancesFiltrees.value.map(r => new Date(r.dateEnvoi))
-    const dateLaPlusRecente = new Date(Math.max.apply(null, toutesLesDates))
-    
-    // Définir l'heure à 18h
-    const dateA18h = new Date(dateLaPlusRecente)
-    dateA18h.setHours(18, 0, 0, 0)
+    // Utiliser la date réelle de la relance sans heure spécifique
+    const dateRelance = new Date(r.dateEnvoi)
+    dateRelance.setHours(0, 0, 0, 0) // Réinitialiser l'heure à minuit
     
     return {
       id: r.id,
       title: (r.to?.split('@')[0] || '?') + ' — ' + (r.objet?.slice(0, 20) || ''),
-      start: dateA18h.toISOString(), // Utiliser start au lieu de date pour spécifier l'heure
+      start: dateRelance.toISOString(),
       backgroundColor: statutCalColor(r.statut),
       borderColor:     statutCalColor(r.statut),
       extendedProps: { row: r },
@@ -720,6 +771,7 @@ function parseRelance(r) {
     ? impayes.map(parseImpaye).filter(Boolean)
     : impaye ? [parseImpaye(impaye)] : []
 
+  // Toujours retourner une seule ligne, avec toutes les factures
   return {
     _parse:      r,
     id:          r.id,
@@ -731,10 +783,11 @@ function parseRelance(r) {
     statut:      r.get('statut') || 'pending',
     manuelle:    r.get('manuelle') || false,
     valide:      r.get('valide') !== false, // par défaut true si non défini
-    nfacture:    impayeliste.map(i => i.nfacture).join(', ') || '—',
-    impayelId:   impayeliste[0]?.id || null,
+    nfacture:    impayeliste.length > 0 ? impayeliste.map(imp => imp.nfacture).join(', ') : '—',
+    impayelId:   impayeliste.length > 0 ? impayeliste.map(imp => imp.id) : null,
     email_index: r.get('email_index') ?? null,
     impayes:     impayeliste,
+    isGrouped:   impayeliste.length > 1,
   }
 }
 
@@ -809,12 +862,27 @@ async function reessayerRelance(row) {
 async function annulerGroupe() {
   annulantGroupe.value = true
   try {
-    for (const row of selection.value) {
-      row._parse.set('statut', 'annulé')
-    }
-    await $parse.Object.saveAll(selection.value.map(r => r._parse))
-    for (const row of selection.value) row.statut = 'annulé'
-    toast.add({ title: `${selection.value.length} relance(s) annulée(s)`, color: 'green' })
+    // Grouper les relances par ID pour éviter les doublons
+    const relancesParId = {}
+    selection.value.forEach(row => {
+      if (!relancesParId[row.id]) {
+        relancesParId[row.id] = row
+      }
+    })
+    
+    const relancesAAnnuler = Object.values(relancesParId)
+    
+    await $parse.Object.saveAll(relancesAAnnuler.map(r => {
+      r._parse.set('statut', 'annulé')
+      return r._parse
+    }))
+    
+    // Mettre à jour le statut localement
+    relancesAAnnuler.forEach(r => {
+      r.statut = 'annulé'
+    })
+    
+    toast.add({ title: `${relancesAAnnuler.length} relance(s) annulée(s)`, color: 'green' })
     selection.value = []
   } catch (err) {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
@@ -826,17 +894,31 @@ async function annulerGroupe() {
 async function validerGroupe() {
   validantGroupe.value = true
   try {
-    const relancesAValider = selection.value.filter(r => !r.valide)
+    // Grouper les relances par ID pour éviter les doublons
+    const relancesParId = {}
+    selection.value.forEach(row => {
+      if (!relancesParId[row.id] && !row.valide) {
+        relancesParId[row.id] = row
+      }
+    })
+    
+    const relancesAValider = Object.values(relancesParId)
+    
     if (relancesAValider.length === 0) {
       toast.add({ title: 'Aucune relance à valider', color: 'yellow' })
       return
     }
 
-    for (const row of relancesAValider) {
-      row._parse.set('valide', true)
-      row.valide = true
-    }
-    await $parse.Object.saveAll(relancesAValider.map(r => r._parse))
+    await $parse.Object.saveAll(relancesAValider.map(r => {
+      r._parse.set('valide', true)
+      return r._parse
+    }))
+    
+    // Mettre à jour le statut localement
+    relancesAValider.forEach(r => {
+      r.valide = true
+    })
+    
     toast.add({ title: `${relancesAValider.length} relance(s) validée(s)`, color: 'green' })
     selection.value = []
   } catch (err) {
@@ -848,16 +930,22 @@ async function validerGroupe() {
 
 // ── Drawer ────────────────────────────────────────────────────
 function ouvrirDrawer(row, readonly) {
-  drawerRow.value = row
+  // Gérer les deux cas: row.original (vue tableau) ou row direct (vue calendrier)
+  const relance = row.original || row
+  
+  drawerRow.value = relance
   drawerReadonly.value = readonly
-  drawerDateEnvoi.value = toDateInput(row.dateEnvoi)
-  drawerTo.value = row.to
-  drawerCc.value = row.cc
-  drawerObjet.value = row.objet
-  drawerCorps.value = row.corps
+  drawerDateEnvoi.value = toDateInput(relance.dateEnvoi)
+  drawerTo.value = relance.to
+  drawerCc.value = relance.cc
+  drawerObjet.value = relance.objet
+  drawerCorps.value = relance.corps
+  originalToValue.value = relance.to // Stocker la valeur originale
+  applyToAllFollowing.value = false // Réinitialiser l'état de la case à cocher
   editorVisible.value = false
   showDrawer.value = true
   console.log('[ouvrirDrawer] drawerCorps:', drawerCorps.value?.slice(0, 80))
+  console.log('[ouvrirDrawer] impayes:', relance.impayes)
   // Attendre la fin de l'animation du slideover avant de monter l'éditeur
   setTimeout(() => { editorVisible.value = true }, 300)
 }
@@ -865,7 +953,9 @@ function ouvrirDrawer(row, readonly) {
 async function enregistrerDrawer() {
   savingDrawer.value = true
   try {
-    const r = drawerRow.value._parse
+    const row = drawerRow.value
+    const r = row._parse
+    
     r.set('dateEnvoi', drawerDateEnvoi.value ? new Date(drawerDateEnvoi.value) : r.get('dateEnvoi'))
     r.set('to', drawerTo.value)
     r.set('cc', drawerCc.value)
@@ -874,6 +964,12 @@ async function enregistrerDrawer() {
       try { r.set('corps', editorDrawerRef.value.getInstance().getHTML()) } catch {}
     }
     await r.save()
+    
+    // Si la case est cochée, appliquer le changement à tous les emails suivants
+    if (applyToAllFollowing.value) {
+      await appliquerToAuxRelancesSuivantes(row, drawerTo.value)
+    }
+    
     showDrawer.value = false
     toast.add({ title: 'Relance enregistrée', color: 'green' })
     await charger()
@@ -884,12 +980,49 @@ async function enregistrerDrawer() {
   }
 }
 
+// Fonction pour appliquer le changement de destinataire à toutes les relances suivantes
+async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
+  try {
+    // Trouver toutes les relances avec la même facture (impaye) qui ont une date postérieure
+    const relancesAAppliquer = relances.value.filter(r => {
+      // Vérifier si c'est une relance suivante (même facture, date postérieure)
+      const memeFacture = r.impayelId && relanceCourante.impayelId && 
+                         r.impayelId.some(id => relanceCourante.impayelId.includes(id))
+      const datePosterieure = new Date(r.dateEnvoi) > new Date(relanceCourante.dateEnvoi)
+      const differentId = r.id !== relanceCourante.id
+      
+      return memeFacture && datePosterieure && differentId
+    })
+    
+    if (relancesAAppliquer.length > 0) {
+      // Mettre à jour toutes les relances suivantes
+      const objetsAEnregistrer = relancesAAppliquer.map(r => {
+        r._parse.set('to', nouveauTo)
+        r.to = nouveauTo // Mettre à jour localement
+        return r._parse
+      })
+      
+      await $parse.Object.saveAll(objetsAEnregistrer)
+      
+      toast.add({ 
+        title: `Destinataire appliqué à ${relancesAAppliquer.length} relance(s) suivante(s)`, 
+        color: 'blue'
+      })
+    }
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: 'Échec de la mise à jour des relances suivantes: ' + err.message, color: 'red' })
+  }
+}
+
 async function validerRelanceDrawer() {
   validantDrawer.value = true
   try {
-    const r = drawerRow.value._parse
+    const row = drawerRow.value
+    const r = row._parse
+    
     r.set('valide', true)
-    drawerRow.value.valide = true
+    row.valide = true
+    
     await r.save()
     showDrawer.value = false
     toast.add({ title: 'Relance validée', color: 'green' })
@@ -911,9 +1044,12 @@ async function validerRelanceWorkflow() {
   
   validantWorkflow.value = true
   try {
-    const r = relanceCourante.value._parse
+    const row = relanceCourante.value
+    const r = row._parse
+    
     r.set('valide', true)
-    relanceCourante.value.valide = true
+    row.valide = true
+    
     await r.save()
     
     toast.add({ title: 'Relance validée !', color: 'green' })
@@ -953,6 +1089,14 @@ function passerARelanceSuivante() {
 watch(vue, (newVue) => {
   if (newVue === 'validation' && relancesAValider.value.length > 0) {
     relanceCourante.value = relancesAValider.value[0]
+  }
+})
+
+// Watcher pour détecter les changements dans le champ To
+watch(drawerTo, (newVal, oldVal) => {
+  if (newVal !== originalToValue.value && newVal !== oldVal) {
+    // Le champ To a été modifié
+    // La case à cocher est maintenant toujours visible en mode édition
   }
 })
 

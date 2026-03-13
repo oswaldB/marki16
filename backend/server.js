@@ -352,13 +352,13 @@ app.post('/smtp/test', express.json(), async (req, res) => {
     console.log(`Parse Dashboard available at http://localhost:${PORT}/parse-dashboard`);
     console.log(`Health check available at http://localhost:${PORT}/healthy`);
 
-    // Cron horaire : sync impayés + contacts depuis la DB externe
-    cron.schedule('0 * * * *', async () => {
+    // Cron quotidien : sync impayés + contacts depuis la DB externe
+    cron.schedule('0 2 * * *', async () => {
       console.log('[cron] Démarrage sync impayés...');
       const stats = await syncImpayes({ trigger: 'cron' });
       console.log(`[cron] Sync terminée:`, stats);
     });
-    console.log('[cron] Scheduler sync impayés actif (toutes les heures)');
+    console.log('[cron] Scheduler sync impayés actif (tous les jours à 2h)');
 
     // Cron quotidien 18h : envoi des relances dues
     cron.schedule('0 18 * * *', async () => {
@@ -398,5 +398,18 @@ app.post('/smtp/test', express.json(), async (req, res) => {
       }
     });
     console.log('[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)');
+
+    // Cron horaire : vérification des factures payées (à HH:05)
+    const verifyPaidInvoices = require('./cloud/jobs/verifyPaidInvoices');
+    cron.schedule('5 * * * *', async () => {
+      console.log('[cron] Vérification des factures payées...');
+      try {
+        const stats = await verifyPaidInvoices({ trigger: 'cron' });
+        console.log(`[cron] Vérification factures payées terminée:`, stats);
+      } catch (error) {
+        console.error('[cron] Erreur vérification factures payées:', error);
+      }
+    });
+    console.log('[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)');
   });
 })();
