@@ -20,7 +20,6 @@
         v-model="searchNfacture"
         placeholder="Rechercher par n° facture..."
         class="w-64"
-        @input="debouncedSearch"
       />
     </div>
 
@@ -184,11 +183,6 @@ const filteredActivites = computed(() => {
     )
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 })
-
-// Recherche avec debounce
-const debouncedSearch = useDebounce(() => {
-  // Le filtrage est déjà réactif via computed
-}, 300)
 
 async function chargerActivites() {
   loading.value = true

@@ -2,9 +2,22 @@
   <div class="p-6 space-y-6">
 
     <!-- ── Header ── -->
-    <div>
-      <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      <p class="text-sm text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
+      </div>
+      <!-- Bouton Synchroniser -->
+      <UButton
+        :loading="syncing"
+        :disabled="syncing"
+        color="neutral"
+        variant="outline"
+        icon="i-heroicons-arrow-path"
+        @click="lancerSyncImpayes"
+      >
+        Synchroniser
+      </UButton>
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
@@ -125,13 +138,13 @@
         <UCard>
           <template #header>
             <div class="flex items-center gap-1.5">
-              <p class="text-sm font-semibold text-gray-700">Montant impayé par mois (12 mois + avant)</p>
-              <UTooltip text="Somme du champ 'reste à payer' pour les impayés dont la date de pièce est dans le mois">
+              <p class="text-sm font-semibold text-gray-700">Montant facturé vs reste à payer par mois (12 mois + avant)</p>
+              <UTooltip text="Montant total TTC (bleu + orange) et reste à payer (orange) pour les factures dont la date de pièce est dans le mois">
                 <UIcon name="i-heroicons-information-circle" class="size-4 text-gray-400" />
               </UTooltip>
             </div>
           </template>
-          <div class="h-52">
+          <div class="h-64">
             <Bar :data="barData" :options="barOptions" />
           </div>
         </UCard>
@@ -161,7 +174,7 @@
               <div class="min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">{{ rel.payeur_nom }}</p>
                 <p class="text-xs text-gray-500">{{ rel.nfacture }} · {{ rel.sequence_nom }}</p>
-                <p class="text-xs text-gray-400">{{ rel.date }} · Relance {{ rel.numero }}</p>
+                <p class="text-xs text-gray-400">{{ rel.date }} · {{ rel.heure }} · Relance {{ rel.numero }}</p>
               </div>
             </div>
           </div>
@@ -274,6 +287,7 @@ const { $parse } = useNuxtApp()
 
 // ── State ──────────────────────────────────────────────────────
 const loading = ref(true)
+const syncing = ref(false)
 
 const kpi = ref({
   impayes_actifs:    0,
@@ -283,7 +297,10 @@ const kpi = ref({
 })
 
 const statutCounts = ref({ impaye: 0, en_cours: 0, paye: 0 })
-const montantsMois = ref([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+const montantsMois = ref({
+  ttc: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  reste: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+})
 const relancesJour = ref([])
 const impayes_recents = ref([])
 const relancesAValider = ref([])
@@ -310,7 +327,7 @@ async function chargerKpi() {
   const today = endOfDay()
 
   const [actifs, total_count, paye_count, relances, contacts_sans_email] = await Promise.all([
-    new $parse.Query('Impaye').notEqualTo('statut', 'payé').count(),
+    new $parse.Query('Impaye').notEqualTo('statut', 'payé').doesNotExist('solde').count(),
     new $parse.Query('Impaye').count(),
     new $parse.Query('Impaye').equalTo('statut', 'payé').count(),
     new $parse.Query('Relance')
@@ -322,9 +339,10 @@ async function chargerKpi() {
       .count(),
   ])
 
-  // Montant total impayé (somme des actifs, chargés en batch)
+  // Montant total impayé (somme des actifs non soldés, chargés en batch)
   const qMontant = new $parse.Query('Impaye')
   qMontant.notEqualTo('statut', 'payé')
+  qMontant.doesNotExist('solde')
   qMontant.select('reste_a_payer')
   qMontant.limit(1000)
   const impayes_actifs = await qMontant.find()
@@ -340,16 +358,19 @@ async function chargerKpi() {
 }
 
 async function chargerStatuts() {
-  const [impaye, en_cours, paye] = await Promise.all([
-    new $parse.Query('Impaye').equalTo('statut', 'impaye').count(),
-    new $parse.Query('Impaye').equalTo('statut', 'en cours').count(),
+  const [impaye, en_cours, paye, solde] = await Promise.all([
+    new $parse.Query('Impaye').equalTo('statut', 'impaye').doesNotExist('solde').count(),
+    new $parse.Query('Impaye').equalTo('statut', 'en cours').doesNotExist('solde').count(),
     new $parse.Query('Impaye').equalTo('statut', 'payé').count(),
+    new $parse.Query('Impaye').equalTo('solde', true).count(),
   ])
-  statutCounts.value = { impaye, en_cours, paye }
+  statutCounts.value = { impaye, en_cours, paye: paye + solde }
 }
 
 async function chargerMontantsMois() {
-  const montants = []
+  const montantsTTC = []
+  const montantsReste = []
+  
   // Calcul pour 12 mois + colonne "avant"
   for (let i = 12; i >= 0; i--) {
     const debut = new Date()
@@ -362,12 +383,22 @@ async function chargerMontantsMois() {
     const q = new $parse.Query('Impaye')
     q.greaterThanOrEqualTo('date_piece', debut)
     q.lessThan('date_piece', fin)
-    q.select('reste_a_payer')
+    q.doesNotExist('solde')
+    q.select('total_ttc', 'reste_a_payer')
     q.limit(500)
     const items = await q.find()
-    montants.push(items.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0))
+    
+    const ttc = items.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
+    const reste = items.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
+    
+    montantsTTC.push(ttc)
+    montantsReste.push(reste)
   }
-  montantsMois.value = montants
+  
+  montantsMois.value = {
+    ttc: montantsTTC,
+    reste: montantsReste
+  }
 }
 
 async function chargerRelancesJour() {
@@ -390,6 +421,7 @@ async function chargerRelancesJour() {
       nfacture:     imp ? imp.get('nfacture') || '—' : '—',
       sequence_nom: seq ? seq.get('nom') || '—' : '—',
       heure:        d ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—',
+      date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
     }
   })
 }
@@ -397,6 +429,7 @@ async function chargerRelancesJour() {
 async function chargerImpayes() {
   const q = new $parse.Query('Impaye')
   q.descending('createdAt')
+  q.doesNotExist('solde')
   q.limit(5)
   const results = await q.find()
   impayes_recents.value = results.map(r => ({
@@ -504,20 +537,38 @@ const donutOptions = {
 
 const barData = computed(() => ({
   labels: labelsMois(),
-  datasets: [{
-    label: 'Montant impayé (€)',
-    data: montantsMois.value,
-    backgroundColor: '#3b82f6',
-    borderRadius: 4,
-  }],
+  datasets: [
+    {
+      label: 'Reste à payer',
+      data: montantsMois.value.reste,
+      backgroundColor: '#fb923c',
+      borderRadius: 4,
+    },
+    {
+      label: 'Montant payé',
+      data: montantsMois.value.ttc.map((ttc, i) => ttc - montantsMois.value.reste[i]),
+      backgroundColor: '#22c55e',
+      borderRadius: 4,
+    }
+  ],
 }))
 
 const barOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
+  plugins: {
+    legend: {
+      display: true,
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        padding: 15,
+      }
+    }
+  },
   scales: {
     y: {
+      stacked: true,
       ticks: {
         callback: (val) => {
           if (val >= 1000) return (val / 1000).toFixed(0) + ' k€'
@@ -526,7 +577,10 @@ const barOptions = {
       },
       grid: { color: '#f3f4f6' },
     },
-    x: { grid: { display: false } },
+    x: {
+      stacked: true,
+      grid: { display: false }
+    },
   },
 }
 </script>

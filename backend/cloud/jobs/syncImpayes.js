@@ -178,8 +178,6 @@ const QUERY = `
     (p."nfacture" IS NOT NULL)
     AND (p."datepiece" >= (CAST(CAST((NOW() + INTERVAL '-300000 day') AS date) AS timestamptz) + INTERVAL '-7 day'))
     AND (p."datepiece" < (CAST(CAST(NOW() AS date) AS timestamptz) + INTERVAL '-7 day'))
-    AND (p."facturesoldee" = FALSE)
-    AND (p."resteapayer" > 0)
     AND (p."valide" = TRUE)
     AND EXISTS (
       SELECT 1

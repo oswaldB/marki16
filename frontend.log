@@ -27,7 +27,7 @@
   ➜ DevTools: press Shift + Alt + D in the browser (v3.2.2)
 
 ℹ Nuxt Icon server bundle mode is set to local
-✔ Vite client built in 223ms
-✔ Vite server built in 174ms
-[nitro] ✔ Nuxt Nitro server built in 3768ms
-ℹ Vite client warmed up in 15ms
+✔ Vite client built in 101ms
+✔ Vite server built in 89ms
+[nitro] ✔ Nuxt Nitro server built in 1895ms
+ℹ Vite client warmed up in 5ms

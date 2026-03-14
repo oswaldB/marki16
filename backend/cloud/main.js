@@ -231,14 +231,31 @@ Parse.Cloud.define('verifyPaidInvoicesNow', async (request) => {
 // ─── construireDestinataires ──────────────────────────────────────────────────
 // Remplace [[payeur_email]] et [[apporteur_email]] en concaténant l'email
 // de la personne morale et celui du contact personne physique si présent.
+// Si un relanceContact est défini sur l'impayé, son email prime sur payeur_email.
 
-function construireDestinataires(template, impaye) {
+async function construireDestinataires(template, impaye) {
   if (!template) return '';
   const joindre = (...emails) => emails.filter(Boolean).join(', ');
+
+  // Résoudre l'email de relances : relanceContact en priorité sur payeur_email
+  let payeurEmail;
+  const relanceContact = impaye.get('relanceContact');
+  if (relanceContact) {
+    let email = relanceContact.get('email');
+    if (!email && relanceContact.id) {
+      try {
+        const fetched = await new Parse.Query('Contact').get(relanceContact.id, { useMasterKey: true });
+        email = fetched.get('email');
+      } catch (_) {}
+    }
+    if (email) payeurEmail = email;
+  }
+  if (!payeurEmail) {
+    payeurEmail = joindre(impaye.get('payeur_email'), impaye.get('payeur_contact_email'));
+  }
+
   return template
-    .replace(/\[\[payeur_email\]\]/g, () =>
-      joindre(impaye.get('payeur_email'), impaye.get('payeur_contact_email'))
-    )
+    .replace(/\[\[payeur_email\]\]/g, () => payeurEmail)
     .replace(/\[\[apporteur_email\]\]/g, () =>
       joindre(impaye.get('apporteur_email'), impaye.get('apporteur_contact_email'))
     );
@@ -302,9 +319,22 @@ Parse.Cloud.define('assignerSequence', async (request) => {
     return { created: 0 };
   }
 
-  // Vérifier que le payeur a un email
-  if (!impaye.get('payeur_email')) {
-    throw new Error('Ce contact n\'a pas d\'adresse email. Veuillez l\'ajouter avant d\'assigner une séquence.');
+  // Vérifier qu'un email de relances est disponible (payeur_email ou relanceContact.email)
+  let hasEmail = !!impaye.get('payeur_email');
+  if (!hasEmail) {
+    const relanceContactPtr = impaye.get('relanceContact');
+    if (relanceContactPtr) {
+      try {
+        const rc = await new Parse.Query('Contact').get(relanceContactPtr.id, { useMasterKey: true });
+        if (rc.get('email')) {
+          hasEmail = true;
+          impaye.set('relanceContact', rc); // version résolue pour construireDestinataires
+        }
+      } catch (_) {}
+    }
+  }
+  if (!hasEmail) {
+    throw new Error('Ce contact n\'a pas d\'adresse email. Veuillez l\'ajouter ou attribuer un email de relances par défaut avant d\'assigner une séquence.');
   }
 
   const sequence = await new Parse.Query('Sequence').get(sequenceId, { useMasterKey: true });
@@ -322,7 +352,7 @@ Parse.Cloud.define('assignerSequence', async (request) => {
     } catch (_) {}
   }
 
-  const relances = emailsSeq.map((email, idx) => {
+  const relances = await Promise.all(emailsSeq.map(async (email, idx) => {
     const dateEnvoi = new Date(baseDate);
     dateEnvoi.setDate(dateEnvoi.getDate() + (email.delai || 0));
     const scenario = getEmailScenario(email, 'single');
@@ -332,7 +362,7 @@ Parse.Cloud.define('assignerSequence', async (request) => {
     r.set('email_index', idx);
     r.set('statut',      'pending');
     r.set('dateEnvoi',   dateEnvoi);
-    r.set('to',          construireDestinataires(email.to || '', impaye));
+    r.set('to',          await construireDestinataires(email.to || '', impaye));
     r.set('cc',          substituerVariables(scenario.cc || email.cc || '', impaye));
     r.set('objet',       substituerVariables(scenario.objet || '', impaye));
     r.set('corps',       substituerVariables(scenario.corps || '', impaye));
@@ -341,7 +371,7 @@ Parse.Cloud.define('assignerSequence', async (request) => {
     // Ajouter le champ valide - par défaut true, mais false si la séquence nécessite une validation
     r.set('valide',      !sequence.get('validation_obligatoire'));
     return r;
-  });
+  }));
   if (relances.length) await Parse.Object.saveAll(relances, { useMasterKey: true });
 
   impaye.set('sequence', sequence);
@@ -411,6 +441,54 @@ Parse.Cloud.define('validerRelance', async (request) => {
   relance.set('valide', true);
   await relance.save(null, { useMasterKey: true });
   return { success: true };
+});
+
+// ─── attribuerRelanceContact ──────────────────────────────────────────────────
+// Attribue un contact de relances par défaut à un impayé.
+// Params : impayelId + (contactId OU { nom, email })
+// Met à jour toutes les relances pending de l'impayé avec le nouvel email.
+
+Parse.Cloud.define('attribuerRelanceContact', async (request) => {
+  if (!request.user) throw new Error('Authentification requise');
+  const { impayelId, contactId, nom, email } = request.params;
+  if (!impayelId) throw new Error('impayelId requis');
+  if (!contactId && (!nom || !email)) throw new Error('contactId ou { nom, email } requis');
+
+  const impaye = await new Parse.Query('Impaye').get(impayelId, { useMasterKey: true });
+
+  let contact;
+  if (contactId) {
+    contact = await new Parse.Query('Contact').get(contactId, { useMasterKey: true });
+  } else {
+    contact = new Parse.Object('Contact');
+    contact.set('nom', nom);
+    contact.set('email', email);
+    contact.set('source', 'relance');
+    await contact.save(null, { useMasterKey: true });
+  }
+
+  impaye.set('relanceContact', contact);
+  await impaye.save(null, { useMasterKey: true });
+
+  // Mettre à jour le champ `to` de toutes les relances pending
+  const qRelances = new Parse.Query('Relance');
+  qRelances.equalTo('impaye', impaye);
+  qRelances.equalTo('statut', 'pending');
+  const pendingRelances = await qRelances.find({ useMasterKey: true });
+
+  // Reconstruire le champ `to` via construireDestinataires (qui utilise désormais relanceContact)
+  const nouveauTo = await construireDestinataires('[[payeur_email]]', impaye);
+  for (const relance of pendingRelances) {
+    relance.set('to', nouveauTo);
+  }
+  if (pendingRelances.length) await Parse.Object.saveAll(pendingRelances, { useMasterKey: true });
+
+  return {
+    id: contact.id,
+    nom: contact.get('nom'),
+    email: contact.get('email'),
+    relancesMisesAJour: pendingRelances.length,
+  };
 });
 
 // Cloud Job pour mettre à jour les options dynamiques (planifié toutes les heures à HH:03)
@@ -496,10 +574,26 @@ async function appliquerReglesAttributionAutomatique(impaye) {
     }
     
     if (correspond) {
+      // Vérifier qu'un email de relances est disponible
+      let hasEmail = !!impaye.get('payeur_email');
+      if (!hasEmail) {
+        const relanceContactPtr = impaye.get('relanceContact');
+        if (relanceContactPtr) {
+          try {
+            const rc = await new Parse.Query('Contact').get(relanceContactPtr.id, { useMasterKey: true });
+            if (rc.get('email')) {
+              hasEmail = true;
+              impaye.set('relanceContact', rc);
+            }
+          } catch (_) {}
+        }
+      }
+      if (!hasEmail) continue; // Pas d'email, pas de séquence pour cet impayé
+
       // Assigner cette séquence à l'impayé
       impaye.set('sequence', sequence);
       await impaye.save(null, { useMasterKey: true });
-      
+
       // Créer les relances associées
       const emailsSeq = sequence.get('emails') || [];
       const baseDate = new Date();
@@ -513,7 +607,7 @@ async function appliquerReglesAttributionAutomatique(impaye) {
         try { smtpMap[id] = await new Parse.Query('SmtpProfile').get(id, { useMasterKey: true }); } catch (_) {}
       }
 
-      const relances = emailsSeq.map((email, idx) => {
+      const relances = await Promise.all(emailsSeq.map(async (email, idx) => {
         const dateEnvoi = new Date(baseDate);
         dateEnvoi.setDate(dateEnvoi.getDate() + (email.delai || 0));
         const scenario = getEmailScenario(email, 'single');
@@ -523,14 +617,14 @@ async function appliquerReglesAttributionAutomatique(impaye) {
         r.set('email_index', idx);
         r.set('statut',      'pending');
         r.set('dateEnvoi',   dateEnvoi);
-        r.set('to',          construireDestinataires(email.to || '', impaye));
+        r.set('to',          await construireDestinataires(email.to || '', impaye));
         r.set('cc',          substituerVariables(scenario.cc || email.cc || '', impaye));
         r.set('objet',       substituerVariables(scenario.objet || '', impaye));
         r.set('corps',       substituerVariables(scenario.corps || '', impaye));
         if (smtpMap[scenario.smtp]) r.set('smtpProfil', smtpMap[scenario.smtp]);
         r.set('manuelle',    false);
         return r;
-      });
+      }));
       
       if (relances.length) {
         await Parse.Object.saveAll(relances, { useMasterKey: true });

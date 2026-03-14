@@ -236,9 +236,23 @@
       <!-- SÉQUENCE -->
       <UCard>
         <template #header>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Séquence</h2>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Indicateur relanceContact -->
+              <div v-if="impaye.relanceContact" class="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
+                <span class="text-gray-400">Email relances :</span>
+                <span class="font-medium text-gray-700">{{ impaye.relanceContact.nom }}</span>
+                <span v-if="impaye.relanceContact.email" class="text-gray-500">· {{ impaye.relanceContact.email }}</span>
+              </div>
+              <UButton
+                size="sm"
+                color="neutral"
+                variant="outline"
+                @click="ouvrirModalRelanceContact"
+              >
+                {{ impaye.relanceContact ? 'Changer l\'email de relances' : 'Attribuer un email de relances par défaut' }}
+              </UButton>
               <UButton
                 v-if="sequenceActive"
                 size="sm"
@@ -358,6 +372,68 @@
       </template>
     </UModal>
 
+    <!-- Modal attribution email de relances -->
+    <UModal v-model:open="modalRelanceContactOuvert" title="Attribuer un email de relances par défaut">
+      <template #body>
+        <div class="space-y-6">
+          <!-- Section recherche contact existant -->
+          <div class="space-y-2">
+            <p class="text-sm font-medium text-gray-700">Rechercher un contact existant</p>
+            <UInput
+              v-model="rechercheContact"
+              placeholder="Nom ou email (2 caractères min.)…"
+              @input="onRechercheContact"
+            />
+            <div v-if="resultatsRecherche.length > 0" class="border border-gray-200 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
+              <button
+                v-for="c in resultatsRecherche"
+                :key="c.id"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                :class="contactSelectionne?.id === c.id ? 'bg-primary-50 font-medium text-primary-700' : 'text-gray-900'"
+                @click="selectionnerContact(c)"
+              >
+                <span class="font-medium">{{ c.nom }}</span>
+                <span v-if="c.email" class="text-gray-500 ml-2">{{ c.email }}</span>
+              </button>
+            </div>
+            <p v-if="rechercheContact.length >= 2 && resultatsRecherche.length === 0 && !rechercheEnCours" class="text-xs text-gray-400 italic">
+              Aucun contact trouvé.
+            </p>
+          </div>
+
+          <div class="border-t border-gray-200" />
+
+          <!-- Section création nouveau contact -->
+          <div class="space-y-2">
+            <p class="text-sm font-medium text-gray-700">Ou créer un nouveau contact</p>
+            <UInput v-model="nouveauContactNom" placeholder="Nom" />
+            <UInput v-model="nouveauContactEmail" placeholder="Email" type="email" />
+            <p v-if="nouveauContactEmailErreur" class="text-xs text-red-500">{{ nouveauContactEmailErreur }}</p>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="modalRelanceContactOuvert = false">Annuler</UButton>
+          <UButton
+            v-if="contactSelectionne"
+            :loading="attribuantContact"
+            @click="confirmerAttributionContact"
+          >
+            Confirmer
+          </UButton>
+          <UButton
+            v-else-if="nouveauContactNom || nouveauContactEmail"
+            :loading="attribuantContact"
+            :disabled="!nouveauContactNom || !nouveauContactEmail"
+            @click="creerEtAttribuerContact"
+          >
+            Créer et attribuer
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
     <!-- Drawer relance -->
     <RelanceDrawer
       v-model="relanceDrawerOuvert"
@@ -413,6 +489,17 @@ const modalSequenceOuvert = ref(false)
 const sequenceChoisie = ref(null)
 const assignantSequence = ref(false)
 const retirantSequence = ref(false)
+
+// Attribution email relances
+const modalRelanceContactOuvert = ref(false)
+const rechercheContact = ref('')
+const resultatsRecherche = ref([])
+const contactSelectionne = ref(null)
+const rechercheEnCours = ref(false)
+const nouveauContactNom = ref('')
+const nouveauContactEmail = ref('')
+const nouveauContactEmailErreur = ref('')
+const attribuantContact = ref(false)
 
 // Relances
 const relanceDrawerOuvert = ref(false)
@@ -493,7 +580,7 @@ const sequenceOptions = computed(() =>
 
 // ── Charger ──
 function parseImpaye(obj) {
-  const seq = obj.get('sequence')
+  const rc = obj.get('relanceContact')
   return {
     objectId:               obj.id,
     createdAt:              obj.createdAt,
@@ -556,6 +643,11 @@ function parseImpaye(obj) {
     syndic_nom:                   obj.get('syndic_nom'),
     syndic_email:                 obj.get('syndic_email'),
     syndic_telephone:             obj.get('syndic_telephone'),
+    relanceContact: rc ? {
+      id:    rc.id,
+      nom:   rc.get('nom'),
+      email: rc.get('email'),
+    } : null,
   }
 }
 
@@ -564,6 +656,7 @@ async function charger() {
   try {
     const q = new $parse.Query('Impaye')
     q.include('sequence')
+    q.include('relanceContact')
     const obj = await q.get(impayelId.value)
     impayeObj.value = obj
     impaye.value = parseImpaye(obj)
@@ -679,6 +772,100 @@ async function supprimerRelance(row) {
 
 function onRelanceSuccess() {
   chargerRelances()
+}
+
+// ── Attribution email de relances ──
+function ouvrirModalRelanceContact() {
+  rechercheContact.value = ''
+  resultatsRecherche.value = []
+  contactSelectionne.value = null
+  nouveauContactNom.value = ''
+  nouveauContactEmail.value = ''
+  nouveauContactEmailErreur.value = ''
+  modalRelanceContactOuvert.value = true
+}
+
+let rechercheTimeout = null
+function onRechercheContact() {
+  contactSelectionne.value = null
+  clearTimeout(rechercheTimeout)
+  if (rechercheContact.value.length < 2) {
+    resultatsRecherche.value = []
+    return
+  }
+  rechercheTimeout = setTimeout(() => rechercherContacts(), 300)
+}
+
+async function rechercherContacts() {
+  rechercheEnCours.value = true
+  try {
+    const terme = rechercheContact.value
+    const qNom = new $parse.Query('Contact')
+    qNom.contains('nom', terme)
+    const qEmail = new $parse.Query('Contact')
+    qEmail.contains('email', terme)
+    const query = $parse.Query.or(qNom, qEmail)
+    query.limit(20)
+    const results = await query.find()
+    resultatsRecherche.value = results.map(c => ({
+      id: c.id, nom: c.get('nom') || '', email: c.get('email') || '', _parse: c,
+    }))
+  } catch (err) {
+    console.error('Erreur recherche contacts:', err)
+  } finally {
+    rechercheEnCours.value = false
+  }
+}
+
+function selectionnerContact(c) {
+  contactSelectionne.value = c
+  nouveauContactNom.value = ''
+  nouveauContactEmail.value = ''
+}
+
+function validerEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+async function confirmerAttributionContact() {
+  if (!contactSelectionne.value) return
+  attribuantContact.value = true
+  try {
+    await $parse.Cloud.run('attribuerRelanceContact', {
+      impayelId: impayelId.value,
+      contactId: contactSelectionne.value.id,
+    })
+    modalRelanceContactOuvert.value = false
+    toast.add({ title: 'Email de relances attribué', color: 'green' })
+    await charger()
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    attribuantContact.value = false
+  }
+}
+
+async function creerEtAttribuerContact() {
+  nouveauContactEmailErreur.value = ''
+  if (!validerEmail(nouveauContactEmail.value)) {
+    nouveauContactEmailErreur.value = 'Adresse email invalide'
+    return
+  }
+  attribuantContact.value = true
+  try {
+    await $parse.Cloud.run('attribuerRelanceContact', {
+      impayelId: impayelId.value,
+      nom: nouveauContactNom.value,
+      email: nouveauContactEmail.value,
+    })
+    modalRelanceContactOuvert.value = false
+    toast.add({ title: 'Contact créé et email de relances attribué', color: 'green' })
+    await charger()
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    attribuantContact.value = false
+  }
 }
 
 onMounted(() => {

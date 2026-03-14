@@ -38,7 +38,13 @@
       "Bash(find /home/oswald/Desktop/marki16/frontend/node_modules/@nuxt/ui -name \"Drawer*\" 2>/dev/null | head -10)",
       "Bash(source .env && node -e \"\nconst Parse = require\\('parse/node'\\);\nParse.initialize\\(process.env.PARSE_APP_ID, process.env.PARSE_JAVASCRIPT_KEY, process.env.PARSE_MASTER_KEY\\);\nParse.serverURL = 'http://localhost:1555/parse';\n\\(async \\(\\) => {\n  const q = new Parse.Query\\('Sequence'\\);\n  q.limit\\(3\\);\n  const seqs = await q.find\\({ useMasterKey: true }\\);\n  for \\(const s of seqs\\) {\n    const emails = s.get\\('emails'\\) || [];\n    console.log\\('=== Sequence:', s.get\\('nom'\\), '==='\\);\n    if \\(emails[0]\\) console.log\\('email[0] keys:', Object.keys\\(emails[0]\\)\\);\n    if \\(emails[0]\\) console.log\\('email[0] sample:', JSON.stringify\\(emails[0]\\).substring\\(0, 500\\)\\);\n  }\n}\\)\\(\\).catch\\(console.error\\);\n\")",
       "Bash(ls /home/oswald/Desktop/marki16/openspec/ 2>/dev/null && cat /home/oswald/Desktop/marki16/openspec/changes/*/design.md 2>/dev/null | head -5)",
-      "Bash(wc -l /home/oswald/Desktop/marki16/frontend/app/pages/sequences/[id].vue)"
+      "Bash(wc -l /home/oswald/Desktop/marki16/frontend/app/pages/sequences/[id].vue)",
+      "Bash(ls /home/oswald/Desktop/marki16/node_modules/.bin/ | grep -i openspec 2>&1 || find /home/oswald -name \"openspec*\" 2>/dev/null | head -10)",
+      "Bash(which specify:*)",
+      "Bash(specify --help 2>&1 | head -30)",
+      "Bash(wc -l /home/oswald/Desktop/marki16/frontend/app/pages/impayes/\\\\[id\\\\].vue 2>&1)",
+      "Bash(cat /home/oswald/Desktop/marki16/openspec/changes/attribuer-email-relances-defaut/specs/attribuer-relance-contact/*.md 2>/dev/null || ls /home/oswald/Desktop/marki16/openspec/changes/attribuer-email-relances-defaut/specs/attribuer-relance-contact/)",
+      "Bash(wc -l /home/oswald/Desktop/marki16/backend/cloud/main.js && wc -l /home/oswald/Desktop/marki16/frontend/app/pages/impayes/\\\\[id\\\\].vue)"
     ]
   }
 }
