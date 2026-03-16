@@ -31,20 +31,23 @@ async function lancerSync() {
   syncing.value = true
   try {
     const syncStats = await $parse.Cloud.run('syncNow')
-    toast.add({ 
-      title: 'Synchronisation terminée', 
-      description: `${syncStats.imported || 0} impayés synchronisés`,
-      color: 'green' 
+    const created = syncStats.impayes_created || 0
+    const updated = syncStats.impayes_updated || 0
+    toast.add({
+      title: 'Synchronisation terminée',
+      description: `${created} créés, ${updated} mis à jour`,
+      color: 'green'
     })
-    
+
     const verifyStats = await $parse.Cloud.run('verifyPaidInvoicesNow')
-    toast.add({ 
-      title: 'Vérification terminée', 
+    toast.add({
+      title: 'Vérification terminée',
       description: `${verifyStats.updated || 0} factures marquées comme payées`,
-      color: 'green' 
+      color: 'green'
     })
-    
+
     props.onSuccess()
+    window.location.reload()
   } catch (err) {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
   } finally {

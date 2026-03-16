@@ -89,7 +89,82 @@
           </div>
         </UCard>
 
+      </div>
 
+      <!-- ── Ancienneté des impayés ── -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-sky-50">
+              <UIcon name="i-heroicons-clock" class="size-5 text-sky-500" />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">Moins de 7 jours</p>
+                <UTooltip text="Factures impayées émises il y a moins de 7 jours">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j7.count }}</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j7.montant) }}</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-yellow-50">
+              <UIcon name="i-heroicons-clock" class="size-5 text-yellow-500" />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">8 à 30 jours</p>
+                <UTooltip text="Factures impayées émises entre 8 et 30 jours">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j30.count }}</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j30.montant) }}</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-orange-50">
+              <UIcon name="i-heroicons-clock" class="size-5 text-orange-500" />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">31 à 60 jours</p>
+                <UTooltip text="Factures impayées émises entre 31 et 60 jours">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j60.count }}</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j60.montant) }}</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-red-50">
+              <UIcon name="i-heroicons-exclamation-triangle" class="size-5 text-red-500" />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">Plus de 120 jours</p>
+                <UTooltip text="Factures impayées émises il y a plus de 120 jours">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j120.count }}</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j120.montant) }}</p>
+            </div>
+          </div>
+        </UCard>
 
       </div>
 
@@ -237,11 +312,13 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Tooltip,
   Legend,
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend)
 
 const { $parse } = useNuxtApp()
 
@@ -256,8 +333,15 @@ const kpi = ref({
 })
 
 const montantsMois = ref({
-  ttc: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  reste: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ttc:    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  reste:  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  count:  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+})
+const aging = ref({
+  j7:   { count: 0, montant: 0 },
+  j30:  { count: 0, montant: 0 },
+  j60:  { count: 0, montant: 0 },
+  j120: { count: 0, montant: 0 },
 })
 const relancesJour = ref([])
 const impayes_recents = ref([])
@@ -269,6 +353,7 @@ onMounted(async () => {
   try {
     await Promise.all([
       chargerKpi(),
+      chargerAging(),
       chargerMontantsMois(),
       chargerRelancesJour(),
       chargerImpayes(),
@@ -316,11 +401,45 @@ async function chargerKpi() {
   }
 }
 
-// Le champ statut a été supprimé - cette fonction n'est plus nécessaire
+async function chargerAging() {
+  const now = new Date()
+  const daysAgo = (n) => { const d = new Date(now); d.setDate(d.getDate() - n); d.setHours(23, 59, 59, 999); return d }
+
+  const cutoff7   = daysAgo(7)
+  const cutoff30  = daysAgo(30)
+  const cutoff60  = daysAgo(60)
+  const cutoff120 = daysAgo(120)
+
+  const q = new $parse.Query('Impaye')
+  q.equalTo('facture_soldee', false)
+  q.select('date_piece', 'reste_a_payer')
+  q.limit(2000)
+  const items = await q.find()
+
+  const bucket = { j7: { count: 0, montant: 0 }, j30: { count: 0, montant: 0 }, j60: { count: 0, montant: 0 }, j120: { count: 0, montant: 0 } }
+
+  for (const item of items) {
+    const dp  = item.get('date_piece')
+    const rap = item.get('reste_a_payer') || 0
+    if (!dp) continue
+    if (dp >= cutoff7) {
+      bucket.j7.count++;   bucket.j7.montant   += rap
+    } else if (dp >= cutoff30) {
+      bucket.j30.count++;  bucket.j30.montant  += rap
+    } else if (dp >= cutoff60) {
+      bucket.j60.count++;  bucket.j60.montant  += rap
+    } else if (dp < cutoff120) {
+      bucket.j120.count++; bucket.j120.montant += rap
+    }
+  }
+
+  aging.value = bucket
+}
 
 async function chargerMontantsMois() {
-  const montantsTTC = []
+  const montantsTTC   = []
   const montantsReste = []
+  const montantsCount = []
   
   // Calcul pour 12 mois + colonne "avant" + mois courant
   // i=13 → "Avant" (toutes les factures avant les 12 derniers mois)
@@ -340,51 +459,46 @@ async function chargerMontantsMois() {
     qAvant.limit(1000)
     const itemsAvant = await qAvant.find()
     
-    const ttcAvant = itemsAvant.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
+    const ttcAvant   = itemsAvant.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
     const resteAvant = itemsAvant.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
-    
+
     montantsTTC.push(ttcAvant)
     montantsReste.push(resteAvant)
+    montantsCount.push(itemsAvant.length) // déjà filtrés facture_soldee: false
   }
-  
+
   // Calcul pour les 12 mois + mois courant
   for (let i = 12; i >= 0; i--) {
     const debut = new Date()
     debut.setDate(1)
     debut.setMonth(debut.getMonth() - i)
     debut.setHours(0, 0, 0, 0)
-    
+
     const fin = new Date(debut)
     fin.setMonth(fin.getMonth() + 1)
-    fin.setDate(0) // Dernier jour du mois
+    fin.setDate(0)
     fin.setHours(23, 59, 59, 999)
 
     const q = new $parse.Query('Impaye')
     q.greaterThanOrEqualTo('date_piece', debut)
     q.lessThanOrEqualTo('date_piece', fin)
-    q.select('total_ttc', 'reste_a_payer', 'date_piece')
+    q.select('total_ttc', 'reste_a_payer', 'facture_soldee')
     q.limit(500)
     const items = await q.find()
-    
-    // Debug pour le mois courant (i=0)
-    if (i === 0) {
-      console.log('Mois courant - Début:', debut.toISOString(), 'Fin:', fin.toISOString())
-      console.log('Nombre d\'items trouvés:', items.length)
-      if (items.length > 0) {
-        console.log('Premier item:', items[0].get('date_piece')?.toISOString())
-      }
-    }
-    
-    const ttc = items.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
+
+    const ttc   = items.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
     const reste = items.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
-    
+    const count = items.filter(i => !i.get('facture_soldee')).length
+
     montantsTTC.push(ttc)
     montantsReste.push(reste)
+    montantsCount.push(count)
   }
-  
+
   montantsMois.value = {
-    ttc: montantsTTC,
-    reste: montantsReste
+    ttc:   montantsTTC,
+    reste: montantsReste,
+    count: montantsCount,
   }
 }
 
@@ -511,13 +625,30 @@ const barData = computed(() => ({
       data: montantsMois.value.reste,
       backgroundColor: '#fb923c',
       borderRadius: 4,
+      yAxisID: 'y',
+      order: 2,
     },
     {
       label: 'Montant payé',
       data: montantsMois.value.ttc.map((ttc, i) => i === 0 ? 0 : ttc - montantsMois.value.reste[i]),
       backgroundColor: '#22c55e',
       borderRadius: 4,
-    }
+      yAxisID: 'y',
+      order: 2,
+    },
+    {
+      type: 'line',
+      label: 'Nb factures impayées',
+      data: montantsMois.value.count,
+      borderColor: '#6366f1',
+      backgroundColor: '#6366f1',
+      pointBackgroundColor: '#6366f1',
+      pointRadius: 4,
+      borderWidth: 2,
+      tension: 0.3,
+      yAxisID: 'y1',
+      order: 1,
+    },
   ],
 }))
 
@@ -532,11 +663,24 @@ const barOptions = {
         usePointStyle: true,
         padding: 15,
       }
+    },
+    tooltip: {
+      callbacks: {
+        label(ctx) {
+          if (ctx.dataset.yAxisID === 'y1') {
+            return ` ${ctx.parsed.y} facture${ctx.parsed.y > 1 ? 's' : ''} impayée${ctx.parsed.y > 1 ? 's' : ''}`
+          }
+          const val = ctx.parsed.y
+          if (val >= 1000) return ` ${ctx.dataset.label} : ${(val / 1000).toFixed(1)} k€`
+          return ` ${ctx.dataset.label} : ${val.toLocaleString('fr-FR')} €`
+        }
+      }
     }
   },
   scales: {
     y: {
       stacked: true,
+      position: 'left',
       ticks: {
         callback: (val) => {
           if (val >= 1000) return (val / 1000).toFixed(0) + ' k€'
@@ -544,6 +688,15 @@ const barOptions = {
         },
       },
       grid: { color: '#f3f4f6' },
+    },
+    y1: {
+      position: 'right',
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1,
+        callback: (val) => val + ' fa.',
+      },
+      grid: { drawOnChartArea: false },
     },
     x: {
       stacked: true,

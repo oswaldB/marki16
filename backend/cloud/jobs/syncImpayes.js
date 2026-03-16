@@ -177,14 +177,8 @@ const QUERY = `
   WHERE
     (p."nfacture" IS NOT NULL)
     AND (p."datepiece" >= (CAST(CAST((NOW() + INTERVAL '-90 day') AS date) AS timestamptz)))
-    AND (p."datepiece" < (CAST(CAST(NOW() AS date) AS timestamptz)))
+    AND (p."datepiece" < (CAST(CAST((NOW() + INTERVAL '1 day') AS date) AS timestamptz)))
     AND (p."valide" = TRUE)
-    AND EXISTS (
-      SELECT 1
-      FROM "public"."(ADN_DIAG) DossierInterlocuteur" di2
-      LEFT JOIN "public"."(ADN_DIAG) RoleInterlocuteurDossier" role2 ON di2."idRole" = role2."idRole"
-      WHERE di2."idDossier" = d."idDossier" AND role2."intitule" = 'Payeur'
-    )
 
   GROUP BY
     p."nfacture", p."datepiece", p."totalhtnet", p."totalttcnet", p."resteapayer",
