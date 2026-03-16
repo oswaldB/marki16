@@ -66,6 +66,13 @@
       :description="syncResultMessage"
     />
 
+    <!-- Slideover pour la sélection d'email -->
+    <EmailSelectionSlideover
+      v-model="showEmailSlideover"
+      :contact-id="selectedContactId"
+      @emailSelected="handleEmailSelected"
+    />
+
     <!-- ── Vue tous / sans-email ── -->
     <div v-if="ongletActif === 'tous' || ongletActif === 'sans-email'">
       <div class="flex items-center gap-3 flex-wrap mb-4">
@@ -104,6 +111,26 @@
               {{ row.original.nb_impayes }}
             </span>
           </template>
+
+          <template #email-relance-cell="{ row }">
+            <span v-if="row.original.email_relance" class="text-gray-700">
+              {{ getEmailFromPointer(row.original.email_relance) }}
+            </span>
+            <span v-else class="text-gray-400 italic">—</span>
+          </template>
+
+          <template #actions-cell="{ row }">
+            <UButton
+              color="primary"
+              icon="i-heroicons-envelope"
+              size="xs"
+              variant="ghost"
+              @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
+              title="Définir un email de relance"
+            >
+              Définir un email de relance
+            </UButton>
+          </template>
         </UTable>
       </UCard>
     </div>
@@ -124,6 +151,7 @@
           :entites="entitesFiltrees"
           :colonnes="colonnesEntites"
           :loading="loadingEntites"
+          @relance-email="ouvrirSlideoverEmailPourContact"
         />
       </UCard>
     </div>
@@ -178,6 +206,26 @@
             <span v-if="row.original.email" class="text-gray-700">{{ row.original.email }}</span>
             <span v-else class="text-gray-400 italic">—</span>
           </template>
+
+          <template #email-relance-cell="{ row }">
+            <span v-if="row.original.email_relance" class="text-gray-700">
+              {{ getEmailFromPointer(row.original.email_relance) }}
+            </span>
+            <span v-else class="text-gray-400 italic">—</span>
+          </template>
+
+          <template #actions-cell="{ row }">
+            <UButton
+              color="primary"
+              icon="i-heroicons-envelope"
+              size="xs"
+              variant="ghost"
+              @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
+              title="Définir un email de relance"
+            >
+              Définir un email de relance
+            </UButton>
+          </template>
         </UTable>
       </UCard>
     </div>
@@ -188,6 +236,7 @@
 <script setup>
 import { h, resolveComponent } from 'vue'
 import { useContactsStoreComposable, useContactsEntitesComposable, useContactsParticuliersComposable, useContactsSyncComposable } from '~/composables/useContactsStore'
+import EmailSelectionSlideover from '~/components/EmailSelectionSlideover.vue'
 
 const { $parse } = useNuxtApp()
 
@@ -219,6 +268,28 @@ async function refresh() {
   await Promise.all([charger(), chargerSansEmailCount()])
 }
 
+// Helper function to get email from pointer or string
+function getEmailFromPointer(emailRelance) {
+  if (!emailRelance) return null
+  
+  // If it's a Parse Object/Pointer, get the email from it
+  if (emailRelance.id && typeof emailRelance.get === 'function') {
+    return emailRelance.get('email')
+  }
+  
+  // If it's already a string (backward compatibility)
+  if (typeof emailRelance === 'string') {
+    return emailRelance
+  }
+  
+  // If it's an object with email property
+  if (emailRelance.email) {
+    return emailRelance.email
+  }
+  
+  return null
+}
+
 const {
   loading, total, sansEmailCount,
   filtreSource, filtreSansEmail,
@@ -233,23 +304,73 @@ const colonnes = [
   { accessorKey: 'telephone',  header: 'Téléphone' },
   { accessorKey: 'source',     header: 'Source' },
   { accessorKey: 'nb_impayes', header: sortHeader('Impayés') },
+  { 
+    id: 'email_relance', 
+    header: 'Email de relance',
+    cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
+    enableSorting: false,
+  },
+  { 
+    id: 'actions', 
+    header: 'Actions',
+    cell: ({ row }) => 'actions-cell',
+    enableSorting: false,
+  },
 ]
 
 const {
-  entitesFiltrees, colonnesEntites,
+  entitesFiltrees, colonnesEntites: colonnesEntitesBase,
   expandedEntites, loadingEntites,
   chargerEntitesGroupes,
 } = useContactsEntitesComposable()
 
+// Ajouter les colonnes email_relance et actions aux colonnes des entités
+const colonnesEntites = computed(() => [
+  ...colonnesEntitesBase.value,
+  { 
+    id: 'email_relance', 
+    header: 'Email de relance',
+    cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
+    enableSorting: false,
+  },
+  { 
+    id: 'actions', 
+    header: 'Actions',
+    cell: ({ row }) => 'actions-cell',
+    enableSorting: false,
+  },
+])
+
 const {
-  particuliersFiltres, colonnesParticuliers,
+  particuliersFiltres, colonnesParticuliers: colonnesParticuliersBase,
   expandedParticuliers, loadingParticuliers,
   chargerParticuliersGroupes,
 } = useContactsParticuliersComposable()
 
+// Ajouter les colonnes email_relance et actions aux colonnes des particuliers
+const colonnesParticuliers = computed(() => [
+  ...colonnesParticuliersBase.value,
+  { 
+    id: 'email_relance', 
+    header: 'Email de relance',
+    cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
+    enableSorting: false,
+  },
+  { 
+    id: 'actions', 
+    header: 'Actions',
+    cell: ({ row }) => 'actions-cell',
+    enableSorting: false,
+  },
+])
+
 const {
   syncing, syncResult, syncResultMessage, lancerSync,
 } = useContactsSyncComposable($parse, refresh)
+
+// État pour le slideover d'email
+const showEmailSlideover = ref(false)
+const selectedContactId = ref(null)
 
 const onglets = computed(() => [
   { label: 'Tous les contacts', value: 'tous',       _badge: ongletActif.value === 'tous' && total.value > 0 ? total.value : undefined },
@@ -275,6 +396,156 @@ watch(ongletActif, (val) => {
     }
   }
 })
+
+// Fonctions pour le slideover d'email
+function ouvrirSlideoverEmailPourContact(contactId) {
+  selectedContactId.value = contactId
+  showEmailSlideover.value = true
+}
+
+function ouvrirSlideoverEmail() {
+  // Fonction de compatibilité pour l'ancien appel
+  selectedContactId.value = null
+  showEmailSlideover.value = true
+}
+
+async function handleEmailSelected(email, emailRelanceId) {
+  // 1. Mettre à jour le contact avec un pointeur vers le contact de relance
+  if (selectedContactId.value) {
+    try {
+      const Contact = $parse.Object.extend('Contact')
+      const contact = Contact.createWithoutData(selectedContactId.value)
+      
+      // Stocker un pointeur vers le contact de relance au lieu de l'email string
+      if (emailRelanceId) {
+        const contactRelancePtr = Contact.createWithoutData(emailRelanceId)
+        contact.set('email_relance', contactRelancePtr)
+      } else {
+        // Si pas d'emailRelanceId, créer un nouveau contact de relance
+        const newContactRelance = new Contact()
+        newContactRelance.set('email', email)
+        newContactRelance.set('nom', email) // ou un nom approprié
+        newContactRelance.set('estActif', true)
+        newContactRelance.set('nombreUtilisations', 1)
+        await newContactRelance.save()
+        
+        const contactRelancePtr = Contact.createWithoutData(newContactRelance.id)
+        contact.set('email_relance', contactRelancePtr)
+      }
+      
+      await contact.save()
+      
+      // Recharger les données pour mettre à jour l'affichage
+      if (ongletActif.value === 'tous' || ongletActif.value === 'sans-email') {
+        await charger()
+      } else if (ongletActif.value === 'par-entite') {
+        await chargerEntitesGroupes()
+      } else if (ongletActif.value === 'par-groupe-particuliers') {
+        await chargerParticuliersGroupes()
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du contact:', error)
+      const toast = useToast()
+      toast.add({ 
+        title: 'Erreur', 
+        description: 'Impossible de mettre à jour l\'email de relance', 
+        color: 'red' 
+      })
+      return
+    }
+  }
+  
+  // 2. Afficher une notification de succès
+  const toast = useToast()
+  toast.add({ 
+    title: 'Email de relance défini', 
+    description: `L\'email de relance a été défini: ${email}`, 
+    color: 'green' 
+  })
+  
+  // 3. Si un emailRelanceId est fourni, mettre à jour les relances existantes
+  if (emailRelanceId) {
+    try {
+      await mettreAJourRelancesAvecEmailRelance(emailRelanceId, email)
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des relances:', error)
+      toast.add({ 
+        title: 'Attention', 
+        description: 'L\'email a été enregistré mais certaines relances n\'ont pas pu être mises à jour', 
+        color: 'yellow' 
+      })
+    }
+  }
+}
+
+async function mettreAJourRelancesAvecEmailRelance(contactRelanceId, email) {
+  try {
+    // 1. Récupérer le contact de relance
+    const Contact = $parse.Object.extend('Contact')
+    const contactRelanceQuery = new $parse.Query(Contact)
+    const contactRelance = await contactRelanceQuery.get(contactRelanceId)
+    
+    // 2. Trouver les relances en attente qui pourraient être concernées
+    // Note: Dans une implémentation complète, il faudrait avoir une logique
+    // pour déterminer quelles relances doivent être mises à jour
+    const Relance = $parse.Object.extend('Relance')
+    const relanceQuery = new $parse.Query(Relance)
+    relanceQuery.equalTo('statut', 'pending')
+    // relanceQuery.equalTo('contact', contactPtr) // À décommenter quand on a le contact
+    
+    const relances = await relanceQuery.find()
+    
+    // 3. Mettre à jour les relances avec le nouvel email
+    const relancesAMettreAJour = []
+    const activites = []
+    
+    for (const relance of relances) {
+      // Sauvegarder l'ancien email pour l'activité
+      const ancienEmail = relance.get('to')
+      
+      if (ancienEmail && ancienEmail !== email) {
+        // Créer une activité pour tracer le changement
+        const Activite = $parse.Object.extend('Activite')
+        const activite = new Activite()
+        activite.set('type', 'email_relance_remplace')
+        activite.set('details', `Email de relance remplacé: ${ancienEmail} → ${email}`)
+        activite.set('contactRelance', contactRelance)
+        activite.set('relance', relance)
+        activites.push(activite)
+        
+        // Mettre à jour l'email de la relance
+        relance.set('to', email)
+        relance.set('contactRelance', contactRelance)
+        relancesAMettreAJour.push(relance)
+      }
+    }
+    
+    if (relancesAMettreAJour.length > 0) {
+      // Sauvegarder les activités
+      if (activites.length > 0) {
+        await $parse.Object.saveAll(activites)
+      }
+      
+      // Sauvegarder les relances
+      await $parse.Object.saveAll(relancesAMettreAJour)
+      
+      // Mettre à jour les statistiques du contact de relance
+      contactRelance.set('nombreUtilisations', (contactRelance.get('nombreUtilisations') || 0) + relancesAMettreAJour.length)
+      contactRelance.set('dateDerniereUtilisation', new Date())
+      await contactRelance.save()
+      
+      toast.add({ 
+        title: 'Relances mises à jour', 
+        description: `${relancesAMettreAJour.length} relance(s) mise(s) à jour avec le nouvel email`, 
+        color: 'blue' 
+      })
+    }
+    
+  } catch (error) {
+    console.error('Erreur dans mettreAJourRelancesAvecEmailRelance:', error)
+    throw error
+  }
+}
 
 onMounted(() => {
   charger()

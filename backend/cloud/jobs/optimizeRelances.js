@@ -2,9 +2,19 @@
 // Job d'optimisation des relances pour éviter le spam
 // Regroupe les relances multiples pour un même contact/email/sequence
 
+// Initialiser Parse au niveau du module pour éviter les problèmes de portée
+const Parse = require('parse/node');
+
 module.exports = async function optimizeRelances() {
-  if (typeof Parse === 'undefined') {
-    throw new Error('Parse SDK not initialized. This job must run in a Parse Cloud environment.');
+  // Vérifier si Parse est initialisé, sinon utiliser la configuration globale
+  if (!Parse.applicationId) {
+    Parse.initialize(
+      process.env.PARSE_APP_ID || 'marki15-app',
+      process.env.PARSE_JAVASCRIPT_KEY || '',
+      process.env.PARSE_MASTER_KEY || 'e2f4e4e89056af61dd95a71226fa0e51917313e09b68aca8bf434e5eb9bd8aa9'
+    );
+    Parse.serverURL = process.env.PARSE_SERVER_URL || 'http://localhost:1555/parse';
+    Parse.Cloud.useMasterKey();
   }
 
   console.log('[optimizeRelances] Début optimisation (anti-spam)...');
@@ -14,6 +24,7 @@ module.exports = async function optimizeRelances() {
     contactsProcessed: 0,
     relancesConsolidated: 0,
     relancesOptimized: 0,
+    emailsRelanceAppliques: 0,
     errors: 0
   };
 
@@ -58,6 +69,20 @@ module.exports = async function optimizeRelances() {
         const emailRelances = relances.filter(r => r.get('to') === emailAddress);
         if (emailRelances.length === 0) continue;
 
+        // D'abord, vérifier et appliquer les emails de relance pour chaque relance
+        let emailsRelanceAppliques = 0;
+        for (const relance of emailRelances) {
+          const applique = await checkAndApplyEmailRelance(relance);
+          if (applique) {
+            emailsRelanceAppliques++;
+          }
+        }
+
+        if (emailsRelanceAppliques > 0) {
+          stats.emailsRelanceAppliques += emailsRelanceAppliques;
+          console.log(`[optimizeRelances] ${emailsRelanceAppliques} emails de relance appliqués pour ${emailAddress}`);
+        }
+
         // Groupement par : to + sequence_id + email_index
         const groupes = groupRelances(emailRelances);
 
@@ -88,9 +113,10 @@ module.exports = async function optimizeRelances() {
       log.set('finishedAt', finishedAt);
       log.set('durationMs', finishedAt - startedAt);
       log.set('trigger', 'cron');
-      log.set('status', stats.errors === 0 ? 'success' : (stats.relancesOptimized > 0 ? 'partial' : 'error'));
+      log.set('status', stats.errors === 0 ? 'success' : (stats.relancesOptimized > 0 || stats.emailsRelanceAppliques > 0 ? 'partial' : 'error'));
       log.set('relances_consolidated', stats.relancesConsolidated);
       log.set('relances_optimized', stats.relancesOptimized);
+      log.set('emails_relance_appliques', stats.emailsRelanceAppliques);
       log.set('contacts_processed', stats.contactsProcessed);
       log.set('errors', stats.errors);
       await log.save(null, { useMasterKey: true });
@@ -129,6 +155,63 @@ function groupRelances(relances) {
     groupes[key].push(r);
   });
   return groupes;
+}
+
+// Vérifier et appliquer les emails de relance si disponibles
+async function checkAndApplyEmailRelance(relance) {
+  try {
+    const emailAddress = relance.get('to');
+    if (!emailAddress) return false;
+
+    // 1. Chercher un contact qui est utilisé comme email de relance
+    const Contact = Parse.Object.extend('Contact');
+    const query = new Parse.Query(Contact);
+    query.equalTo('email', emailAddress);
+    query.equalTo('estActif', true);
+    query.exists('nombreUtilisations');
+    
+    const contactRelance = await query.first({ useMasterKey: true });
+    
+    if (contactRelance) {
+      // 2. Mettre à jour la relance avec l'email de relance
+      const ancienEmail = relance.get('to');
+      const nouvelEmail = contactRelance.get('email');
+      
+      if (ancienEmail !== nouvelEmail) {
+        relance.set('to', nouvelEmail);
+        relance.set('contactRelance', contactRelance);
+        
+        // 3. Créer une activité pour tracer le changement
+        const Activite = Parse.Object.extend('Activite');
+        const activite = new Activite();
+        activite.set('type', 'email_relance_applique');
+        activite.set('details', `Email de relance appliqué: ${ancienEmail} → ${nouvelEmail}`);
+        activite.set('contactRelance', contactRelance);
+        activite.set('relance', relance);
+        activite.set('optimizeImpact', true);
+        activite.set('impactDetails', {
+          action: 'email_relance_applique',
+          oldEmail: ancienEmail,
+          newEmail: nouvelEmail,
+          relanceId: relance.id,
+          contactRelanceId: contactRelance.id
+        });
+        
+        // 4. Mettre à jour les statistiques du contact de relance
+        contactRelance.set('nombreUtilisations', (contactRelance.get('nombreUtilisations') || 0) + 1);
+        contactRelance.set('dateDerniereUtilisation', new Date());
+        
+        await Parse.Object.saveAll([relance, contactRelance, activite], { useMasterKey: true });
+        
+        console.log(`[optimizeRelances] Email de relance appliqué: ${ancienEmail} → ${nouvelEmail}`);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error(`[optimizeRelances] Erreur checkAndApplyEmailRelance:`, error.message);
+    return false;
+  }
 }
 
 // Création d'une relance consolidée pour un groupe (même to + sequence + email_index)
@@ -201,6 +284,22 @@ async function createConsolidatedRelance(groupe) {
     }),
     { useMasterKey: true }
   );
+
+  // Créer une activité pour tracer la consolidation
+  const Activite = Parse.Object.extend('Activite');
+  const activite = new Activite();
+  activite.set('type', 'relance_consolidee');
+  activite.set('details', `Relance consolidée créée à partir de ${groupe.length} relances: ${groupe.map(r => r.id).join(', ')}`);
+  activite.set('relance', consolidated);
+  activite.set('optimizeImpact', true);
+  activite.set('impactDetails', {
+    action: 'relance_consolidee',
+    consolidatedRelanceId: consolidated.id,
+    sourceRelanceIds: groupe.map(r => r.id),
+    count: groupe.length,
+    emailIndex: emailIndex
+  });
+  await activite.save(null, { useMasterKey: true });
 
   console.log(`[optimizeRelances] Relance consolidée ${consolidated.id} créée (${groupe.length} relances, email_index=${emailIndex}, smtp=${scenario.smtp})`);
 }

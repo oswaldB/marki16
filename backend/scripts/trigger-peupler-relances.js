@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Script pour déclencher manuellement l'optimisation des relances
+// Script pour déclencher manuellement le peuplement des relances avec emails de relance
 // À exécuter pour tester le job avant de le mettre en production
 
 const path = require('path');
@@ -15,25 +15,23 @@ Parse.initialize(
 Parse.serverURL = process.env.PARSE_SERVER_URL || 'http://localhost:1555/parse';
 Parse.Cloud.useMasterKey();
 
-const optimizeRelances = require('../cloud/jobs/optimizeRelances');
+const peuplerRelancesAvecEmails = require('../cloud/jobs/peuplerRelancesAvecEmails');
 
 async function main() {
-  console.log('🚀 Déclenchement manuel de optimizeRelances...\n');
+  console.log('🚀 Déclenchement manuel de peuplerRelancesAvecEmails...\n');
   
   try {
-    const result = await optimizeRelances();
-    console.log('✅ Succès ! Optimisation des relances terminée');
+    const result = await peuplerRelancesAvecEmails();
+    console.log('✅ Succès ! Peuplement des relances terminé');
     console.log('Résultat:', result);
     
     console.log('\n📊 Statistiques :');
-    console.log(`- Contacts traités: ${result.contactsProcessed}`);
-    console.log(`- Relances consolidées: ${result.relancesConsolidated}`);
-    console.log(`- Relances optimisées: ${result.relancesOptimized}`);
-    console.log(`- Emails de relance appliqués: ${result.emailsRelanceAppliques || 0}`);
-    console.log(`- Erreurs: ${result.errors}`);
+    console.log(`- Relances traitées: ${result.relancesTraitees}`);
+    console.log(`- Contacts de relance appliqués: ${result.contactsRelanceAppliques}`);
+    console.log(`- Erreurs: ${result.erreurs}`);
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'optimisation des relances:', error);
+    console.error('❌ Erreur lors du peuplement des relances:', error);
     process.exit(1);
   }
 }

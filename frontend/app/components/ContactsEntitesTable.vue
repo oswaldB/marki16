@@ -53,11 +53,33 @@
       <span v-else class="text-gray-400 italic">—</span>
     </template>
 
+    <template #email-relance-cell="{ row }">
+      <!-- Email de relance -->
+      <span v-if="row.original.email_relance" class="text-gray-700">
+        {{ getEmailFromPointer(row.original.email_relance) }}
+      </span>
+      <span v-else class="text-gray-400 italic">—</span>
+    </template>
+
     <template #telephone-cell="{ row }">
       <!-- Téléphone de l'entreprise ou de l'employé -->
       <span class="text-gray-700">
         {{ row.original.telephone }}
       </span>
+    </template>
+
+    <template #actions-cell="{ row }">
+      <!-- Bouton de relance par email -->
+      <UButton
+        color="primary"
+        icon="i-heroicons-envelope"
+        size="xs"
+        variant="ghost"
+        @click.stop="() => $emit('relance-email', row.original.id)"
+        title="Définir un email de relance"
+      >
+        Définir un email de relance
+      </UButton>
     </template>
   </UTable>
 </template>
@@ -80,5 +102,28 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['relance-email'])
 const expanded = ref({})
+
+// Helper function to get email from pointer or string
+function getEmailFromPointer(emailRelance) {
+  if (!emailRelance) return null
+  
+  // If it's a Parse Object/Pointer, get the email from it
+  if (emailRelance.id && typeof emailRelance.get === 'function') {
+    return emailRelance.get('email')
+  }
+  
+  // If it's already a string (backward compatibility)
+  if (typeof emailRelance === 'string') {
+    return emailRelance
+  }
+  
+  // If it's an object with email property
+  if (emailRelance.email) {
+    return emailRelance.email
+  }
+  
+  return null
+}
 </script>

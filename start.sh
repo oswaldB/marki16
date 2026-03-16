@@ -140,7 +140,7 @@ cd ..
 # Démarrer Caddy
 echo "🌐 Démarrage de Caddy..."
 if command -v caddy &> /dev/null; then
-    sudo caddy start --config ./Caddyfile
+    sudo caddy start --config /etc/caddy/Caddyfile
     if [ $? -eq 0 ]; then
         echo "   ✅ Caddy démarré"
         echo "   🌐 Frontend: https://dev.markidiags.com"

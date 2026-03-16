@@ -231,25 +231,44 @@ Parse.Cloud.define('verifyPaidInvoicesNow', async (request) => {
 // ─── construireDestinataires ──────────────────────────────────────────────────
 // Remplace [[payeur_email]] et [[apporteur_email]] en concaténant l'email
 // de la personne morale et celui du contact personne physique si présent.
-// Si un relanceContact est défini sur l'impayé, son email prime sur payeur_email.
+// Si un email_relance est défini sur l'impayé, son email prime sur relanceContact et payeur_email.
 
 async function construireDestinataires(template, impaye) {
   if (!template) return '';
   const joindre = (...emails) => emails.filter(Boolean).join(', ');
 
-  // Résoudre l'email de relances : relanceContact en priorité sur payeur_email
+  // Résoudre l'email de relances : email_relance en priorité, puis relanceContact, puis payeur_email
   let payeurEmail;
-  const relanceContact = impaye.get('relanceContact');
-  if (relanceContact) {
-    let email = relanceContact.get('email');
-    if (!email && relanceContact.id) {
+  
+  // 1. D'abord vérifier email_relance (nouveau champ pointer)
+  const emailRelance = impaye.get('email_relance');
+  if (emailRelance) {
+    let email = emailRelance.get('email');
+    if (!email && emailRelance.id) {
       try {
-        const fetched = await new Parse.Query('Contact').get(relanceContact.id, { useMasterKey: true });
+        const fetched = await new Parse.Query('Contact').get(emailRelance.id, { useMasterKey: true });
         email = fetched.get('email');
       } catch (_) {}
     }
     if (email) payeurEmail = email;
   }
+  
+  // 2. Sinon vérifier relanceContact (ancien champ pour compatibilité)
+  if (!payeurEmail) {
+    const relanceContact = impaye.get('relanceContact');
+    if (relanceContact) {
+      let email = relanceContact.get('email');
+      if (!email && relanceContact.id) {
+        try {
+          const fetched = await new Parse.Query('Contact').get(relanceContact.id, { useMasterKey: true });
+          email = fetched.get('email');
+        } catch (_) {}
+      }
+      if (email) payeurEmail = email;
+    }
+  }
+  
+  // 3. Enfin, utiliser payeur_email par défaut
   if (!payeurEmail) {
     payeurEmail = joindre(impaye.get('payeur_email'), impaye.get('payeur_contact_email'));
   }
@@ -319,8 +338,20 @@ Parse.Cloud.define('assignerSequence', async (request) => {
     return { created: 0 };
   }
 
-  // Vérifier qu'un email de relances est disponible (payeur_email ou relanceContact.email)
+  // Vérifier qu'un email de relances est disponible (payeur_email, email_relance ou relanceContact.email)
   let hasEmail = !!impaye.get('payeur_email');
+  if (!hasEmail) {
+    const emailRelancePtr = impaye.get('email_relance');
+    if (emailRelancePtr) {
+      try {
+        const rc = await new Parse.Query('Contact').get(emailRelancePtr.id, { useMasterKey: true });
+        if (rc.get('email')) {
+          hasEmail = true;
+          impaye.set('email_relance', rc); // version résolue pour construireDestinataires
+        }
+      } catch (_) {}
+    }
+  }
   if (!hasEmail) {
     const relanceContactPtr = impaye.get('relanceContact');
     if (relanceContactPtr) {
@@ -447,6 +478,7 @@ Parse.Cloud.define('validerRelance', async (request) => {
 // Attribue un contact de relances par défaut à un impayé.
 // Params : impayelId + (contactId OU { nom, email })
 // Met à jour toutes les relances pending de l'impayé avec le nouvel email.
+// Sauvegarde le contact dans le champ email_relance (pointer vers Contact).
 
 Parse.Cloud.define('attribuerRelanceContact', async (request) => {
   if (!request.user) throw new Error('Authentification requise');
@@ -467,7 +499,7 @@ Parse.Cloud.define('attribuerRelanceContact', async (request) => {
     await contact.save(null, { useMasterKey: true });
   }
 
-  impaye.set('relanceContact', contact);
+  impaye.set('email_relance', contact);
   await impaye.save(null, { useMasterKey: true });
 
   // Mettre à jour le champ `to` de toutes les relances pending
@@ -476,7 +508,7 @@ Parse.Cloud.define('attribuerRelanceContact', async (request) => {
   qRelances.equalTo('statut', 'pending');
   const pendingRelances = await qRelances.find({ useMasterKey: true });
 
-  // Reconstruire le champ `to` via construireDestinataires (qui utilise désormais relanceContact)
+  // Reconstruire le champ `to` via construireDestinataires (qui utilise désormais email_relance)
   const nouveauTo = await construireDestinataires('[[payeur_email]]', impaye);
   for (const relance of pendingRelances) {
     relance.set('to', nouveauTo);
@@ -576,6 +608,18 @@ async function appliquerReglesAttributionAutomatique(impaye) {
     if (correspond) {
       // Vérifier qu'un email de relances est disponible
       let hasEmail = !!impaye.get('payeur_email');
+      if (!hasEmail) {
+        const emailRelancePtr = impaye.get('email_relance');
+        if (emailRelancePtr) {
+          try {
+            const rc = await new Parse.Query('Contact').get(emailRelancePtr.id, { useMasterKey: true });
+            if (rc.get('email')) {
+              hasEmail = true;
+              impaye.set('email_relance', rc);
+            }
+          } catch (_) {}
+        }
+      }
       if (!hasEmail) {
         const relanceContactPtr = impaye.get('relanceContact');
         if (relanceContactPtr) {

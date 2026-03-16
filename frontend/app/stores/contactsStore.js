@@ -33,6 +33,7 @@ export const useContactsStore = defineStore('contacts', {
         const query = new $parse.Query('Contact')
         query.limit(1000)
         query.include('entreprise')
+        query.include('email_relance')
         query.ascending('nom')
         
         const contacts = await query.find()
@@ -128,6 +129,7 @@ export const useContactsStore = defineStore('contacts', {
       // 1. Récupérer toutes les personnes morales (type_personne === 'M')
       const q = new $parse.Query(Contact)
       q.equalTo('type_personne', 'M')
+      q.include('email_relance')
       q.ascending('nom')
       const entreprises = await q.find()
 
@@ -158,6 +160,7 @@ export const useContactsStore = defineStore('contacts', {
       // Récupérer les personnes physiques (type_personne !== 'M') non-employés d'une entreprise
       const q = new $parse.Query(Contact)
       q.notEqualTo('type_personne', 'M')
+      q.include('email_relance')
       q.ascending('nom')
       const candidats = await q.find()
 

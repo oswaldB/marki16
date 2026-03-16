@@ -3,5 +3,10 @@ export default defineAppConfig({
     colors: {
       primary: 'sky',
     },
+    table: {
+      slots: {
+        root: 'relative overflow-auto',
+      },
+    },
   },
 })

@@ -20,16 +20,7 @@
         </div>
       </div>
       <!-- Bouton Synchroniser -->
-      <UButton
-        :loading="syncing"
-        :disabled="syncing"
-        color="neutral"
-        variant="outline"
-        icon="i-heroicons-arrow-path"
-        @click="lancerSyncImpayes"
-      >
-        {{ syncing ? 'Sync...' : 'Synchroniser' }}
-      </UButton>
+      <SyncButton @success="charger" />
     </div>
 
     <!-- Barre de filtres -->
@@ -73,7 +64,7 @@
 
     <!-- ── Vue unitaire ── -->
     <div v-if="activeView === 'unitaire'" class="space-y-3">
-      <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[60vh] !overflow-x-auto !overflow-y-auto">
+      <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[60vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
         <UTable
           ref="tableUnitaire"
           :data="impayes"
@@ -161,7 +152,7 @@
       <div v-if="loading" class="text-center py-8 text-gray-400">Chargement...</div>
       <div v-else-if="impayes.length === 0" class="text-center py-8 text-gray-400">Aucun impayé trouvé</div>
       <template v-else>
-        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto">
+        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
           <UTable
             :data="impayes"
             :columns="colonnesPayeur"
@@ -254,7 +245,7 @@
       <div v-if="loading" class="text-center py-8 text-gray-400">Chargement...</div>
       <div v-else-if="impayes.length === 0" class="text-center py-8 text-gray-400">Aucun impayé trouvé</div>
       <template v-else>
-        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto">
+        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
           <UTable
             :data="impayesContactFlat"
             :columns="colonnesContact"
@@ -344,7 +335,7 @@
       <div v-if="loading" class="text-center py-8 text-gray-400">Chargement...</div>
       <div v-else-if="impayes.length === 0" class="text-center py-8 text-gray-400">Aucun impayé sans séquence trouvé</div>
       <template v-else>
-        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto">
+        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
           <UTable
             :data="impayes"
             :columns="colonnesParDefaut"
@@ -434,9 +425,7 @@
         <UButton size="sm" color="primary" variant="solid" @click="modalAssignerOuvert = true">
           Assigner une séquence
         </UButton>
-        <UButton size="sm" color="success" variant="solid" @click="marquerPayesGroupes">
-          Marquer payé
-        </UButton>
+
         <UButton size="sm" color="neutral" variant="ghost" @click="selection = []">
           Annuler
         </UButton>
@@ -490,6 +479,17 @@
     </UModal>
   </div>
 </template>
+
+<style>
+.force-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.force-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+</style>
 
 <script setup>
 import { h, resolveComponent } from 'vue'
@@ -556,9 +556,6 @@ const modalAssignerOuvert = ref(false)
 const sequenceChoisie = ref(null)
 const assignant = ref(false)
 const impayesCibles = ref([])
-
-// Synchronisation
-const syncing = ref(false)
 
 // ── TanStack Table : état partagé entre les vues ──
 const globalFilter = ref('')
@@ -776,11 +773,7 @@ function menuItems(row) {
         modalAssignerOuvert.value = true
       },
     },
-    {
-      label: 'Marquer payé',
-      icon: 'i-heroicons-check-circle',
-      onSelect: () => marquerPaye(row),
-    },
+
   ]
 }
 
@@ -799,20 +792,7 @@ async function assignerSequenceWrapper() {
   }
 }
 
-async function lancerSyncImpayes() {
-  syncing.value = true
-  try {
-    const syncStats = await $parse.Cloud.run('syncNow')
-    toast.add({ title: 'Synchronisation terminée', description: `${syncStats.imported || 0} impayés synchronisés`, color: 'green' })
-    const verifyStats = await $parse.Cloud.run('verifyPaidInvoicesNow')
-    toast.add({ title: 'Vérification terminée', description: `${verifyStats.updated || 0} factures marquées comme payées`, color: 'green' })
-    await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    syncing.value = false
-  }
-}
+
 
 onMounted(() => {
   charger()

@@ -8,16 +8,7 @@
         <p class="text-sm text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
       </div>
       <!-- Bouton Synchroniser -->
-      <UButton
-        :loading="syncing"
-        :disabled="syncing"
-        color="neutral"
-        variant="outline"
-        icon="i-heroicons-arrow-path"
-        @click="lancerSyncImpayes"
-      >
-        Synchroniser
-      </UButton>
+      <SyncButton @success="onMounted" />
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
@@ -88,12 +79,12 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Taux de recouvrement</p>
-                <UTooltip text="Pourcentage d'impayés avec statut 'payé' par rapport au total">
+                <UTooltip text="Pourcentage d'impayés avec statut 'payé' par rapport au total (12 derniers mois)">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.taux_recouvrement }}%</p>
-              <p class="text-xs text-gray-400">des dossiers payés</p>
+              <p class="text-xs text-gray-400">des dossiers payés (12 mois)</p>
             </div>
           </div>
         </UCard>
@@ -103,38 +94,9 @@
       </div>
 
       <!-- ── Graphiques ── -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4">
 
-        <!-- Donut statuts -->
-        <UCard>
-          <template #header>
-            <div class="flex items-center gap-1.5">
-              <p class="text-sm font-semibold text-gray-700">Répartition par statut</p>
-              <UTooltip text="Nombre d'impayés par statut (impayé, en cours, payé)">
-                <UIcon name="i-heroicons-information-circle" class="size-4 text-gray-400" />
-              </UTooltip>
-            </div>
-          </template>
-          <div class="flex items-center justify-center h-52">
-            <Doughnut :data="donutData" :options="donutOptions" />
-          </div>
-          <div class="flex justify-center gap-5 mt-3 text-xs text-gray-600">
-            <span class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-orange-400 inline-block" />
-              Impayé ({{ statutCounts.impaye }})
-            </span>
-            <span class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-blue-500 inline-block" />
-              En cours ({{ statutCounts.en_cours }})
-            </span>
-            <span class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-green-500 inline-block" />
-              Payé ({{ statutCounts.paye }})
-            </span>
-          </div>
-        </UCard>
-
-        <!-- Bar mois -->
+        <!-- Bar mois (pleine largeur) -->
         <UCard>
           <template #header>
             <div class="flex items-center gap-1.5">
@@ -254,7 +216,6 @@
               </div>
               <div class="flex items-center gap-2 shrink-0 ml-2">
                 <span class="text-sm font-medium text-gray-800">{{ formatMontant(imp.reste_a_payer) }}</span>
-                <UBadge :color="statutColor(imp.statut)" variant="subtle" size="xs">{{ imp.statut }}</UBadge>
                 <NuxtLink :to="`/impayes/${imp.id}`">
                   <UIcon name="i-heroicons-arrow-top-right-on-square" class="size-4 text-gray-400 hover:text-sky-600" />
                 </NuxtLink>
@@ -270,24 +231,22 @@
 </template>
 
 <script setup>
-import { Doughnut, Bar } from 'vue-chartjs'
+import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
   CategoryScale,
   LinearScale,
   BarElement,
+  Tooltip,
+  Legend,
 } from 'chart.js'
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const { $parse } = useNuxtApp()
 
 // ── State ──────────────────────────────────────────────────────
 const loading = ref(true)
-const syncing = ref(false)
 
 const kpi = ref({
   impayes_actifs:    0,
@@ -296,7 +255,6 @@ const kpi = ref({
   taux_recouvrement: 0,
 })
 
-const statutCounts = ref({ impaye: 0, en_cours: 0, paye: 0 })
 const montantsMois = ref({
   ttc: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   reste: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -311,7 +269,6 @@ onMounted(async () => {
   try {
     await Promise.all([
       chargerKpi(),
-      chargerStatuts(),
       chargerMontantsMois(),
       chargerRelancesJour(),
       chargerImpayes(),
@@ -325,11 +282,13 @@ onMounted(async () => {
 
 async function chargerKpi() {
   const today = endOfDay()
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
 
   const [actifs, total_count, paye_count, relances, contacts_sans_email] = await Promise.all([
-    new $parse.Query('Impaye').notEqualTo('statut', 'payé').doesNotExist('solde').count(),
-    new $parse.Query('Impaye').count(),
-    new $parse.Query('Impaye').equalTo('statut', 'payé').count(),
+    new $parse.Query('Impaye').equalTo('facture_soldee', false).greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
+    new $parse.Query('Impaye').greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
+    new $parse.Query('Impaye').equalTo('facture_soldee', true).greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
     new $parse.Query('Relance')
       .equalTo('statut', 'pending')
       .lessThanOrEqualTo('dateEnvoi', today)
@@ -339,10 +298,10 @@ async function chargerKpi() {
       .count(),
   ])
 
-  // Montant total impayé (somme des actifs non soldés, chargés en batch)
+  // Montant total impayé (somme des actifs non soldés des 12 derniers mois, chargés en batch)
   const qMontant = new $parse.Query('Impaye')
-  qMontant.notEqualTo('statut', 'payé')
-  qMontant.doesNotExist('solde')
+  qMontant.equalTo('facture_soldee', false)
+  qMontant.greaterThanOrEqualTo('date_piece', twelveMonthsAgo)
   qMontant.select('reste_a_payer')
   qMontant.limit(1000)
   const impayes_actifs = await qMontant.find()
@@ -357,36 +316,64 @@ async function chargerKpi() {
   }
 }
 
-async function chargerStatuts() {
-  const [impaye, en_cours, paye, solde] = await Promise.all([
-    new $parse.Query('Impaye').equalTo('statut', 'impaye').doesNotExist('solde').count(),
-    new $parse.Query('Impaye').equalTo('statut', 'en cours').doesNotExist('solde').count(),
-    new $parse.Query('Impaye').equalTo('statut', 'payé').count(),
-    new $parse.Query('Impaye').equalTo('solde', true).count(),
-  ])
-  statutCounts.value = { impaye, en_cours, paye: paye + solde }
-}
+// Le champ statut a été supprimé - cette fonction n'est plus nécessaire
 
 async function chargerMontantsMois() {
   const montantsTTC = []
   const montantsReste = []
   
-  // Calcul pour 12 mois + colonne "avant"
+  // Calcul pour 12 mois + colonne "avant" + mois courant
+  // i=13 → "Avant" (toutes les factures avant les 12 derniers mois)
+  // i=12 → mois-12, ..., i=0 → mois courant
+  
+  // Calcul pour la colonne "Avant" (toutes les factures non soldées avant les 12 derniers mois)
+  if (13 >= 0) {
+    const debut12Mois = new Date()
+    debut12Mois.setDate(1)
+    debut12Mois.setMonth(debut12Mois.getMonth() - 12)
+    debut12Mois.setHours(0, 0, 0, 0)
+
+    const qAvant = new $parse.Query('Impaye')
+    qAvant.lessThan('date_piece', debut12Mois)  // Avant le début des 12 derniers mois
+    qAvant.equalTo('facture_soldee', false)  // Seulement les factures non soldées
+    qAvant.select('total_ttc', 'reste_a_payer', 'date_piece')
+    qAvant.limit(1000)
+    const itemsAvant = await qAvant.find()
+    
+    const ttcAvant = itemsAvant.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
+    const resteAvant = itemsAvant.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
+    
+    montantsTTC.push(ttcAvant)
+    montantsReste.push(resteAvant)
+  }
+  
+  // Calcul pour les 12 mois + mois courant
   for (let i = 12; i >= 0; i--) {
     const debut = new Date()
     debut.setDate(1)
     debut.setMonth(debut.getMonth() - i)
     debut.setHours(0, 0, 0, 0)
+    
     const fin = new Date(debut)
     fin.setMonth(fin.getMonth() + 1)
+    fin.setDate(0) // Dernier jour du mois
+    fin.setHours(23, 59, 59, 999)
 
     const q = new $parse.Query('Impaye')
     q.greaterThanOrEqualTo('date_piece', debut)
-    q.lessThan('date_piece', fin)
-    q.doesNotExist('solde')
-    q.select('total_ttc', 'reste_a_payer')
+    q.lessThanOrEqualTo('date_piece', fin)
+    q.select('total_ttc', 'reste_a_payer', 'date_piece')
     q.limit(500)
     const items = await q.find()
+    
+    // Debug pour le mois courant (i=0)
+    if (i === 0) {
+      console.log('Mois courant - Début:', debut.toISOString(), 'Fin:', fin.toISOString())
+      console.log('Nombre d\'items trouvés:', items.length)
+      if (items.length > 0) {
+        console.log('Premier item:', items[0].get('date_piece')?.toISOString())
+      }
+    }
     
     const ttc = items.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
     const reste = items.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
@@ -429,7 +416,7 @@ async function chargerRelancesJour() {
 async function chargerImpayes() {
   const q = new $parse.Query('Impaye')
   q.descending('createdAt')
-  q.doesNotExist('solde')
+  q.equalTo('facture_soldee', false)
   q.limit(5)
   const results = await q.find()
   impayes_recents.value = results.map(r => ({
@@ -437,7 +424,6 @@ async function chargerImpayes() {
     nfacture:     r.get('nfacture') || '—',
     payeur_nom:   r.get('payeur_nom') || '—',
     reste_a_payer: r.get('reste_a_payer'),
-    statut:       r.get('statut') || '—',
   }))
 }
 
@@ -501,40 +487,22 @@ function formatMontantCourt(val) {
   return n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
 }
 
-function statutColor(statut) {
-  if (statut === 'payé') return 'green'
-  if (statut === 'en cours') return 'blue'
-  return 'orange'
-}
-
 function labelsMois() {
   const mois = []
-  // Commencer par "Avant" puis 12 mois
-  mois.push('Avant')
-  for (let i = 12; i >= 1; i--) {
-    const d = new Date()
-    d.setMonth(d.getMonth() - i)
-    mois.push(d.toLocaleDateString('fr-FR', { month: 'short' }))
+  // 14 éléments : "Avant" + 13 mois (incluant le mois courant)
+  for (let i = 13; i >= 0; i--) {
+    if (i === 13) {
+      mois.push('Avant')
+    } else {
+      const d = new Date()
+      d.setMonth(d.getMonth() - i)
+      mois.push(d.toLocaleDateString('fr-FR', { month: 'short' }))
+    }
   }
   return mois
 }
 
 // ── Chart data ─────────────────────────────────────────────────
-const donutData = computed(() => ({
-  labels: ['Impayé', 'En cours', 'Payé'],
-  datasets: [{
-    data: [statutCounts.value.impaye, statutCounts.value.en_cours, statutCounts.value.paye],
-    backgroundColor: ['#fb923c', '#3b82f6', '#22c55e'],
-    borderWidth: 0,
-  }],
-}))
-
-const donutOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-}
-
 const barData = computed(() => ({
   labels: labelsMois(),
   datasets: [
@@ -546,7 +514,7 @@ const barData = computed(() => ({
     },
     {
       label: 'Montant payé',
-      data: montantsMois.value.ttc.map((ttc, i) => ttc - montantsMois.value.reste[i]),
+      data: montantsMois.value.ttc.map((ttc, i) => i === 0 ? 0 : ttc - montantsMois.value.reste[i]),
       backgroundColor: '#22c55e',
       borderRadius: 4,
     }

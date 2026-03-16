@@ -176,8 +176,8 @@ const QUERY = `
 
   WHERE
     (p."nfacture" IS NOT NULL)
-    AND (p."datepiece" >= (CAST(CAST((NOW() + INTERVAL '-300000 day') AS date) AS timestamptz) + INTERVAL '-7 day'))
-    AND (p."datepiece" < (CAST(CAST(NOW() AS date) AS timestamptz) + INTERVAL '-7 day'))
+    AND (p."datepiece" >= (CAST(CAST((NOW() + INTERVAL '-90 day') AS date) AS timestamptz)))
+    AND (p."datepiece" < (CAST(CAST(NOW() AS date) AS timestamptz)))
     AND (p."valide" = TRUE)
     AND EXISTS (
       SELECT 1
@@ -234,6 +234,25 @@ async function lierEmployeEntreprise(entreprise, personne) {
     relation.add(personne);
     await entreprise.save(null, { useMasterKey: true });
   }
+}
+
+// Fonction utilitaire pour comparer les changements
+function hasChanges(oldValues, newValues) {
+  if (!oldValues) return true; // Si oldValues est null, c'est une création
+  
+  for (const key in newValues) {
+    // Comparaison spéciale pour les dates
+    if (newValues[key] instanceof Date && oldValues[key] instanceof Date) {
+      if (newValues[key].getTime() !== oldValues[key].getTime()) {
+        return true;
+      }
+    }
+    // Comparaison normale pour les autres valeurs
+    else if (newValues[key] !== oldValues[key]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // ─── syncImpayes ──────────────────────────────────────────────────────────────
@@ -330,7 +349,6 @@ async function syncImpayes({ trigger = 'cron' } = {}) {
           impaye = new Impaye();
           impaye.set('externe_id',  row.nfacture);
           impaye.set('source',      'db_externe');
-          impaye.set('statut',      'impaye');
         }
 
         // Champs toujours mis à jour
@@ -409,27 +427,161 @@ async function syncImpayes({ trigger = 'cron' } = {}) {
           if (defaultRelance) impaye.set('contact_relance', defaultRelance);
         }
 
-        // Ne pas écraser statut si modifié manuellement
-        if (!isNewImpaye && impaye.get('statut') !== 'impaye') {
-          impaye.unset('statut'); // conserve la valeur existante
-        }
+        // (Le champ statut a été supprimé - cette logique n'est plus nécessaire)
+
+        // Stocker les valeurs avant sauvegarde pour comparaison
+        const oldValues = isNewImpaye ? null : {
+          nfacture: impaye.get('nfacture'),
+          date_piece: impaye.get('date_piece'),
+          date_debut_mission: impaye.get('date_debut_mission'),
+          total_ht: impaye.get('total_ht'),
+          total_ttc: impaye.get('total_ttc'),
+          reste_a_payer: impaye.get('reste_a_payer'),
+          facture_soldee: impaye.get('facture_soldee'),
+          commentaire_piece: impaye.get('commentaire_piece'),
+          ref_piece: impaye.get('ref_piece'),
+          url_pdf: impaye.get('url_pdf'),
+          id_dossier: impaye.get('id_dossier'),
+          numero_dossier: impaye.get('numero_dossier'),
+          reference: impaye.get('reference'),
+          reference_externe: impaye.get('reference_externe'),
+          statut_dossier: impaye.get('statut_dossier'),
+          commentaire_dossier: impaye.get('commentaire_dossier'),
+          employe_intervention: impaye.get('employe_intervention'),
+          adresse_bien: impaye.get('adresse_bien'),
+          code_postal: impaye.get('code_postal'),
+          ville: impaye.get('ville'),
+          numero_lot: impaye.get('numero_lot'),
+          etage: impaye.get('etage'),
+          entree: impaye.get('entree'),
+          escalier: impaye.get('escalier'),
+          porte: impaye.get('porte'),
+          payeur_nom: impaye.get('payeur_nom'),
+          payeur_email: impaye.get('payeur_email'),
+          payeur_telephone: impaye.get('payeur_telephone'),
+          payeur_type_personne: impaye.get('payeur_type_personne'),
+          payeur_type: impaye.get('payeur_type'),
+          payeur_contact_nom: impaye.get('payeur_contact_nom'),
+          payeur_contact_email: impaye.get('payeur_contact_email'),
+          apporteur_nom: impaye.get('apporteur_nom'),
+          apporteur_email: impaye.get('apporteur_email'),
+          apporteur_telephone: impaye.get('apporteur_telephone'),
+          apporteur_contact_nom: impaye.get('apporteur_contact_nom'),
+          apporteur_contact_email: impaye.get('apporteur_contact_email'),
+          acquereur_nom: impaye.get('acquereur_nom'),
+          acquereur_email: impaye.get('acquereur_email'),
+          acquereur_telephone: impaye.get('acquereur_telephone'),
+          donneur_ordre_nom: impaye.get('donneur_ordre_nom'),
+          donneur_ordre_email: impaye.get('donneur_ordre_email'),
+          donneur_ordre_telephone: impaye.get('donneur_ordre_telephone'),
+          locataire_entrant_nom: impaye.get('locataire_entrant_nom'),
+          locataire_entrant_email: impaye.get('locataire_entrant_email'),
+          locataire_entrant_telephone: impaye.get('locataire_entrant_telephone'),
+          locataire_sortant_nom: impaye.get('locataire_sortant_nom'),
+          locataire_sortant_email: impaye.get('locataire_sortant_email'),
+          locataire_sortant_telephone: impaye.get('locataire_sortant_telephone'),
+          notaire_nom: impaye.get('notaire_nom'),
+          notaire_email: impaye.get('notaire_email'),
+          notaire_telephone: impaye.get('notaire_telephone'),
+          proprietaire_nom: impaye.get('proprietaire_nom'),
+          proprietaire_email: impaye.get('proprietaire_email'),
+          proprietaire_telephone: impaye.get('proprietaire_telephone'),
+          proprietaire_type_personne: impaye.get('proprietaire_type_personne'),
+          proprietaire_contact_nom: impaye.get('proprietaire_contact_nom'),
+          proprietaire_contact_email: impaye.get('proprietaire_contact_email'),
+          syndic_nom: impaye.get('syndic_nom'),
+          syndic_email: impaye.get('syndic_email'),
+          syndic_telephone: impaye.get('syndic_telephone'),
+          payeur: impaye.get('payeur') ? impaye.get('payeur').id : null,
+          apporteur: impaye.get('apporteur') ? impaye.get('apporteur').id : null,
+          contact_relance: impaye.get('contact_relance') ? impaye.get('contact_relance').id : null
+        };
 
         await impaye.save(null, { useMasterKey: true });
         if (isNewImpaye) stats.impayes_created++; else stats.impayes_updated++;
 
-        // Log individuel pour cet impayé
+        // Log individuel pour cet impayé - seulement si création ou si mise à jour avec changements
         try {
-          const activite = new Parse.Object('Activite');
-          activite.set('type', 'sync_impaye');
-          activite.set('operation', isNewImpaye ? 'created' : 'updated');
-          activite.set('nfacture', row.nfacture);
-          activite.set('impaye_id', impaye.id);
-          activite.set('montant', row.resteapayer != null ? Number(row.resteapayer) : null);
-          activite.set('payeur_nom', row.payeur_nom || null);
-          activite.set('date_piece', row.datepiece ? new Date(row.datepiece) : null);
-          activite.set('trigger', trigger);
-          activite.set('timestamp', new Date());
-          await activite.save(null, { useMasterKey: true });
+          const shouldLogActivity = isNewImpaye || hasChanges(oldValues, {
+            nfacture: row.nfacture,
+            date_piece: row.datepiece  ? new Date(row.datepiece)       : null,
+            date_debut_mission: row.dateDebutMission ? new Date(row.dateDebutMission) : null,
+            total_ht: row.totalhtnet  != null ? Number(row.totalhtnet)  : null,
+            total_ttc: row.totalttcnet != null ? Number(row.totalttcnet) : null,
+            reste_a_payer: row.resteapayer != null ? Number(row.resteapayer) : null,
+            facture_soldee: row.facturesoldee,
+            commentaire_piece: row.commentaire_piece || null,
+            ref_piece: row.refpiece || null,
+            url_pdf: buildUrlPdf(row.refpiece, row.datepiece),
+            id_dossier: row.idDossier   ? String(row.idDossier)   : null,
+            numero_dossier: row.numero      || null,
+            reference: row.reference   || null,
+            reference_externe: row.referenceExterne || null,
+            statut_dossier: row.statut_intitule  || null,
+            commentaire_dossier: row.commentaire_dossier || null,
+            employe_intervention: row.employe_intervention || null,
+            adresse_bien: buildAdresse(row),
+            code_postal: row.codePostal  || null,
+            ville: row.ville       || null,
+            numero_lot: row.numeroLot   || null,
+            etage: row.etage       || null,
+            entree: row.entree      || null,
+            escalier: row.escalier    || null,
+            porte: row.porte       || null,
+            payeur_nom: row.payeur_nom || null,
+            payeur_email: row.payeur_email || null,
+            payeur_telephone: row.payeur_telephone || null,
+            payeur_type_personne: row.payeur_typePersonne || null,
+            payeur_type: row.payeur_type || null,
+            payeur_contact_nom: row.payeur_contact_nom || null,
+            payeur_contact_email: row.payeur_contact_email || null,
+            apporteur_nom: row.apporteur_nom || null,
+            apporteur_email: row.apporteur_email || null,
+            apporteur_telephone: row.apporteur_telephone || null,
+            apporteur_contact_nom: row.apporteur_contact_nom || null,
+            apporteur_contact_email: row.apporteur_contact_email || null,
+            acquereur_nom: row.acquereur_nom || null,
+            acquereur_email: row.acquereur_email || null,
+            acquereur_telephone: row.acquereur_telephone || null,
+            donneur_ordre_nom: row.donneur_ordre_nom || null,
+            donneur_ordre_email: row.donneur_ordre_email || null,
+            donneur_ordre_telephone: row.donneur_ordre_telephone || null,
+            locataire_entrant_nom: row.locataire_entrant_nom || null,
+            locataire_entrant_email: row.locataire_entrant_email || null,
+            locataire_entrant_telephone: row.locataire_entrant_telephone || null,
+            locataire_sortant_nom: row.locataire_sortant_nom || null,
+            locataire_sortant_email: row.locataire_sortant_email || null,
+            locataire_sortant_telephone: row.locataire_sortant_telephone || null,
+            notaire_nom: row.notaire_nom || null,
+            notaire_email: row.notaire_email || null,
+            notaire_telephone: row.notaire_telephone || null,
+            proprietaire_nom: row.proprietaire_nom || null,
+            proprietaire_email: row.proprietaire_email || null,
+            proprietaire_telephone: row.proprietaire_telephone || null,
+            proprietaire_type_personne: row.proprietaire_typePersonne || null,
+            proprietaire_contact_nom: row.proprietaire_contact_nom || null,
+            proprietaire_contact_email: row.proprietaire_contact_email || null,
+            syndic_nom: row.syndic_nom || null,
+            syndic_email: row.syndic_email || null,
+            syndic_telephone: row.syndic_telephone || null,
+            payeur: payeurContact ? payeurContact.id : null,
+            apporteur: apporteurContact ? apporteurContact.id : null,
+            contact_relance: isNewImpaye && (payeurPersonne || payeurContact) ? (payeurPersonne || payeurContact).id : (impaye.get('contact_relance') ? impaye.get('contact_relance').id : null)
+          });
+
+          if (shouldLogActivity) {
+            const activite = new Parse.Object('Activite');
+            activite.set('type', 'sync_impaye');
+            activite.set('operation', isNewImpaye ? 'created' : 'updated');
+            activite.set('nfacture', row.nfacture);
+            activite.set('impaye_id', impaye.id);
+            activite.set('montant', row.resteapayer != null ? Number(row.resteapayer) : null);
+            activite.set('payeur_nom', row.payeur_nom || null);
+            activite.set('date_piece', row.datepiece ? new Date(row.datepiece) : null);
+            activite.set('trigger', trigger);
+            activite.set('timestamp', new Date());
+            await activite.save(null, { useMasterKey: true });
+          }
         } catch (logErr) {
           console.error(`[syncImpayes] Erreur log activite pour ${row.nfacture}:`, logErr.message);
         }

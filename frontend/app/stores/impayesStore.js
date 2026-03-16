@@ -35,6 +35,7 @@ export const useImpayesStore = defineStore('impayes', {
         query.limit(1000)
         query.include('sequence')
         query.descending('date_piece')
+        query.equalTo('facture_soldee', false)
         
         const results = await query.find()
         this.allImpayes = results.map(this.rowToPlain)
