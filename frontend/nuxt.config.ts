@@ -19,6 +19,7 @@ export default defineNuxtConfig({
       parseAppId: process.env.PARSE_APP_ID || 'marki15-app-id',
       parseServerURL: process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com:8444/parse',
       parseJavaScriptKey: process.env.PARSE_JS_KEY || '',
+      apiBaseUrl: process.env.API_BASE_URL || 'https://adti.api.markidiags.com:8445',
     }
   },
   vite: {
@@ -28,9 +29,8 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/api': {
-          target: 'https://dev.api.markidiags.com:8444',
+          target: 'https://adti.api.markidiags.com:8445',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
         }
       }
     }

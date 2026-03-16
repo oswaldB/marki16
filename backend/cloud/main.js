@@ -529,6 +529,12 @@ Parse.Cloud.job('updateDynamicOptions', async (request) => {
   return await updateDynamicOptions();
 });
 
+// Cloud Job pour attribuer automatiquement des séquences (planifié tous les jours à 3h)
+const assignSequencesAutomatically = require('./jobs/assignSequencesAutomatically');
+Parse.Cloud.job('assignSequencesAutomatically', async (request) => {
+  return await assignSequencesAutomatically();
+});
+
 // Planifier le job pour s'exécuter toutes les heures à la 3ème minute (HH:03)
 // Parse.Cloud.startJob('updateDynamicOptions', { schedule: '0 3 * * * *' });
 
@@ -539,6 +545,15 @@ Parse.Cloud.define('updateDynamicOptions', async (request) => {
     throw new Error('Authentification requise');
   }
   return await updateDynamicOptions();
+});
+
+// Cloud Function pour déclenchement manuel de l'attribution automatique des séquences
+Parse.Cloud.define('assignSequencesAutomatically', async (request) => {
+  // Autoriser soit un utilisateur authentifié, soit la Master Key
+  if (!request.user && !request.master) {
+    throw new Error('Authentification requise');
+  }
+  return await assignSequencesAutomatically();
 });
 
 Parse.Cloud.define('hello', () => {

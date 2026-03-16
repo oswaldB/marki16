@@ -307,18 +307,6 @@
 
 <script setup>
 import { Bar } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Tooltip,
-  Legend,
-} from 'chart.js'
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend)
 
 const { $parse } = useNuxtApp()
 
@@ -500,6 +488,8 @@ async function chargerMontantsMois() {
     reste: montantsReste,
     count: montantsCount,
   }
+  
+  console.log('Montants par mois:', montantsMois.value)
 }
 
 async function chargerRelancesJour() {
@@ -617,40 +607,45 @@ function labelsMois() {
 }
 
 // ── Chart data ─────────────────────────────────────────────────
-const barData = computed(() => ({
-  labels: labelsMois(),
-  datasets: [
-    {
-      label: 'Reste à payer',
-      data: montantsMois.value.reste,
-      backgroundColor: '#fb923c',
-      borderRadius: 4,
-      yAxisID: 'y',
-      order: 2,
-    },
-    {
-      label: 'Montant payé',
-      data: montantsMois.value.ttc.map((ttc, i) => i === 0 ? 0 : ttc - montantsMois.value.reste[i]),
-      backgroundColor: '#22c55e',
-      borderRadius: 4,
-      yAxisID: 'y',
-      order: 2,
-    },
-    {
-      type: 'line',
-      label: 'Nb factures impayées',
-      data: montantsMois.value.count,
-      borderColor: '#6366f1',
-      backgroundColor: '#6366f1',
-      pointBackgroundColor: '#6366f1',
-      pointRadius: 4,
-      borderWidth: 2,
-      tension: 0.3,
-      yAxisID: 'y1',
-      order: 1,
-    },
-  ],
-}))
+const barData = computed(() => {
+  const data = {
+    labels: labelsMois(),
+    datasets: [
+      {
+        label: 'Reste à payer',
+        data: montantsMois.value.reste,
+        backgroundColor: '#fb923c',
+        borderRadius: 4,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        label: 'Montant payé',
+        data: montantsMois.value.ttc.map((ttc, i) => i === 0 ? 0 : ttc - montantsMois.value.reste[i]),
+        backgroundColor: '#22c55e',
+        borderRadius: 4,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: 'Nb factures impayées',
+        data: montantsMois.value.count,
+        borderColor: '#6366f1',
+        backgroundColor: '#6366f1',
+        pointBackgroundColor: '#6366f1',
+        pointRadius: 4,
+        borderWidth: 2,
+        tension: 0.3,
+        yAxisID: 'y1',
+        order: 1,
+      },
+    ],
+  }
+  
+  console.log('Données du graphique:', data)
+  return data
+})
 
 const barOptions = {
   responsive: true,

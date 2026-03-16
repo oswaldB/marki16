@@ -68,7 +68,7 @@ const parseDashboard = new ParseDashboard(dashboardConfig, { allowInsecureHTTP: 
 app.use('/parse-dashboard', parseDashboard);
 
 // Endpoint health personnalisé
-app.get('/healthy', (req, res) => {
+app.get('/api/healthy', (req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -156,7 +156,7 @@ const upload = multer({
 });
 
 // Étape 1 : upload + extraction texte
-app.post('/import/upload', upload.array('files', 50), async (req, res) => {
+app.post('/api/import/upload', upload.array('files', 50), async (req, res) => {
   try {
     const results = await Promise.all((req.files || []).map(async (file) => {
       const buffer = fs.readFileSync(file.path);
@@ -184,7 +184,7 @@ app.post('/import/upload', upload.array('files', 50), async (req, res) => {
 });
 
 // Étape 2 : parsing Ollama/Mistral
-app.post('/import/parse', express.json({ limit: '10mb' }), async (req, res) => {
+app.post('/api/import/parse', express.json({ limit: '10mb' }), async (req, res) => {
   const { files } = req.body;
   if (!Array.isArray(files) || files.length === 0) {
     return res.status(400).json({ error: 'Aucun fichier' });
@@ -254,7 +254,7 @@ ${excerpt}`;
 
 const SftpClient = require('ssh2-sftp-client');
 
-app.get('/pdf/:impayelId', async (req, res) => {
+app.get('/api/pdf/:impayelId', async (req, res) => {
   const { impayelId } = req.params;
 
   // Récupérer l'impayé depuis Parse
@@ -322,7 +322,7 @@ app.get('/pdf/:impayelId', async (req, res) => {
 
 // ─── Test SMTP ────────────────────────────────────────────────────────────────
 
-app.post('/smtp/test', express.json(), async (req, res) => {
+app.post('/api/smtp/test', express.json(), async (req, res) => {
   const { host, port, username, password } = req.body;
   if (!host || !username || !password) {
     return res.status(400).json({ ok: false, error: 'Champs manquants (host, username, password requis)' });
@@ -411,5 +411,18 @@ app.post('/smtp/test', express.json(), async (req, res) => {
       }
     });
     console.log('[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)');
+
+    // Cron quotidien à 3h : attribution automatique des séquences
+    const assignSequencesAutomatically = require('./cloud/jobs/assignSequencesAutomatically');
+    cron.schedule('0 3 * * *', async () => {
+      console.log('[cron] Attribution automatique des séquences...');
+      try {
+        const result = await assignSequencesAutomatically();
+        console.log('[cron] Attribution automatique terminée:', result.message, result.stats);
+      } catch (error) {
+        console.error('[cron] Erreur attribution automatique des séquences:', error);
+      }
+    });
+    console.log('[cron] Scheduler attribution automatique des séquences actif (tous les jours à 3h)');
   });
 })();

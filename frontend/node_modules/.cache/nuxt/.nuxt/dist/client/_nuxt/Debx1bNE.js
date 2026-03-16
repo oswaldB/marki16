@@ -1,1 +1,0 @@
-import{b9 as r,h as n,y as e,ba as a,aS as u}from"./CUQYlPAI.js";function i(t){const o=r({dir:n("ltr")});return e(()=>t?.value||o.dir?.value||"ltr")}function c(t){return e(()=>a(t)?!!u(t)?.closest("form"):!0)}export{c as a,i as u};

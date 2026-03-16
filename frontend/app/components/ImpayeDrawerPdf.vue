@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between w-full">
         <h3 class="text-base font-semibold text-gray-900">Aperçu PDF</h3>
         <div class="flex items-center gap-2">
-          <a :href="`/api/pdf/${impayelId}`" target="_blank">
+          <a :href="pdfUrl" target="_blank">
             <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="ghost" size="sm">
               Télécharger
             </UButton>
@@ -24,7 +24,7 @@
         </div>
         <iframe
           v-if="impayelId && !erreur"
-          :src="`/api/pdf/${impayelId}`"
+          :src="pdfUrl"
 
           class="w-full h-full border-0"
           style="min-height: calc(100vh - 80px)"
@@ -43,6 +43,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
+const config = useRuntimeConfig()
 const open = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
@@ -50,6 +51,10 @@ const open = computed({
 
 const loading = ref(true)
 const erreur = ref(false)
+
+const pdfUrl = computed(() => {
+  return `${config.public.apiBaseUrl}/api/pdf/${props.impayelId}`
+})
 
 watch(() => props.impayelId, () => {
   loading.value = true

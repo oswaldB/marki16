@@ -316,17 +316,19 @@ const runUploadAndParse = async () => {
   uploadError.value = ''
   uploading.value = true
   try {
+    const config = useRuntimeConfig()
+    
     // 1. Upload
     const formData = new FormData()
     for (const file of selectedFiles.value) {
       formData.append('files', file)
     }
-    const uploadRes = await fetch('/api/import/upload', { method: 'POST', body: formData })
+    const uploadRes = await fetch(`${config.public.apiBaseUrl}/api/import/upload`, { method: 'POST', body: formData })
     if (!uploadRes.ok) throw new Error(`Erreur upload (HTTP ${uploadRes.status})`)
     const { files: uploadedFiles } = await uploadRes.json()
 
     // 2. Parse avec Mistral
-    const parseRes = await fetch('/api/import/parse', {
+    const parseRes = await fetch(`${config.public.apiBaseUrl}/api/import/parse`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ files: uploadedFiles }),

@@ -1,0 +1,1 @@
+import{bj as r,h as n,y as e,bk as u,b4 as a}from"./CP8dzIg1.js";function i(t){const o=r({dir:n("ltr")});return e(()=>t?.value||o.dir?.value||"ltr")}function c(t){return e(()=>u(t)?!!a(t)?.closest("form"):!0)}export{c as a,i as u};

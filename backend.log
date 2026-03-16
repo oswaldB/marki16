@@ -50649,3 +50649,3007 @@ warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDoma
 warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
 warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
 Unable to listen on port 1555. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+error: Database transient error connect ECONNREFUSED 83.228.244.151:27017 {"cause":{"beforeHandshake":false,"errorLabelSet":{}},"errorLabelSet":{},"reason":{"commonWireVersion":0,"compatible":true,"heartbeatFrequencyMS":10000,"localThresholdMS":15,"logicalSessionTimeoutMinutes":null,"maxElectionId":null,"maxSetVersion":null,"servers":{"dev.api.markidiags.com:27017":{"$clusterTime":null,"address":"dev.api.markidiags.com:27017","arbiters":[],"electionId":null,"error":{"beforeHandshake":false,"errorLabelSet":{}},"hosts":[],"iscryptd":false,"lastUpdateTime":30906,"lastWriteDate":0,"logicalSessionTimeoutMinutes":null,"maxBsonObjectSize":null,"maxMessageSizeBytes":null,"maxWireVersion":0,"maxWriteBatchSize":null,"me":null,"minRoundTripTime":0,"minWireVersion":0,"passives":[],"primary":null,"roundTripTime":-1,"setName":null,"setVersion":null,"tags":{},"topologyVersion":null,"type":"Unknown"}},"setName":null,"stale":false,"type":"Unknown"},"stack":"MongoServerSelectionError: connect ECONNREFUSED 83.228.244.151:27017\n    at Topology.selectServer (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:347:38)\n    at async Topology._connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:220:28)\n    at async Topology.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:171:13)\n    at async topologyConnect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:258:17)\n    at async MongoClient._connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:271:13)\n    at async MongoClient.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:196:13)\n    at async MongoClient.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:438:16)"}
+error: Database transient error connect ECONNREFUSED 83.228.244.151:27017 {"cause":{"beforeHandshake":false,"errorLabelSet":{}},"errorLabelSet":{},"reason":{"commonWireVersion":0,"compatible":true,"heartbeatFrequencyMS":10000,"localThresholdMS":15,"logicalSessionTimeoutMinutes":null,"maxElectionId":null,"maxSetVersion":null,"servers":{"dev.api.markidiags.com:27017":{"$clusterTime":null,"address":"dev.api.markidiags.com:27017","arbiters":[],"electionId":null,"error":{"beforeHandshake":false,"errorLabelSet":{}},"hosts":[],"iscryptd":false,"lastUpdateTime":30906,"lastWriteDate":0,"logicalSessionTimeoutMinutes":null,"maxBsonObjectSize":null,"maxMessageSizeBytes":null,"maxWireVersion":0,"maxWriteBatchSize":null,"me":null,"minRoundTripTime":0,"minWireVersion":0,"passives":[],"primary":null,"roundTripTime":-1,"setName":null,"setVersion":null,"tags":{},"topologyVersion":null,"type":"Unknown"}},"setName":null,"stale":false,"type":"Unknown"},"stack":"MongoServerSelectionError: connect ECONNREFUSED 83.228.244.151:27017\n    at Topology.selectServer (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:347:38)\n    at async Topology._connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:220:28)\n    at async Topology.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/sdam/topology.js:171:13)\n    at async topologyConnect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:258:17)\n    at async MongoClient._connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:271:13)\n    at async MongoClient.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:196:13)\n    at async MongoClient.connect (/home/ubuntu/prod/adti/backend/node_modules/parse-server/node_modules/mongodb/lib/mongo_client.js:438:16)"}
+ParseError: Database error
+    at MongoStorageAdapter.handleError (/home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:249:13)
+    at /home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:448:130 {
+  code: 1
+}
+ParseError: Database error
+    at MongoStorageAdapter.handleError (/home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:249:13)
+    at /home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:448:130 {
+  code: 1
+}
+node:internal/process/promises:391
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+ParseError: Database error
+    at MongoStorageAdapter.handleError (/home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:249:13)
+    at /home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:448:130 {
+  code: 1
+}
+
+Node.js v20.20.1
+node:internal/process/promises:391
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+ParseError: Database error
+    at MongoStorageAdapter.handleError (/home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:249:13)
+    at /home/ubuntu/prod/adti/backend/node_modules/parse-server/lib/Adapters/Storage/Mongo/MongoStorageAdapter.js:448:130 {
+  code: 1
+}
+
+Node.js v20.20.1
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:41:00.302Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:41:00.302Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:42:00.343Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:42:00.343Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:43:00.364Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:43:00.364Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:44:00.515Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:44:00.515Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:45:00.530Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:45:00.530Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:46:00.543Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:46:00.543Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:47:00.551Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:47:00.551Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:48:00.567Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:48:00.567Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:49:00.580Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:49:00.580Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:50:00.596Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:50:00.596Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:51:00.615Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:51:00.615Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:52:00.638Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:52:00.638Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:53:00.654Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:53:00.654Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:54:00.667Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:54:00.667Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:55:00.678Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:55:00.678Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:58:00.016Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:58:00.016Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:59:00.037Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T19:59:00.037Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:00:00.744Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:00:00.744Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[pdf-proxy] Stream error: No response from server
+[pdf-proxy] Stream error: No response from server
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:02:00.737Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:02:00.737Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:03:00.751Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:03:00.751Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Mise à jour des options dynamiques...
+[cron] Mise à jour des options dynamiques...
+[updateDynamicOptions] Début de la mise à jour des options dynamiques
+[updateDynamicOptions] Début de la mise à jour des options dynamiques
+[updateDynamicOptions] Mise à jour des options pour statut_impaye depuis Impaye.statut
+[updateDynamicOptions] Mise à jour des options pour statut_impaye depuis Impaye.statut
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour statut_impaye
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour statut_impaye
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[updateDynamicOptions] Options statut_impaye mises à jour avec 0 valeurs
+[updateDynamicOptions] Mise à jour des options pour statut_relance depuis Relance.statut
+[updateDynamicOptions] Options statut_impaye mises à jour avec 0 valeurs
+[updateDynamicOptions] Mise à jour des options pour statut_relance depuis Relance.statut
+[updateDynamicOptions] Trouvé 1 valeurs distinctes pour statut_relance
+[updateDynamicOptions] Trouvé 1 valeurs distinctes pour statut_relance
+[updateDynamicOptions] Options statut_relance mises à jour avec 1 valeurs
+[updateDynamicOptions] Mise à jour des options pour statut_dossier depuis Impaye.statut_dossier
+[updateDynamicOptions] Options statut_relance mises à jour avec 1 valeurs
+[updateDynamicOptions] Mise à jour des options pour statut_dossier depuis Impaye.statut_dossier
+[updateDynamicOptions] Trouvé 5 valeurs distinctes pour statut_dossier
+[updateDynamicOptions] Trouvé 5 valeurs distinctes pour statut_dossier
+[updateDynamicOptions] Options statut_dossier mises à jour avec 5 valeurs
+[updateDynamicOptions] Options statut_dossier mises à jour avec 5 valeurs
+[updateDynamicOptions] Mise à jour des options pour payeur_type depuis Impaye.payeur_type
+[updateDynamicOptions] Mise à jour des options pour payeur_type depuis Impaye.payeur_type
+[updateDynamicOptions] Trouvé 3 valeurs distinctes pour payeur_type
+[updateDynamicOptions] Trouvé 3 valeurs distinctes pour payeur_type
+[updateDynamicOptions] Options payeur_type mises à jour avec 3 valeurs
+[updateDynamicOptions] Mise à jour des options pour payeur_type_personne depuis Impaye.payeur_type_personne
+[updateDynamicOptions] Options payeur_type mises à jour avec 3 valeurs
+[updateDynamicOptions] Mise à jour des options pour payeur_type_personne depuis Impaye.payeur_type_personne
+[updateDynamicOptions] Trouvé 2 valeurs distinctes pour payeur_type_personne
+[updateDynamicOptions] Trouvé 2 valeurs distinctes pour payeur_type_personne
+[updateDynamicOptions] Options payeur_type_personne mises à jour avec 2 valeurs
+[updateDynamicOptions] Mise à jour des options pour proprietaire_type_personne depuis Impaye.proprietaire_type_personne
+[updateDynamicOptions] Options payeur_type_personne mises à jour avec 2 valeurs
+[updateDynamicOptions] Mise à jour des options pour proprietaire_type_personne depuis Impaye.proprietaire_type_personne
+[updateDynamicOptions] Trouvé 2 valeurs distinctes pour proprietaire_type_personne
+[updateDynamicOptions] Trouvé 2 valeurs distinctes pour proprietaire_type_personne
+[updateDynamicOptions] Options proprietaire_type_personne mises à jour avec 2 valeurs
+[updateDynamicOptions] Options proprietaire_type_personne mises à jour avec 2 valeurs
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour ville depuis Impaye.ville
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour ville depuis Impaye.ville
+[updateDynamicOptions] Trouvé 21 valeurs distinctes pour ville
+[updateDynamicOptions] Trouvé 21 valeurs distinctes pour ville
+[updateDynamicOptions] Toutes les valeurs pour ville mises à jour (21 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour code_postal depuis Impaye.code_postal
+[updateDynamicOptions] Toutes les valeurs pour ville mises à jour (21 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour code_postal depuis Impaye.code_postal
+[updateDynamicOptions] Trouvé 22 valeurs distinctes pour code_postal
+[updateDynamicOptions] Trouvé 22 valeurs distinctes pour code_postal
+[updateDynamicOptions] Toutes les valeurs pour code_postal mises à jour (22 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour entreprise depuis Impaye.entreprise
+[updateDynamicOptions] Toutes les valeurs pour code_postal mises à jour (22 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour entreprise depuis Impaye.entreprise
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour entreprise
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour entreprise
+[updateDynamicOptions] Toutes les valeurs pour entreprise mises à jour (0 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_societe depuis Impaye.apporteur_societe
+[updateDynamicOptions] Toutes les valeurs pour entreprise mises à jour (0 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_societe depuis Impaye.apporteur_societe
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour apporteur_societe
+[updateDynamicOptions] Trouvé 0 valeurs distinctes pour apporteur_societe
+[updateDynamicOptions] Toutes les valeurs pour apporteur_societe mises à jour (0 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_nom depuis Impaye.payeur_nom
+[updateDynamicOptions] Toutes les valeurs pour apporteur_societe mises à jour (0 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_nom depuis Impaye.payeur_nom
+[updateDynamicOptions] Trouvé 79 valeurs distinctes pour payeur_nom
+[updateDynamicOptions] Trouvé 79 valeurs distinctes pour payeur_nom
+[updateDynamicOptions] Toutes les valeurs pour payeur_nom mises à jour (79 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_email depuis Impaye.payeur_email
+[updateDynamicOptions] Toutes les valeurs pour payeur_nom mises à jour (79 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_email depuis Impaye.payeur_email
+[updateDynamicOptions] Trouvé 63 valeurs distinctes pour payeur_email
+[updateDynamicOptions] Trouvé 63 valeurs distinctes pour payeur_email
+[updateDynamicOptions] Toutes les valeurs pour payeur_email mises à jour (63 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_telephone depuis Impaye.payeur_telephone
+[updateDynamicOptions] Toutes les valeurs pour payeur_email mises à jour (63 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour payeur_telephone depuis Impaye.payeur_telephone
+[updateDynamicOptions] Trouvé 7 valeurs distinctes pour payeur_telephone
+[updateDynamicOptions] Trouvé 7 valeurs distinctes pour payeur_telephone
+[updateDynamicOptions] Toutes les valeurs pour payeur_telephone mises à jour (7 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_nom depuis Impaye.apporteur_nom
+[updateDynamicOptions] Toutes les valeurs pour payeur_telephone mises à jour (7 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_nom depuis Impaye.apporteur_nom
+[updateDynamicOptions] Trouvé 45 valeurs distinctes pour apporteur_nom
+[updateDynamicOptions] Trouvé 45 valeurs distinctes pour apporteur_nom
+[updateDynamicOptions] Toutes les valeurs pour apporteur_nom mises à jour (45 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_email depuis Impaye.apporteur_email
+[updateDynamicOptions] Toutes les valeurs pour apporteur_nom mises à jour (45 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_email depuis Impaye.apporteur_email
+[updateDynamicOptions] Trouvé 35 valeurs distinctes pour apporteur_email
+[updateDynamicOptions] Trouvé 35 valeurs distinctes pour apporteur_email
+[updateDynamicOptions] Toutes les valeurs pour apporteur_email mises à jour (35 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_telephone depuis Impaye.apporteur_telephone
+[updateDynamicOptions] Toutes les valeurs pour apporteur_email mises à jour (35 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour apporteur_telephone depuis Impaye.apporteur_telephone
+[updateDynamicOptions] Trouvé 5 valeurs distinctes pour apporteur_telephone
+[updateDynamicOptions] Trouvé 5 valeurs distinctes pour apporteur_telephone
+[updateDynamicOptions] Toutes les valeurs pour apporteur_telephone mises à jour (5 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_nom depuis Impaye.proprietaire_nom
+[updateDynamicOptions] Toutes les valeurs pour apporteur_telephone mises à jour (5 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_nom depuis Impaye.proprietaire_nom
+[updateDynamicOptions] Trouvé 86 valeurs distinctes pour proprietaire_nom
+[updateDynamicOptions] Trouvé 86 valeurs distinctes pour proprietaire_nom
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_nom mises à jour (86 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_email depuis Impaye.proprietaire_email
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_nom mises à jour (86 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_email depuis Impaye.proprietaire_email
+[updateDynamicOptions] Trouvé 44 valeurs distinctes pour proprietaire_email
+[updateDynamicOptions] Trouvé 44 valeurs distinctes pour proprietaire_email
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_email mises à jour (44 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_telephone depuis Impaye.proprietaire_telephone
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_email mises à jour (44 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour proprietaire_telephone depuis Impaye.proprietaire_telephone
+[updateDynamicOptions] Trouvé 4 valeurs distinctes pour proprietaire_telephone
+[updateDynamicOptions] Trouvé 4 valeurs distinctes pour proprietaire_telephone
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_telephone mises à jour (4 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour adresse_bien depuis Impaye.adresse_bien
+[updateDynamicOptions] Toutes les valeurs pour proprietaire_telephone mises à jour (4 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour adresse_bien depuis Impaye.adresse_bien
+[updateDynamicOptions] Trouvé 84 valeurs distinctes pour adresse_bien
+[updateDynamicOptions] Trouvé 84 valeurs distinctes pour adresse_bien
+[updateDynamicOptions] Toutes les valeurs pour adresse_bien mises à jour (84 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour numero_lot depuis Impaye.numero_lot
+[updateDynamicOptions] Toutes les valeurs pour adresse_bien mises à jour (84 valeurs)
+[updateDynamicOptions] Mise à jour de toutes les valeurs pour numero_lot depuis Impaye.numero_lot
+[updateDynamicOptions] Trouvé 39 valeurs distinctes pour numero_lot
+[updateDynamicOptions] Trouvé 39 valeurs distinctes pour numero_lot
+[updateDynamicOptions] Toutes les valeurs pour numero_lot mises à jour (39 valeurs)
+[updateDynamicOptions] Toutes les options mises à jour avec succès
+[updateDynamicOptions] Toutes les valeurs pour numero_lot mises à jour (39 valeurs)
+[updateDynamicOptions] Toutes les options mises à jour avec succès
+info: Ran cloud function updateDynamicOptions for user undefined with:
+  Input: {}
+  Result: {"success":true,"message":"Options dynamiques mises à jour avec succès","updatedTypes":["statut_impaye","statut_relance","statut_dossier","payeur_type","payeur_type_personne","proprietaire_type_personne","ville","code_postal","entreprise","apporteur_societe","payeur_nom","payeur_email","payeur_telephone","apporteur_nom","apporteur_email","apporteur_telephone","proprietaire_nom","proprietaire_email","proprietaire_telephone","adresse_bien","numero_lot"]} {"functionName":"updateDynamicOptions","params":{}}
+[cron] Options dynamiques mises à jour avec succès: Options dynamiques mises à jour avec succès
+info: Ran cloud function updateDynamicOptions for user undefined with:
+  Input: {}
+  Result: {"success":true,"message":"Options dynamiques mises à jour avec succès","updatedTypes":["statut_impaye","statut_relance","statut_dossier","payeur_type","payeur_type_personne","proprietaire_type_personne","ville","code_postal","entreprise","apporteur_societe","payeur_nom","payeur_email","payeur_telephone","apporteur_nom","apporteur_email","apporteur_telephone","proprietaire_nom","proprietaire_email","proprietaire_telephone","adresse_bien","numero_lot"]} {"functionName":"updateDynamicOptions","params":{}}
+[cron] Options dynamiques mises à jour avec succès: Options dynamiques mises à jour avec succès
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:04:00.762Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:04:00.762Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:05:00.775Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:05:00.775Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Vérification des factures payées...
+[cron] Vérification des factures payées...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[verifyPaidInvoices] Trouvé 216 factures impayées dans Parse
+[verifyPaidInvoices] Trouvé 216 factures impayées dans Parse
+[verifyPaidInvoices] Trouvé 0 facture(s) payée(s) à vérifier
+[verifyPaidInvoices] Terminé — 0 mis à jour, 0 ignorés, 0 erreurs
+[verifyPaidInvoices] Trouvé 0 facture(s) payée(s) à vérifier
+[verifyPaidInvoices] Terminé — 0 mis à jour, 0 ignorés, 0 erreurs
+[cron] Vérification factures payées terminée: { updated: 0, errors: [], skipped: 0, invoiceNumbers: [] }
+[cron] Vérification factures payées terminée: { updated: 0, errors: [], skipped: 0, invoiceNumbers: [] }
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:07:00.606Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:07:00.606Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[pdf-proxy] Stream error: No response from server
+[pdf-proxy] Stream error: No response from server
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:08:00.624Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:08:00.624Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[pdf-proxy] Stream error: No response from server
+[pdf-proxy] Stream error: No response from server
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:09:00.640Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:09:00.640Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:10:00.660Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:10:00.660Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[pdf-proxy] Stream error: No response from server
+[pdf-proxy] Stream error: No response from server
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:11:00.673Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:11:00.673Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:12:00.699Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:12:00.699Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:13:00.717Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:13:00.717Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:14:00.728Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:14:00.728Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function createLienPaiement for user 8Do4NOiavE with:
+  Input: {"nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}
+  Result: {"id":"QLaFUMvDdW"} {"functionName":"createLienPaiement","params":{"nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"},"user":"8Do4NOiavE"}
+info: Ran cloud function createLienPaiement for user 8Do4NOiavE with:
+  Input: {"nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}
+  Result: {"id":"QLaFUMvDdW"} {"functionName":"createLienPaiement","params":{"nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:15:00.742Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:15:00.742Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:16:00.757Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:16:00.757Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:17:00.774Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:17:00.774Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:18:00.787Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:18:00.787Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:19:00.798Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:19:00.798Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:20:00.814Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:20:00.814Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:21:00.831Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:21:00.831Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:22:00.839Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:22:00.839Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:23:00.853Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:23:00.853Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:24:00.866Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:24:00.866Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:25:00.872Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:25:00.872Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:26:00.889Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:26:00.889Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:27:00.906Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:27:00.906Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:28:00.925Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:28:00.925Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:29:00.938Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:29:00.938Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:30:00.948Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:30:00.948Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:31:00.310Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:31:00.310Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:32:00.323Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:32:00.323Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:33:00.186Z
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:33:00.186Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:34:00.202Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:34:00.202Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+info: Ran cloud function listLiensPaiement for user 8Do4NOiavE with:
+  Input: {}
+  Result: [{"id":"QLaFUMvDdW","nom":"banque populaire","url":"https://paiement.systempay.fr/vads-site/EXIM?lck_vads_amount=[[resteapayer]]&vads_order_id=[[nfacture]]&vads_cust_id=[[numero_dossier]]"}] {"functionName":"listLiensPaiement","params":{},"user":"8Do4NOiavE"}
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:35:00.215Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[cron] Optimisation des relances (anti-spam)...
+[cron] Heure actuelle: 2026-03-16T20:35:00.215Z
+[optimizeRelances] Début optimisation (anti-spam)...
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] 1 relances pending trouvées pour 0 emails
+[optimizeRelances] Adresses email uniques: []
+[optimizeRelances] Répartition détaillée des relances:
+[optimizeRelances]   undefined_0_no-seq: 1 relance(s) - IDs: 38NVlmLo4j
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[optimizeRelances] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[cron] Optimisation terminée: {
+  contactsProcessed: 0,
+  relancesConsolidated: 0,
+  relancesOptimized: 0,
+  emailsRelanceAppliques: 0,
+  errors: 0
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+Server running on port 1556
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+(node:152095) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:152095) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+(node:152153) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:152153) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Server running on port 1556
+Parse Server available at https://dev.api.markidiags.com:8444/parse
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+Parse Dashboard available at http://localhost:1556/parse-dashboard
+Health check available at http://localhost:1556/healthy
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler sync impayés actif (tous les jours à 2h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler envoi relances actif (tous les jours à 18h)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler optimisation relances actif (toutes les minutes)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler options dynamiques actif (toutes les heures à HH:03)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[cron] Scheduler vérification factures payées actif (toutes les heures à HH:05)
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+(node:152210) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:152210) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+
+> marki15-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'fileUpload.allowedFileUrlDomains' default will change to '[]' in a future version. Set 'fileUpload.allowedFileUrlDomains' to the domains you want to allow, or to '[]' to block all file URLs.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+warn: DeprecationWarning: The Parse Server option 'pages.encodePageParamHeaders' default will change to 'true' in a future version. Set 'pages.encodePageParamHeaders' to 'true' to URI-encode non-ASCII characters in page parameter headers.
+warn: DeprecationWarning: The Parse Server option 'readOnlyMasterKeyIps' default will change to '["127.0.0.1", "::1"]' in a future version. Set 'readOnlyMasterKeyIps' to the IP addresses that should be allowed to use the read-only master key, or to '["127.0.0.1", "::1"]' to restrict access to localhost.
+(node:152277) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:152277) Warning: Accessing non-existent property 'appliquerReglesAttributionAutomatique' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+Unable to listen on port 1556. The port is already in use.Unable to listen on port 1556. The port is already in use.[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] clean exit - waiting for changes before restart[39m

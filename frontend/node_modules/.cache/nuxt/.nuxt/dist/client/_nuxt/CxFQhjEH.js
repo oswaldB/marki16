@@ -1,0 +1,1 @@
+import{bx as s,a7 as a,ab as r,by as c}from"./CP8dzIg1.js";const d=s(async()=>{let e,t;const{$parse:n}=a();if(!n.User.current())return r("/login");try{if(!([e,t]=c(()=>n.Cloud.run("checkAdminRole")),e=await e,t(),e))return r("/")}catch{return r("/")}});export{d as default};

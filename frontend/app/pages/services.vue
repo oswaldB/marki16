@@ -83,7 +83,8 @@ async function checkParseServer() {
   parseServer.error = null
   const t0 = Date.now()
   try {
-    const res = await fetch('/api/healthy')
+    const config = useRuntimeConfig()
+    const res = await fetch(`${config.public.apiBaseUrl}/api/healthy`)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     parseServer.responseMs = Date.now() - t0
     parseServer.status = 'ok'
