@@ -1,38 +1,45 @@
 <template>
-  <UModal v-model:open="open" :title="mode === 'create' ? 'Nouvelle relance' : 'Modifier la relance'">
+  <USlideover v-model:open="open">
+    <template #title>
+      {{ mode === 'create' ? 'Nouvelle relance' : 'Modifier la relance' }}
+    </template>
+
     <template #body>
-      <div class="space-y-4">
+      <div class="p-6 space-y-4">
         <!-- Date d'envoi -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Date d'envoi</label>
-          <UInput v-model="form.dateEnvoi" type="date" required />
+          <UInput v-model="form.dateEnvoi" type="date" required class="w-full" />
         </div>
 
         <!-- Objet -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Objet</label>
-          <UInput v-model="form.objet" placeholder="Objet du message" />
-        </div>
-
-        <!-- Insérer une variable (mode create uniquement) -->
-        <div v-if="mode === 'create'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Insérer une variable dans l'objet</label>
-          <USelect
-            :options="variableOptions"
-            value-attribute="value"
-            option-attribute="label"
-            placeholder="Choisir une variable..."
-            @change="insererVariable"
-          />
+          <UInput v-model="form.objet" placeholder="Objet du message" class="w-full" />
         </div>
 
         <!-- Corps -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Corps du message</label>
-          <UTextarea v-model="form.corps" :rows="8" placeholder="Corps du message..." />
+          <div class="border border-gray-200 rounded-md overflow-hidden">
+            <ToastuiEditor
+              ref="editorRef"
+              :initial-value="form.corps"
+              :options="editorOptions"
+              initial-edit-type="wysiwyg"
+            />
+          </div>
         </div>
+
+        <!-- Variables -->
+        <VariablesPicker
+          :variables="allVariables"
+          @copy="insererVariable"
+          @copy-payment-link="insererLienPaiement"
+        />
       </div>
     </template>
+
     <template #footer>
       <div class="flex justify-end gap-2">
         <UButton color="neutral" variant="ghost" @click="open = false">Annuler</UButton>
@@ -41,15 +48,20 @@
         </UButton>
       </div>
     </template>
-  </UModal>
+  </USlideover>
 </template>
 
 <script setup>
+import ToastuiEditor from '~/components/ToastuiEditor.vue'
+import VariablesPicker from '~/components/VariablesPicker.vue'
+import { editorOptions, VARIABLES } from '~/composables/useSequenceEditor'
+
 const props = defineProps({
-  modelValue: { type: Boolean, default: false },
-  mode: { type: String, default: 'create' }, // 'create' | 'edit'
-  relance: { type: Object, default: null },   // Parse object (pour edit)
-  impayelId: { type: String, default: null },
+  modelValue:  { type: Boolean, default: false },
+  mode:        { type: String,  default: 'create' },
+  relance:     { type: Object,  default: null },
+  impayelId:   { type: String,  default: null },
+  relances:    { type: Array,   default: () => [] },
 })
 const emit = defineEmits(['update:modelValue', 'success'])
 
@@ -62,19 +74,58 @@ const open = computed({
 })
 
 const saving = ref(false)
+const editorRef = ref(null)
+const liensPaiement = ref([])
 
 const form = ref({ dateEnvoi: '', objet: '', corps: '' })
 
-const variableOptions = [
-  { label: '[[nfacture]] — N° facture',       value: '[[nfacture]]' },
-  { label: '[[reste_a_payer]] — Reste à payer', value: '[[reste_a_payer]]' },
-  { label: '[[payeur_nom]] — Nom du payeur',   value: '[[payeur_nom]]' },
-  { label: '[[payeur_email]] — Email payeur',  value: '[[payeur_email]]' },
-  { label: '[[date_piece]] — Date pièce',      value: '[[date_piece]]' },
-]
+// Variables des relances précédentes
+const relanceVars = computed(() =>
+  props.relances.map((r, i) => ({
+    groupe: `RELANCE ${i + 1} — ${r.objet || '(sans objet)'}`,
+    vars: [`relance.${i + 1}.objet`, `relance.${i + 1}.dateEnvoi`],
+  }))
+)
 
-function insererVariable(val) {
-  if (val) form.value.objet += val
+// Variables liens de paiement
+const liensPaiementVars = computed(() => {
+  if (!liensPaiement.value.length) return []
+  return [{
+    groupe: 'LIENS DE PAIEMENT',
+    vars: liensPaiement.value.map(l => ({
+      name: `lien_paiement_${l.id}`,
+      display: l.nom,
+      url: l.url,
+      isPaymentLink: true,
+    })),
+  }]
+})
+
+const allVariables = computed(() => [
+  ...VARIABLES,
+  ...liensPaiementVars.value,
+  ...relanceVars.value,
+])
+
+async function chargerLiensPaiement() {
+  try {
+    const q = new $parse.Query('LienPaiement')
+    q.limit(100)
+    const results = await q.find()
+    liensPaiement.value = results.map(l => ({
+      id:  l.id,
+      nom: l.get('nom') || l.get('name') || l.id,
+      url: l.get('url') || '',
+    }))
+  } catch { /* silencieux */ }
+}
+
+function insererVariable(varName) {
+  editorRef.value?.getInstance()?.insertText(`[[${varName}]]`)
+}
+
+function insererLienPaiement(lien) {
+  editorRef.value?.getInstance()?.insertText(lien.url)
 }
 
 // Pré-remplir en mode edit
@@ -93,10 +144,14 @@ watch(
   { immediate: true },
 )
 
-// Réinitialiser en mode create à l'ouverture
 watch(open, (val) => {
-  if (val && props.mode === 'create') {
+  if (!val) return
+  chargerLiensPaiement()
+  if (props.mode === 'create') {
     form.value = { dateEnvoi: '', objet: '', corps: '' }
+    nextTick(() => editorRef.value?.getInstance()?.setHTML(''))
+  } else if (props.mode === 'edit' && props.relance) {
+    nextTick(() => editorRef.value?.getInstance()?.setHTML(form.value.corps || ''))
   }
 })
 
@@ -108,6 +163,7 @@ async function soumettre() {
   saving.value = true
   try {
     const dateEnvoi = new Date(form.value.dateEnvoi)
+    const corps = editorRef.value?.getInstance()?.getHTML() || ''
 
     if (props.mode === 'create') {
       const impayePtr = $parse.Object.extend('Impaye').createWithoutData(props.impayelId)
@@ -115,14 +171,14 @@ async function soumettre() {
       r.set('impaye',    impayePtr)
       r.set('dateEnvoi', dateEnvoi)
       r.set('objet',     form.value.objet)
-      r.set('corps',     form.value.corps)
+      r.set('corps',     corps)
       r.set('statut',    'pending')
       r.set('manuelle',  true)
       await r.save()
     } else {
       props.relance.set('dateEnvoi', dateEnvoi)
       props.relance.set('objet',     form.value.objet)
-      props.relance.set('corps',     form.value.corps)
+      props.relance.set('corps',     corps)
       props.relance.set('manuelle',  true)
       await props.relance.save()
     }

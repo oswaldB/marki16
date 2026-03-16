@@ -15,13 +15,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <USelect
-          v-if="impaye"
-          v-model="statut"
-          :items="statutOptions"
-          class="w-36"
-          @change="changerStatut"
-        />
+        <UBadge v-if="impaye" color="neutral" variant="subtle">{{ statut }}</UBadge>
         <UButton icon="i-heroicons-document" color="neutral" variant="outline" @click="pdfOuvert = true">
           Voir PDF
         </UButton>
@@ -133,7 +127,7 @@
                 <dd class="text-gray-700">{{ formatDate(impaye.date_debut_mission) }}</dd>
               </div>
               <div class="flex justify-between text-sm">
-                <dt class="text-gray-500">Employé</dt>
+                <dt class="text-gray-500">Intervenant</dt>
                 <dd class="text-gray-700">{{ impaye.employe_intervention || '—' }}</dd>
               </div>
             </dl>
@@ -239,20 +233,32 @@
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Séquence</h2>
             <div class="flex items-center gap-2 flex-wrap">
-              <!-- Indicateur relanceContact -->
-              <div v-if="impaye.relanceContact" class="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
+              <!-- Indicateur email_relance ou relanceContact -->
+              <div v-if="impaye.email_relance || impaye.relanceContact" class="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
                 <span class="text-gray-400">Email relances :</span>
-                <span class="font-medium text-gray-700">{{ impaye.relanceContact.nom }}</span>
-                <span v-if="impaye.relanceContact.email" class="text-gray-500">· {{ impaye.relanceContact.email }}</span>
+                <span class="font-medium text-gray-700">{{ impaye.email_relance?.nom || impaye.relanceContact?.nom }}</span>
+                <span v-if="impaye.email_relance?.email || impaye.relanceContact?.email" class="text-gray-500">· {{ impaye.email_relance?.email || impaye.relanceContact?.email }}</span>
               </div>
-              <UButton
-                size="sm"
-                color="neutral"
-                variant="outline"
-                @click="ouvrirModalRelanceContact"
-              >
-                {{ impaye.relanceContact ? 'Changer l\'email de relances' : 'Attribuer un email de relances par défaut' }}
-              </UButton>
+              <div class="flex items-center gap-2">
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  @click="ouvrirModalRelanceContact"
+                >
+                  {{ impaye.email_relance || impaye.relanceContact ? 'Changer l\'email de relances' : 'Attribuer un email de relances par défaut' }}
+                </UButton>
+                <UButton
+                  v-if="impaye.email_relance || impaye.relanceContact"
+                  size="sm"
+                  color="gray"
+                  variant="ghost"
+                  icon="i-heroicons-x-mark"
+                  @click="retirerEmailRelance"
+                >
+                  Retirer
+                </UButton>
+              </div>
               <UButton
                 v-if="sequenceActive"
                 size="sm"
@@ -260,7 +266,7 @@
                 variant="outline"
                 @click="ouvrirModalSequence"
               >Changer</UButton>
-              <UButton
+<UButton
                 v-if="sequenceActive"
                 size="sm"
                 color="error"
@@ -286,9 +292,18 @@
         <template #header>
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Relances</h2>
-            <UButton icon="i-heroicons-plus" size="sm" @click="ouvrirRelanceCreate">
-              Créer une relance
-            </UButton>
+            <div class="flex items-center gap-2">
+              <UButton
+                size="sm"
+                color="amber"
+                variant="outline"
+                icon="i-heroicons-pause-circle"
+                @click="pauseDrawerOuvert = true"
+              >Mettre en pause</UButton>
+              <UButton icon="i-heroicons-plus" size="sm" @click="ouvrirRelanceCreate">
+                Créer une relance
+              </UButton>
+            </div>
           </div>
         </template>
         <div v-if="relances.length === 0" class="text-center py-4 text-gray-400 text-sm italic">
@@ -371,68 +386,20 @@
         </div>
       </template>
     </UModal>
+    
+    <!-- Slideover attribution email de relances -->
+    <EmailSelectionSlideover
+      v-model="modalRelanceContactOuvert"
+      :impayelId="impayelId"
+      @emailSelected="handleEmailSelected"
+    />
 
-    <!-- Modal attribution email de relances -->
-    <UModal v-model:open="modalRelanceContactOuvert" title="Attribuer un email de relances par défaut">
-      <template #body>
-        <div class="space-y-6">
-          <!-- Section recherche contact existant -->
-          <div class="space-y-2">
-            <p class="text-sm font-medium text-gray-700">Rechercher un contact existant</p>
-            <UInput
-              v-model="rechercheContact"
-              placeholder="Nom ou email (2 caractères min.)…"
-              @input="onRechercheContact"
-            />
-            <div v-if="resultatsRecherche.length > 0" class="border border-gray-200 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-              <button
-                v-for="c in resultatsRecherche"
-                :key="c.id"
-                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
-                :class="contactSelectionne?.id === c.id ? 'bg-primary-50 font-medium text-primary-700' : 'text-gray-900'"
-                @click="selectionnerContact(c)"
-              >
-                <span class="font-medium">{{ c.nom }}</span>
-                <span v-if="c.email" class="text-gray-500 ml-2">{{ c.email }}</span>
-              </button>
-            </div>
-            <p v-if="rechercheContact.length >= 2 && resultatsRecherche.length === 0 && !rechercheEnCours" class="text-xs text-gray-400 italic">
-              Aucun contact trouvé.
-            </p>
-          </div>
-
-          <div class="border-t border-gray-200" />
-
-          <!-- Section création nouveau contact -->
-          <div class="space-y-2">
-            <p class="text-sm font-medium text-gray-700">Ou créer un nouveau contact</p>
-            <UInput v-model="nouveauContactNom" placeholder="Nom" />
-            <UInput v-model="nouveauContactEmail" placeholder="Email" type="email" />
-            <p v-if="nouveauContactEmailErreur" class="text-xs text-red-500">{{ nouveauContactEmailErreur }}</p>
-          </div>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="neutral" variant="ghost" @click="modalRelanceContactOuvert = false">Annuler</UButton>
-          <UButton
-            v-if="contactSelectionne"
-            :loading="attribuantContact"
-            @click="confirmerAttributionContact"
-          >
-            Confirmer
-          </UButton>
-          <UButton
-            v-else-if="nouveauContactNom || nouveauContactEmail"
-            :loading="attribuantContact"
-            :disabled="!nouveauContactNom || !nouveauContactEmail"
-            @click="creerEtAttribuerContact"
-          >
-            Créer et attribuer
-          </UButton>
-        </div>
-      </template>
-    </UModal>
+    <!-- Drawer pause séquence -->
+    <PauseSequenceDrawer
+      v-model="pauseDrawerOuvert"
+      :impayelId="impayelId"
+      @success="chargerRelances"
+    />
 
     <!-- Drawer relance -->
     <RelanceDrawer
@@ -440,6 +407,7 @@
       :mode="relanceDrawerMode"
       :relance="relanceSelectionnee"
       :impayelId="impayelId"
+      :relances="relances"
       @success="onRelanceSuccess"
     />
   </div>
@@ -492,14 +460,10 @@ const retirantSequence = ref(false)
 
 // Attribution email relances
 const modalRelanceContactOuvert = ref(false)
-const rechercheContact = ref('')
-const resultatsRecherche = ref([])
-const contactSelectionne = ref(null)
-const rechercheEnCours = ref(false)
-const nouveauContactNom = ref('')
-const nouveauContactEmail = ref('')
-const nouveauContactEmailErreur = ref('')
 const attribuantContact = ref(false)
+
+// Pause séquence
+const pauseDrawerOuvert = ref(false)
 
 // Relances
 const relanceDrawerOuvert = ref(false)
@@ -581,6 +545,7 @@ const sequenceOptions = computed(() =>
 // ── Charger ──
 function parseImpaye(obj) {
   const rc = obj.get('relanceContact')
+  const er = obj.get('email_relance')
   return {
     objectId:               obj.id,
     createdAt:              obj.createdAt,
@@ -648,6 +613,11 @@ function parseImpaye(obj) {
       nom:   rc.get('nom'),
       email: rc.get('email'),
     } : null,
+    email_relance: er ? {
+      id:    er.id,
+      nom:   er.get('nom'),
+      email: er.get('email'),
+    } : null,
   }
 }
 
@@ -657,6 +627,7 @@ async function charger() {
     const q = new $parse.Query('Impaye')
     q.include('sequence')
     q.include('relanceContact')
+    q.include('email_relance')
     const obj = await q.get(impayelId.value)
     impayeObj.value = obj
     impaye.value = parseImpaye(obj)
@@ -776,100 +747,132 @@ function onRelanceSuccess() {
 
 // ── Attribution email de relances ──
 function ouvrirModalRelanceContact() {
-  rechercheContact.value = ''
-  resultatsRecherche.value = []
-  contactSelectionne.value = null
-  nouveauContactNom.value = ''
-  nouveauContactEmail.value = ''
-  nouveauContactEmailErreur.value = ''
   modalRelanceContactOuvert.value = true
 }
 
-let rechercheTimeout = null
-function onRechercheContact() {
-  contactSelectionne.value = null
-  clearTimeout(rechercheTimeout)
-  if (rechercheContact.value.length < 2) {
-    resultatsRecherche.value = []
-    return
-  }
-  rechercheTimeout = setTimeout(() => rechercherContacts(), 300)
-}
-
-async function rechercherContacts() {
-  rechercheEnCours.value = true
+async function retirerEmailRelance() {
   try {
-    const terme = rechercheContact.value
-    const qNom = new $parse.Query('Contact')
-    qNom.contains('nom', terme)
-    const qEmail = new $parse.Query('Contact')
-    qEmail.contains('email', terme)
-    const query = $parse.Query.or(qNom, qEmail)
-    query.limit(20)
-    const results = await query.find()
-    resultatsRecherche.value = results.map(c => ({
-      id: c.id, nom: c.get('nom') || '', email: c.get('email') || '', _parse: c,
-    }))
-  } catch (err) {
-    console.error('Erreur recherche contacts:', err)
-  } finally {
-    rechercheEnCours.value = false
-  }
-}
-
-function selectionnerContact(c) {
-  contactSelectionne.value = c
-  nouveauContactNom.value = ''
-  nouveauContactEmail.value = ''
-}
-
-function validerEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
-
-async function confirmerAttributionContact() {
-  if (!contactSelectionne.value) return
-  attribuantContact.value = true
-  try {
-    await $parse.Cloud.run('attribuerRelanceContact', {
-      impayelId: impayelId.value,
-      contactId: contactSelectionne.value.id,
+    attribuantContact.value = true
+    
+    // Supprimer le pointer email_relance de l'impayé
+    const impayeToUpdate = $parse.Object.extend('Impaye').createWithoutData(impayelId.value)
+    impayeToUpdate.unset('email_relance')
+    
+    await impayeToUpdate.save()
+    
+    console.log('Email de relance retiré de l\'impayé:', impayelId.value)
+    
+    // Mettre à jour les relances en attente pour utiliser l'email du payeur par défaut
+    const Relance = $parse.Object.extend('Relance')
+    const qRelances = new $parse.Query(Relance)
+    qRelances.equalTo('impaye', impayeToUpdate)
+    qRelances.equalTo('statut', 'pending')
+    const pendingRelances = await qRelances.find()
+    
+    console.log('Relances en attente trouvées pour mise à jour:', pendingRelances.length)
+    
+    // Recalculer le destinataire sans email_relance (utilisera payeur_email par défaut)
+    const nouveauTo = await construireDestinataires('[[payeur_email]]', impayeToUpdate)
+    console.log('Nouveau destinataire calculé (sans email_relance):', nouveauTo)
+    
+    for (const relance of pendingRelances) {
+      relance.set('to', nouveauTo)
+    }
+    if (pendingRelances.length) {
+      await $parse.Object.saveAll(pendingRelances)
+    }
+    
+    toast.add({ 
+      title: 'Email de relance retiré avec succès',
+      description: 'Les futures relances utiliseront l\'email du payeur par défaut',
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+      timeout: 5000
     })
-    modalRelanceContactOuvert.value = false
+    await charger()
+  } catch (err) {
+    console.error('Erreur lors du retrait de l\'email de relance:', err)
+    toast.add({ title: 'Erreur', description: err.message || 'Impossible de retirer l\'email de relance', color: 'red' })
+  } finally {
+    attribuantContact.value = false
+  }
+}
+
+async function handleEmailSelected(email, contactId) {
+  try {
+    attribuantContact.value = true
+    console.log('handleEmailSelected appelé avec:', { email, contactId })
+    
+    if (!contactId) {
+      throw new Error('ID de contact non fourni')
+    }
+    
+    // Créer un pointer vers le contact
+    const Contact = $parse.Object.extend('Contact')
+    const contactPointer = Contact.createWithoutData(contactId)
+    
+    // Mettre à jour l'impayé avec un appel PUT direct
+    const impayeToUpdate = $parse.Object.extend('Impaye').createWithoutData(impayelId.value)
+    impayeToUpdate.set('email_relance', contactPointer)
+    
+    await impayeToUpdate.save()
+    
+    console.log('Impayé mis à jour avec email_relance:', impayelId.value)
+    
+    // Mettre à jour les relances en attente avec le nouvel email
+    const Relance = $parse.Object.extend('Relance')
+    const qRelances = new $parse.Query(Relance)
+    qRelances.equalTo('impaye', impayeToUpdate)
+    qRelances.equalTo('statut', 'pending')
+    const pendingRelances = await qRelances.find()
+    
+    console.log('Relances en attente trouvées:', pendingRelances.length)
+    
+    // Recalculer le destinataire avec le nouveau contact
+    const nouveauTo = await construireDestinataires('[[payeur_email]]', impayeToUpdate)
+    console.log('Nouveau destinataire calculé:', nouveauTo)
+    
+    for (const relance of pendingRelances) {
+      relance.set('to', nouveauTo)
+    }
+    if (pendingRelances.length) {
+      await $parse.Object.saveAll(pendingRelances)
+    }
+    
     toast.add({ title: 'Email de relances attribué', color: 'green' })
     await charger()
   } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+    console.error('Erreur dans handleEmailSelected:', err)
+    toast.add({ title: 'Erreur', description: err.message || 'Erreur inconnue', color: 'red' })
   } finally {
     attribuantContact.value = false
   }
 }
 
-async function creerEtAttribuerContact() {
-  nouveauContactEmailErreur.value = ''
-  if (!validerEmail(nouveauContactEmail.value)) {
-    nouveauContactEmailErreur.value = 'Adresse email invalide'
-    return
-  }
-  attribuantContact.value = true
-  try {
-    await $parse.Cloud.run('attribuerRelanceContact', {
-      impayelId: impayelId.value,
-      nom: nouveauContactNom.value,
-      email: nouveauContactEmail.value,
-    })
-    modalRelanceContactOuvert.value = false
-    toast.add({ title: 'Contact créé et email de relances attribué', color: 'green' })
-    await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    attribuantContact.value = false
-  }
-}
+
 
 onMounted(() => {
   charger()
   chargerSequences()
 })
 </script>
+
+<style scoped>
+/* Style pour le slideover */
+:deep(.USlideover) {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Style pour le contenu du slideover */
+.flex-col {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-1 {
+  flex: 1;
+  overflow-y: auto;
+}
+</style>
