@@ -70,6 +70,9 @@
         <span class="text-red-500 font-medium">
           <UIcon name="i-heroicons-x-circle" class="size-4" /> {{ apercuExclus }} exclus
         </span>
+        <span class="text-yellow-600 font-medium">
+          <UIcon name="i-heroicons-envelope-open" class="size-4" /> {{ apercuSansEmail || 0 }} sans email
+        </span>
         <UButton
           v-if="apercuConcernes > 0"
           variant="outline"
@@ -143,6 +146,7 @@ const {
   attributionAutomatique,
   apercuConcernes,
   apercuExclus,
+  apercuSansEmail,
   impayesConcernes,
   showImpayesTable,
   calculerApercu,

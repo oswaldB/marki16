@@ -966,9 +966,10 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "parseAppId": "marki15-app",
+    "parseAppId": "adti-marki",
     "parseServerURL": "https://dev.api.markidiags.com:8444/parse",
-    "parseJavaScriptKey": "c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda"
+    "parseJavaScriptKey": "c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda",
+    "apiBaseUrl": "https://adti.api.markidiags.com:8445"
   },
   "icon": {
     "serverKnownCssClasses": []

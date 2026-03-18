@@ -64,10 +64,12 @@ echo "🔍 Vérification des ports..."
 
 if port_in_use 1555; then
     echo "⚠️  Le port 1555 est déjà utilisé"
-    read -p "   Voulez-vous continuer quand même ? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+    echo "   Tentative de libération du port..."
+    BACKEND_PIDS=$(pgrep -f "node.*server.js" 2>/dev/null)
+    if [ -n "$BACKEND_PIDS" ]; then
+        echo "   Arrêt des processus backend (PIDs: $BACKEND_PIDS)"
+        kill $BACKEND_PIDS 2>/dev/null
+        sleep 3
     fi
 fi
 

@@ -6,6 +6,12 @@
 
     <template #body>
       <div class="p-6 space-y-4">
+        <!-- Destinataires -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Destinataires (To)</label>
+          <UInput v-model="form.to" placeholder="email1@example.com, email2@example.com" class="w-full" />
+        </div>
+
         <!-- Date d'envoi -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Date d'envoi</label>
@@ -77,7 +83,7 @@ const saving = ref(false)
 const editorRef = ref(null)
 const liensPaiement = ref([])
 
-const form = ref({ dateEnvoi: '', objet: '', corps: '' })
+const form = ref({ dateEnvoi: '', objet: '', corps: '', to: '' })
 
 // Variables des relances précédentes
 const relanceVars = computed(() =>
@@ -138,6 +144,7 @@ watch(
         dateEnvoi: d ? d.toISOString().split('T')[0] : '',
         objet:     r.get('objet') || '',
         corps:     r.get('corps') || '',
+        to:        r.get('to') || '',
       }
     }
   },
@@ -172,6 +179,7 @@ async function soumettre() {
       r.set('dateEnvoi', dateEnvoi)
       r.set('objet',     form.value.objet)
       r.set('corps',     corps)
+      r.set('to',        form.value.to)
       r.set('statut',    'pending')
       r.set('manuelle',  true)
       await r.save()
@@ -179,6 +187,7 @@ async function soumettre() {
       props.relance.set('dateEnvoi', dateEnvoi)
       props.relance.set('objet',     form.value.objet)
       props.relance.set('corps',     corps)
+      props.relance.set('to',        form.value.to)
       props.relance.set('manuelle',  true)
       await props.relance.save()
     }

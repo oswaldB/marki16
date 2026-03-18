@@ -45,13 +45,10 @@
       "Bash(wc -l /home/oswald/Desktop/marki16/frontend/app/pages/impayes/\\\\[id\\\\].vue 2>&1)",
       "Bash(cat /home/oswald/Desktop/marki16/openspec/changes/attribuer-email-relances-defaut/specs/attribuer-relance-contact/*.md 2>/dev/null || ls /home/oswald/Desktop/marki16/openspec/changes/attribuer-email-relances-defaut/specs/attribuer-relance-contact/)",
       "Bash(wc -l /home/oswald/Desktop/marki16/backend/cloud/main.js && wc -l /home/oswald/Desktop/marki16/frontend/app/pages/impayes/\\\\[id\\\\].vue)",
-<<<<<<< HEAD
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
-=======
+      "Bash(git push:*)",
       "Bash(find:*)"
->>>>>>> b4899367263c677ae8963b2600b501440aff7566
     ]
   }
 }

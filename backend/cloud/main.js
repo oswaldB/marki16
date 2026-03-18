@@ -556,6 +556,224 @@ Parse.Cloud.define('assignSequencesAutomatically', async (request) => {
   return await assignSequencesAutomatically();
 });
 
+// Cloud Function pour attribuer une séquence spécifique à tous les impayés correspondants
+Parse.Cloud.define('assignSequenceToMatchingImpayes', async (request) => {
+  if (!request.user) throw new Error('Authentification requise');
+  const { sequenceId } = request.params;
+  if (!sequenceId) throw new Error('sequenceId requis');
+
+  const sequence = await new Parse.Query('Sequence').get(sequenceId, { useMasterKey: true });
+  const groupesRegles = sequence.get('groupes_regles') || [];
+
+  // Si aucune règle définie, ne rien faire
+  if (groupesRegles.length === 0) {
+    return {
+      assigned: 0,
+      totalMatching: 0,
+      errors: []
+    };
+  }
+
+  // Construire la requête pour trouver les impayés correspondants
+  const Impaye = Parse.Object.extend('Impaye');
+  const q = new Parse.Query(Impaye);
+  q.equalTo('facture_soldee', false); // Seulement les factures non soldées
+  q.doesNotExist('sequence'); // Seulement ceux sans séquence déjà attribuée
+  q.limit(1000); // Limiter pour éviter les timeouts
+
+  // Liste des champs valides pour la classe Impaye
+  const validFields = [
+    'proprietaire_nom', 'payeur_nom', 'montant_ttc', 'montant_ht', 'reste_a_payer',
+    'date_piece', 'date_echeance', 'ref_piece', 'nfacture', 'adresse_bien',
+    'code_postal', 'ville', 'payeur_type', 'proprietaire_type_personne',
+    'payeur_email', 'payeur_telephone', 'proprietaire_email', 'proprietaire_telephone',
+    'numero_lot', 'etage', 'porte', 'numero_dossier', 'employe_intervention',
+    'date_debut_mission', 'commentaire_piece', 'statut', 'source', 'pdf_filename',
+    'pdf_local_path', 'url_pdf', 'facture_soldee', 'payeur_contact_email',
+    'apporteur_nom', 'apporteur_email', 'apporteur_telephone', 'apporteur_type',
+    'apporteur_contact_email', 'relanceContact', 'email_relance', 'sequence'
+  ];
+
+  // Mapping des noms de champs affichés vers les noms de champs réels
+  const fieldMapping = {
+    'Propriétaire': 'proprietaire_nom',
+    'Payeur': 'payeur_nom',
+    'Montant TTC': 'montant_ttc',
+    'Montant HT': 'montant_ht',
+    'Reste à payer': 'reste_a_payer',
+    'Date pièce': 'date_piece',
+    'Date échéance': 'date_echeance',
+    'Référence pièce': 'ref_piece',
+    'Numéro facture': 'nfacture',
+    'Adresse bien': 'adresse_bien',
+    'Code postal': 'code_postal',
+    'Ville': 'ville',
+    'Type de payeur': 'payeur_type',
+    'Type de propriétaire': 'proprietaire_type_personne'
+  };
+
+  // Mapping des valeurs affichées vers les valeurs réelles dans la base de données
+  // Note: Les valeurs avec accents doivent être utilisées telles quelles car elles sont
+  // stockées directement dans la base de données. Parse Server gère les accents.
+  const valueMapping = {
+    // 'Propriétaire': 'Proprietaire', // Ne pas mapper - utiliser la valeur originale
+    // 'Apporteur d\'affaire': 'Apporteur d\'affaire', // Ne pas mapper
+    // 'Autre': 'Autre' // Ne pas mapper
+  };
+
+  // Appliquer les règles comme filtres
+  for (const groupeRegle of groupesRegles) {
+    const regles = groupeRegle.regles || [];
+    if (regles.length === 0) continue;
+
+    for (const regle of regles) {
+      if (!regle.champ || regle.valeur === '' || !regle.operateur) continue;
+
+      // Mapper le nom du champ si nécessaire
+      let fieldName = regle.champ;
+      if (fieldMapping[fieldName]) {
+        fieldName = fieldMapping[fieldName];
+      }
+
+      // Vérifier que le champ est valide avant de l'utiliser
+      if (!validFields.includes(fieldName)) {
+        console.warn(`Champ invalide dans les règles (ignoré): ${regle.champ} -> ${fieldName}`);
+        continue;
+      }
+
+      // Préparer la valeur - toujours utiliser une valeur simple (pas de tableau)
+      let ruleValue = regle.valeur;
+      
+      // Si c'est un tableau, prendre la première valeur
+      if (Array.isArray(ruleValue)) {
+        if (ruleValue.length === 0) {
+          console.warn(`Valeur vide pour le champ ${fieldName}, règle ignorée`);
+          continue;
+        }
+        ruleValue = ruleValue[0];
+      }
+
+      // Appliquer la règle
+      switch (regle.operateur) {
+        case 'egal':
+          q.equalTo(fieldName, ruleValue);
+          break;
+        case 'superieur':
+          q.greaterThan(fieldName, Number(ruleValue));
+          break;
+        case 'inferieur':
+          q.lessThan(fieldName, Number(ruleValue));
+          break;
+        case 'contient':
+          q.contains(fieldName, ruleValue);
+          break;
+        default:
+          // Opérateur non supporté, ignorer cette règle
+          console.warn(`Opérateur non supporté (ignoré): ${regle.operateur}`);
+          continue;
+      }
+    }
+  }
+
+  const impayesCorrespondants = await q.find({ useMasterKey: true });
+  
+  const stats = {
+    totalMatching: impayesCorrespondants.length,
+    assigned: 0,
+    errors: []
+  };
+
+  for (const impaye of impayesCorrespondants) {
+    try {
+      // Vérifier qu'un email de relances est disponible
+      let hasEmail = !!impaye.get('payeur_email');
+      if (!hasEmail) {
+        const emailRelancePtr = impaye.get('email_relance');
+        if (emailRelancePtr) {
+          try {
+            const rc = await new Parse.Query('Contact').get(emailRelancePtr.id, { useMasterKey: true });
+            if (rc.get('email')) {
+              hasEmail = true;
+              impaye.set('email_relance', rc);
+            }
+          } catch (_) {}
+        }
+      }
+      if (!hasEmail) {
+        const relanceContactPtr = impaye.get('relanceContact');
+        if (relanceContactPtr) {
+          try {
+            const rc = await new Parse.Query('Contact').get(relanceContactPtr.id, { useMasterKey: true });
+            if (rc.get('email')) {
+              hasEmail = true;
+              impaye.set('relanceContact', rc);
+            }
+          } catch (_) {}
+        }
+      }
+      if (!hasEmail) {
+        stats.errors.push({
+          impayeId: impaye.id,
+          refPiece: impaye.get('ref_piece'),
+          reason: 'Pas d\'email disponible'
+        });
+        continue;
+      }
+
+      // Assigner la séquence à l'impayé
+      impaye.set('sequence', sequence);
+      await impaye.save(null, { useMasterKey: true });
+
+      // Créer les relances associées
+      const emailsSeq = sequence.get('emails') || [];
+      const baseDate = new Date();
+
+      // Pré-charger les profils SMTP uniques
+      const smtpIds = [...new Set(
+        emailsSeq.map(e => getEmailScenario(e, 'single').smtp).filter(Boolean)
+      )];
+      const smtpMap = {};
+      for (const id of smtpIds) {
+        try { smtpMap[id] = await new Parse.Query('SmtpProfile').get(id, { useMasterKey: true }); } catch (_) {}
+      }
+
+      const relances = await Promise.all(emailsSeq.map(async (email, idx) => {
+        const dateEnvoi = new Date(baseDate);
+        dateEnvoi.setDate(dateEnvoi.getDate() + (email.delai || 0));
+        const scenario = getEmailScenario(email, 'single');
+        const r = new Parse.Object('Relance');
+        r.set('impaye',      impaye);
+        r.set('sequence',    sequence);
+        r.set('email_index', idx);
+        r.set('statut',      'pending');
+        r.set('dateEnvoi',   dateEnvoi);
+        r.set('to',          await construireDestinataires(email.to || '', impaye));
+        r.set('cc',          substituerVariables(scenario.cc || email.cc || '', impaye));
+        r.set('objet',       substituerVariables(scenario.objet || '', impaye));
+        r.set('corps',       substituerVariables(scenario.corps || '', impaye));
+        if (smtpMap[scenario.smtp]) r.set('smtpProfil', smtpMap[scenario.smtp]);
+        r.set('manuelle',    false);
+        r.set('valide',      !sequence.get('validation_obligatoire'));
+        return r;
+      }));
+      
+      if (relances.length) {
+        await Parse.Object.saveAll(relances, { useMasterKey: true });
+      }
+
+      stats.assigned++;
+    } catch (err) {
+      stats.errors.push({
+        impayeId: impaye.id,
+        refPiece: impaye.get('ref_piece'),
+        reason: err.message
+      });
+    }
+  }
+
+  return stats;
+});
+
 Parse.Cloud.define('hello', () => {
   return 'Hello from Parse Cloud Code!';
 });

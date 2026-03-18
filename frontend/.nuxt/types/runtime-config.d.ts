@@ -24,6 +24,8 @@ import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRu
    parseServerURL: string,
 
    parseJavaScriptKey: string,
+
+   apiBaseUrl: string,
   }
 declare module '@nuxt/schema' {
   interface RuntimeConfig extends UserRuntimeConfig {}

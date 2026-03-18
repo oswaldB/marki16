@@ -3,6 +3,7 @@ export {}
 declare global {
   const EXEMPLE_VARS: typeof import('../../app/composables/useSequenceEditor').EXEMPLE_VARS
   const SCENARIO_FORMATS: typeof import('../../app/composables/useSequenceEditor').SCENARIO_FORMATS
+  const SEQUENCE_TYPES: typeof import('../../app/composables/useSequenceEditor').SEQUENCE_TYPES
   const VARIABLES: typeof import('../../app/composables/useSequenceEditor').VARIABLES
   const abortNavigation: typeof import('../../node_modules/nuxt/dist/app/composables/router').abortNavigation
   const acceptHMRUpdate: typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables').acceptHMRUpdate
@@ -253,6 +254,7 @@ declare module 'vue' {
   interface ComponentCustomProperties {
     readonly EXEMPLE_VARS: UnwrapRef<typeof import('../../app/composables/useSequenceEditor')['EXEMPLE_VARS']>
     readonly SCENARIO_FORMATS: UnwrapRef<typeof import('../../app/composables/useSequenceEditor')['SCENARIO_FORMATS']>
+    readonly SEQUENCE_TYPES: UnwrapRef<typeof import('../../app/composables/useSequenceEditor')['SEQUENCE_TYPES']>
     readonly VARIABLES: UnwrapRef<typeof import('../../app/composables/useSequenceEditor')['VARIABLES']>
     readonly abortNavigation: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['abortNavigation']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables')['acceptHMRUpdate']>

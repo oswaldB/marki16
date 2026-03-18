@@ -36,7 +36,7 @@ export { useDynamicOptions } from '../app/composables/useDynamicOptions';
 export { useIaSequence } from '../app/composables/useIaSequence';
 export { useImpayesStoreComposable } from '../app/composables/useImpayesStore';
 export { useLiensPaiement } from '../app/composables/useLiensPaiement';
-export { SCENARIO_FORMATS, VARIABLES, EXEMPLE_VARS, champOptions, operateurOptions, groupeLogiqueOptions, scenarioTabs, editorOptions, getScenario, getCurrentCorps, updateCorps, switchScenario, useSequenceEditor } from '../app/composables/useSequenceEditor';
+export { SCENARIO_FORMATS, SEQUENCE_TYPES, VARIABLES, EXEMPLE_VARS, champOptions, operateurOptions, groupeLogiqueOptions, scenarioTabs, editorOptions, getScenario, getCurrentCorps, updateCorps, switchScenario, useSequenceEditor } from '../app/composables/useSequenceEditor';
 export { useSequenceRules } from '../app/composables/useSequenceRules';
 export { defineLocale, extendLocale } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineLocale';
 export { extractShortcuts, defineShortcuts } from '../node_modules/@nuxt/ui/dist/runtime/composables/defineShortcuts';

@@ -1,7 +1,9 @@
 import { useDynamicOptions } from '~/composables/useDynamicOptions'
+import { useRoute } from '#vue-router'
 
 export function useSequenceRules(parse) {
   const toast = useToast()
+  const route = useRoute()
   const { getOptions } = useDynamicOptions()
 
   // ── State ────────────────────────────────────────────────────
@@ -11,6 +13,7 @@ export function useSequenceRules(parse) {
 
   const apercuConcernes = ref(0)
   const apercuExclus = ref(0)
+  const apercuSansEmail = ref(0)
   const impayesConcernes = ref([])
   const showImpayesTable = ref(false)
 
@@ -50,7 +53,53 @@ export function useSequenceRules(parse) {
     await loadOptionsForChamp(regle.champ, regle)
   }
 
-  // ── Construction de requête Parse (source unique) ─────────────
+  // ── Construction de requête Parse (comme le backend) ────────────────────────
+  function buildImpayeQueryFromBackendRegles(regles) {
+    const queries = []
+    
+    for (const regle of regles) {
+      if (!regle.champ || regle.valeur === '' || !regle.valeur) continue
+      
+      const q = new parse.Query('Impaye')
+      
+      switch (regle.operateur) {
+        case 'egal':
+          Array.isArray(regle.valeur)
+            ? q.containedIn(regle.champ, regle.valeur)
+            : q.equalTo(regle.champ, regle.valeur)
+          break
+        case 'different':
+          Array.isArray(regle.valeur)
+            ? q.notContainedIn(regle.champ, regle.valeur)
+            : q.notEqualTo(regle.champ, regle.valeur)
+          break
+        case 'superieur':
+          q.greaterThan(regle.champ, Number(regle.valeur))
+          break
+        case 'inferieur':
+          q.lessThan(regle.champ, Number(regle.valeur))
+          break
+        case 'contient':
+          q.contains(regle.champ, regle.valeur)
+          break
+        default:
+          continue
+      }
+      
+      queries.push(q)
+    }
+    
+    if (queries.length === 0) return null
+    
+    // Combiner avec AND (comme le backend)
+    let finalQuery = queries[0]
+    for (let i = 1; i < queries.length; i++) {
+      finalQuery = parse.Query.and(finalQuery, queries[i])
+    }
+    return finalQuery
+  }
+  
+  //─── Construction de requête Parse (ancienne version pour compatibilité) ────────────
   function buildImpayeQuery(groupes) {
     const queriesParGroupe = []
 
@@ -123,23 +172,88 @@ export function useSequenceRules(parse) {
   // ── Aperçu ────────────────────────────────────────────────────
   async function calculerApercu() {
     try {
+      // Utiliser groupes_regles (comme le backend maintenant)
       const finalQuery = buildImpayeQuery(groupesRegles.value)
-
+      
+      console.log('Groupes de règles utilisés:', JSON.stringify(groupesRegles.value, null, 2))
+      
       if (!finalQuery) {
         apercuConcernes.value = 0
         apercuExclus.value = 0
         impayesConcernes.value = []
         return
       }
+      
+      // Étape 2: Appliquer les filtres comme le backend
+      finalQuery.equalTo('facture_soldee', false)
+      finalQuery.doesNotExist('sequence')
+      
+      // Debug: compter le total éligible
+      const totalEligible = await new parse.Query('Impaye')
+        .equalTo('facture_soldee', false)
+        .doesNotExist('sequence')
+        .count()
+      console.log('Total éligible (non soldés sans séquence):', totalEligible)
+      
+      // Étape 3: Compter les résultats de la requête finale
+      const totalAvecRegles = await finalQuery.count()
+      console.log('Avec règles appliquées:', totalAvecRegles)
+      
+      // Étape 4: Charger les impayés et vérifier les emails (exactement comme le backend)
+      const impayesTrouves = await finalQuery.find()
+      console.log(`Impayés trouvés pour vérification email: ${impayesTrouves.length}`)
+      
+      let hasEmailCount = 0
+      let sansEmailCount = 0
+      const idsSansEmail = []
+      
+      for (const impaye of impayesTrouves) {
+        // Logique exacte du backend
+        let hasEmail = !!impaye.get('payeur_email')
+        
+        if (!hasEmail) {
+          const emailRelancePtr = impaye.get('email_relance')
+          if (emailRelancePtr) {
+            try {
+              const rc = await new parse.Query('Contact').get(emailRelancePtr.id)
+              if (rc.get('email')) {
+                hasEmail = true
+              }
+            } catch (_) {}
+          }
+        }
+        
+        if (!hasEmail) {
+          const relanceContactPtr = impaye.get('relanceContact')
+          if (relanceContactPtr) {
+            try {
+              const rc = await new parse.Query('Contact').get(relanceContactPtr.id)
+              if (rc.get('email')) {
+                hasEmail = true
+              }
+            } catch (_) {}
+          }
+        }
+        
+        if (hasEmail) {
+          hasEmailCount++
+        } else {
+          sansEmailCount++
+          idsSansEmail.push(impaye.id)
+        }
+      }
+      
+      console.log(`Vérification emails: ${hasEmailCount} avec email, ${sansEmailCount} sans email`)
+      console.log(`IDs sans email: ${idsSansEmail.join(', ')}`)
+      
+      // Résultats finaux (comme le backend)
+      apercuConcernes.value = hasEmailCount
+      apercuExclus.value = totalEligible - totalAvecRegles
+      apercuSansEmail.value = sansEmailCount
+      
+      console.log(`Résultats finaux: ${hasEmailCount} avec email, ${sansEmailCount} sans email`)
 
-      const [concernes, total] = await Promise.all([
-        finalQuery.count(),
-        new parse.Query('Impaye').count(),
-      ])
-      apercuConcernes.value = concernes
-      apercuExclus.value = total - concernes
-
-      if (showImpayesTable.value && concernes > 0) {
+      if (showImpayesTable.value && hasEmailCount > 0) {
         await _chargerImpayesConcernes(finalQuery)
       }
     } catch (err) {
@@ -153,6 +267,8 @@ export function useSequenceRules(parse) {
       query.limit(100)
       query.include(['payeur', 'dossier'])
       query.ascending('nfacture')
+      query.equalTo('facture_soldee', false)
+      query.doesNotExist('sequence')
       const results = await query.find()
       impayesConcernes.value = results.map(impaye => ({
         id: impaye.id,
@@ -221,6 +337,7 @@ export function useSequenceRules(parse) {
     validationObligatoire,
     apercuConcernes,
     apercuExclus,
+    apercuSansEmail,
     impayesConcernes,
     showImpayesTable,
     calculerApercu,

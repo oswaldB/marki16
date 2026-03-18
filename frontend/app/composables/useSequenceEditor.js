@@ -1,6 +1,11 @@
 // ── Constants ──────────────────────────────────────────────────
 export const SCENARIO_FORMATS = ['single', 'multiple', 'both', 'broker']
 
+export const SEQUENCE_TYPES = [
+  { value: 'relances', label: 'Relances' },
+  { value: 'suivi', label: 'Suivi' }
+]
+
 export const VARIABLES = [
   { groupe: 'PAYEUR',   vars: ['payeur_nom', 'payeur_email', 'payeur_telephone', 'payeur_type'] },
   { groupe: 'FACTURE',  vars: ['nfacture', 'ref_piece', 'date_piece', 'reste_a_payer', 'montant_total', 'date_echeance'] },
@@ -118,7 +123,7 @@ export function switchScenario(email, newScenario, editorRefs) {
 }
 
 // ── Composable principal ───────────────────────────────────────
-export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerLiensPaiement, loadAllOptions) {
+export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerLiensPaiement, loadAllOptions, attributionAutomatique, validationObligatoire) {
   const toast = useToast()
   const route = useRoute()
 
@@ -130,6 +135,7 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
   const sequence = ref(null)
   const nom = ref('')
   const publiee = ref(false)
+  const type = ref('relances') // Nouveau: type de séquence (relances/suivi)
   const emails = ref([])
   const smtpProfiles = ref([])
 
@@ -161,6 +167,9 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
       sequence.value = seq
       nom.value = seq.get('nom') || ''
       publiee.value = seq.get('publiee') || false
+      type.value = seq.get('type') || 'relances' // Charger le type de séquence
+      attributionAutomatique.value = seq.get('attribution_automatique') || false
+      validationObligatoire.value = seq.get('validation_obligatoire') || false
 
       // Charger règles dans groupesRegles (passé depuis useSequenceRules)
       const anciennesRegles = seq.get('regles') || []
@@ -266,15 +275,15 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
         }
       }
       sequence.value.set('nom', nom.value)
+      sequence.value.set('type', type.value) // Sauvegarder le type de séquence
       sequence.value.set('emails', emails.value.map(({ _key, activeScenario, ...rest }) => rest))
       sequence.value.set('groupes_regles', groupesRegles.value)
+      sequence.value.set('attribution_automatique', attributionAutomatique.value)
+      sequence.value.set('validation_obligatoire', validationObligatoire.value)
 
-      // Compat arrière
-      const anciennesRegles = groupesRegles.value.flatMap(g =>
-        g.regles.map(r => ({ champ: r.champ, operateur: r.operateur, valeur: r.valeur }))
-      )
-      sequence.value.set('regles', anciennesRegles)
-      sequence.value.set('regles_type', groupesRegles.value.length > 0 ? groupesRegles.value[0].logique : 'ET')
+      // Supprimer les anciennes colonnes pour uniformiser
+      sequence.value.unset('regles')
+      sequence.value.unset('regles_type')
 
       await sequence.value.save()
       toast.add({ title: 'Séquence enregistrée', color: 'green' })
@@ -347,9 +356,14 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
     smtpCreateForEmailFormat.value = null
   }
 
+  // Fonction pour changer le type de séquence
+  function setType(newType) {
+    type.value = newType
+  }
+
   return {
     loading, saving, publishing,
-    sequence, nom, publiee,
+    sequence, nom, publiee, type,
     emails, emailsSorted,
     smtpProfiles, smtpOptions,
     collapsedEmails,
@@ -363,5 +377,6 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
     toggleEmailVisibility,
     onSmtpChange,
     onSmtpSaved,
+    setType,
   }
 }
