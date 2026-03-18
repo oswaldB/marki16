@@ -19,15 +19,18 @@ interface _GlobalComponents {
   ContactsEntitesTable: typeof import("../../app/components/ContactsEntitesTable.vue")['default']
   DrawerAssignSequence: typeof import("../../app/components/DrawerAssignSequence.vue")['default']
   DrawerLienPaiement: typeof import("../../app/components/DrawerLienPaiement.vue")['default']
+  EmailSelectionSlideover: typeof import("../../app/components/EmailSelectionSlideover.vue")['default']
   ImpayeDrawerPdf: typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']
   ModalChatGptEmail: typeof import("../../app/components/ModalChatGptEmail.vue")['default']
   ModalIaSequence: typeof import("../../app/components/ModalIaSequence.vue")['default']
   NaiveTest: typeof import("../../app/components/NaiveTest.vue")['default']
+  PauseSequenceDrawer: typeof import("../../app/components/PauseSequenceDrawer.vue")['default']
   PdfIframe: typeof import("../../app/components/PdfIframe.vue")['default']
   RelanceDrawer: typeof import("../../app/components/RelanceDrawer.vue")['default']
   SequenceEmailCard: typeof import("../../app/components/SequenceEmailCard.vue")['default']
   SequenceRulesSection: typeof import("../../app/components/SequenceRulesSection.vue")['default']
   SmtpDrawer: typeof import("../../app/components/SmtpDrawer.vue")['default']
+  SyncButton: typeof import("../../app/components/SyncButton.vue")['default']
   ToastuiEditor: typeof import("../../app/components/ToastuiEditor.vue")['default']
   ToggleSwitch: typeof import("../../app/components/ToggleSwitch.vue")['default']
   VariablesPicker: typeof import("../../app/components/VariablesPicker.vue")['default']
@@ -183,15 +186,18 @@ interface _GlobalComponents {
   LazyContactsEntitesTable: LazyComponent<typeof import("../../app/components/ContactsEntitesTable.vue")['default']>
   LazyDrawerAssignSequence: LazyComponent<typeof import("../../app/components/DrawerAssignSequence.vue")['default']>
   LazyDrawerLienPaiement: LazyComponent<typeof import("../../app/components/DrawerLienPaiement.vue")['default']>
+  LazyEmailSelectionSlideover: LazyComponent<typeof import("../../app/components/EmailSelectionSlideover.vue")['default']>
   LazyImpayeDrawerPdf: LazyComponent<typeof import("../../app/components/ImpayeDrawerPdf.vue")['default']>
   LazyModalChatGptEmail: LazyComponent<typeof import("../../app/components/ModalChatGptEmail.vue")['default']>
   LazyModalIaSequence: LazyComponent<typeof import("../../app/components/ModalIaSequence.vue")['default']>
   LazyNaiveTest: LazyComponent<typeof import("../../app/components/NaiveTest.vue")['default']>
+  LazyPauseSequenceDrawer: LazyComponent<typeof import("../../app/components/PauseSequenceDrawer.vue")['default']>
   LazyPdfIframe: LazyComponent<typeof import("../../app/components/PdfIframe.vue")['default']>
   LazyRelanceDrawer: LazyComponent<typeof import("../../app/components/RelanceDrawer.vue")['default']>
   LazySequenceEmailCard: LazyComponent<typeof import("../../app/components/SequenceEmailCard.vue")['default']>
   LazySequenceRulesSection: LazyComponent<typeof import("../../app/components/SequenceRulesSection.vue")['default']>
   LazySmtpDrawer: LazyComponent<typeof import("../../app/components/SmtpDrawer.vue")['default']>
+  LazySyncButton: LazyComponent<typeof import("../../app/components/SyncButton.vue")['default']>
   LazyToastuiEditor: LazyComponent<typeof import("../../app/components/ToastuiEditor.vue")['default']>
   LazyToggleSwitch: LazyComponent<typeof import("../../app/components/ToggleSwitch.vue")['default']>
   LazyVariablesPicker: LazyComponent<typeof import("../../app/components/VariablesPicker.vue")['default']>

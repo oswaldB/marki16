@@ -1,43 +1,43 @@
 import process from 'node:process';globalThis._importMeta_={url:import.meta.url,env:process.env};import { tmpdir } from 'node:os';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, createError, getQuery as getQuery$1, readBody, getResponseStatus, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, createError, getQuery as getQuery$1, readBody, getResponseStatus, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///home/ubuntu/marki16/frontend/node_modules/h3/dist/index.mjs';
 import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { escapeHtml } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, joinRelativeURL } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/ufo/dist/index.mjs';
-import destr, { destr as destr$1 } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/destr/dist/index.mjs';
-import { createHooks } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/unstorage/drivers/fs.mjs';
-import { digest, hash as hash$1 } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/ohash/dist/index.mjs';
-import { klona } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/defu/dist/defu.mjs';
-import { snakeCase } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/scule/dist/index.mjs';
-import { getContext } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/unctx/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/radix3/dist/index.mjs';
+import { escapeHtml } from 'file:///home/ubuntu/marki16/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, joinRelativeURL } from 'file:///home/ubuntu/marki16/frontend/node_modules/ufo/dist/index.mjs';
+import destr, { destr as destr$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/destr/dist/index.mjs';
+import { createHooks } from 'file:///home/ubuntu/marki16/frontend/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///home/ubuntu/marki16/frontend/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file:///home/ubuntu/marki16/frontend/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file:///home/ubuntu/marki16/frontend/node_modules/unstorage/drivers/fs.mjs';
+import { digest, hash as hash$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/ohash/dist/index.mjs';
+import { klona } from 'file:///home/ubuntu/marki16/frontend/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file:///home/ubuntu/marki16/frontend/node_modules/defu/dist/defu.mjs';
+import { snakeCase } from 'file:///home/ubuntu/marki16/frontend/node_modules/scule/dist/index.mjs';
+import { getContext } from 'file:///home/ubuntu/marki16/frontend/node_modules/unctx/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file:///home/ubuntu/marki16/frontend/node_modules/radix3/dist/index.mjs';
 import { readFile } from 'node:fs/promises';
-import consola, { consola as consola$1 } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/youch-core/build/index.js';
-import { Youch } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/source-map/source-map.js';
+import consola, { consola as consola$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file:///home/ubuntu/marki16/frontend/node_modules/youch-core/build/index.js';
+import { Youch } from 'file:///home/ubuntu/marki16/frontend/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file:///home/ubuntu/marki16/frontend/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { stringify, uneval } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/devalue/index.js';
-import { captureRawStackTrace, parseRawStackTrace } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/errx/dist/index.js';
-import { isVNode, isRef, toValue } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/vue/index.mjs';
+import { stringify, uneval } from 'file:///home/ubuntu/marki16/frontend/node_modules/devalue/index.js';
+import { captureRawStackTrace, parseRawStackTrace } from 'file:///home/ubuntu/marki16/frontend/node_modules/errx/dist/index.js';
+import { isVNode, isRef, toValue } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue/index.mjs';
 import { promises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname as dirname$1, resolve as resolve$1, basename } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/pathe/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/unhead/dist/server.mjs';
-import { renderToString } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/vue/server-renderer/index.mjs';
-import { walkResolver } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/unhead/dist/utils.mjs';
-import { getIcons } from 'file:///home/oswald/Desktop/marki16/frontend/node_modules/@iconify/utils/lib/index.js';
-import { collections } from 'file:///home/oswald/Desktop/marki16/frontend/.nuxt/nuxt-icon-server-bundle.mjs';
+import { dirname as dirname$1, resolve as resolve$1, basename } from 'file:///home/ubuntu/marki16/frontend/node_modules/pathe/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///home/ubuntu/marki16/frontend/node_modules/unhead/dist/server.mjs';
+import { renderToString } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue/server-renderer/index.mjs';
+import { walkResolver } from 'file:///home/ubuntu/marki16/frontend/node_modules/unhead/dist/utils.mjs';
+import { getIcons } from 'file:///home/ubuntu/marki16/frontend/node_modules/@iconify/utils/lib/index.js';
+import { collections } from 'file:///home/ubuntu/marki16/frontend/.nuxt/nuxt-icon-server-bundle.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"/home/oswald/Desktop/marki16/frontend/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"/home/ubuntu/marki16/frontend/server/assets"}];
 
 const assets$1 = createStorage();
 
@@ -49,11 +49,11 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets$1);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/oswald/Desktop/marki16/frontend","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/oswald/Desktop/marki16/frontend/server","watchOptions":{"ignored":[null]}}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/oswald/Desktop/marki16/frontend/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/oswald/Desktop/marki16/frontend/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"/home/oswald/Desktop/marki16/frontend/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/marki16/frontend","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/marki16/frontend/server","watchOptions":{"ignored":[null]}}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/marki16/frontend/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/marki16/frontend/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"/home/ubuntu/marki16/frontend/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -583,6 +583,11 @@ const appConfig0 = defineAppConfig({
   ui: {
     colors: {
       primary: "sky"
+    },
+    table: {
+      slots: {
+        root: "relative overflow-auto"
+      }
     }
   }
 });
@@ -2350,13 +2355,13 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _7RpoijfL3AfThfCRkyv3LPgDh4kuhKEmKDmoSmJph7s = (function(nitro) {
+const _BqTSlkd6rp7MRPZuDqWWCsZC1pQZcQMJXXircU59vm8 = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script$1}<\/script>`);
   });
 });
 
-const rootDir = "/home/oswald/Desktop/marki16/frontend";
+const rootDir = "/home/ubuntu/marki16/frontend";
 
 const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[]};
 
@@ -2385,7 +2390,7 @@ const asyncContext = getContext("nuxt-dev", {
 	asyncContext: true,
 	AsyncLocalStorage
 });
-const _tkR6Yg60wBCjpgDisex5o0p0HPb5_qkyBOY_xWz1sIU = (nitroApp) => {
+const _1EumwEU2_U7z99PJeUpNZL51qVuAxSknuVDxWOrKA_c = (nitroApp) => {
 	const handler = nitroApp.h3App.handler;
 	nitroApp.h3App.handler = (event) => {
 		return asyncContext.callAsync({
@@ -2460,16 +2465,16 @@ function onConsoleLog(callback) {
 
 const script = "\"use strict\";(()=>{const t=window,e=document.documentElement,c=[\"dark\",\"light\"],n=getStorageValue(\"localStorage\",\"nuxt-color-mode\")||\"light\";let i=n===\"system\"?u():n;const r=e.getAttribute(\"data-color-mode-forced\");r&&(i=r),l(i),t[\"__NUXT_COLOR_MODE__\"]={preference:n,value:i,getColorScheme:u,addColorScheme:l,removeColorScheme:d};function l(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.add(s):e.className+=\" \"+s,a&&e.setAttribute(\"data-\"+a,o)}function d(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.remove(s):e.className=e.className.replace(new RegExp(s,\"g\"),\"\"),a&&e.removeAttribute(\"data-\"+a)}function f(o){return t.matchMedia(\"(prefers-color-scheme\"+o+\")\")}function u(){if(t.matchMedia&&f(\"\").media!==\"not all\"){for(const o of c)if(f(\":\"+o).matches)return o}return\"light\"}})();function getStorageValue(t,e){switch(t){case\"localStorage\":return window.localStorage.getItem(e);case\"sessionStorage\":return window.sessionStorage.getItem(e);case\"cookie\":return getCookie(e);default:return null}}function getCookie(t){const c=(\"; \"+window.document.cookie).split(\"; \"+t+\"=\");if(c.length===2)return c.pop()?.split(\";\").shift()}";
 
-const _ybldpQR9f69vydonHPQ2fgNwF3sou_5KBnf6Zf5M = (function(nitro) {
+const _0IcHlR3tMVG2zEe3_j9J1GctISgLgOYInSnJ2Kswtps = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
 });
 
 const plugins = [
-  _7RpoijfL3AfThfCRkyv3LPgDh4kuhKEmKDmoSmJph7s,
-_tkR6Yg60wBCjpgDisex5o0p0HPb5_qkyBOY_xWz1sIU,
-_ybldpQR9f69vydonHPQ2fgNwF3sou_5KBnf6Zf5M
+  _BqTSlkd6rp7MRPZuDqWWCsZC1pQZcQMJXXircU59vm8,
+_1EumwEU2_U7z99PJeUpNZL51qVuAxSknuVDxWOrKA_c,
+_0IcHlR3tMVG2zEe3_j9J1GctISgLgOYInSnJ2Kswtps
 ];
 
 const assets = {};
@@ -2497,7 +2502,7 @@ function getAsset (id) {
 
 const METHODS = /* @__PURE__ */ new Set(["HEAD", "GET"]);
 const EncodingMap = { gzip: ".gz", br: ".br" };
-const _xokX7Q = eventHandler((event) => {
+const _bqtTmA = eventHandler((event) => {
   if (event.method && !METHODS.has(event.method)) {
     return;
   }
@@ -2637,7 +2642,7 @@ const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
 // @ts-expect-error file will be produced after app build
 const getServerEntry = () => Promise.resolve().then(function () { return server$1; }).then((r) => r.default || r);
 // @ts-expect-error file will be produced after app build
-const getClientManifest = () => import('file:///home/oswald/Desktop/marki16/frontend/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
+const getClientManifest = () => import('file:///home/ubuntu/marki16/frontend/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 // -- SSR Renderer --
 const getSSRRenderer = lazyCachedFunction(async () => {
 	// Load server bundle
@@ -2996,7 +3001,7 @@ async function runTask(name, {
 
 const warnOnceSet = /* @__PURE__ */ new Set();
 const DEFAULT_ENDPOINT = "https://api.iconify.design";
-const _EHtfEp = defineCachedEventHandler(async (event) => {
+const _pjRERz = defineCachedEventHandler(async (event) => {
   const url = getRequestURL(event);
   if (!url)
     return createError({ status: 400, message: "Invalid icon request" });
@@ -3054,15 +3059,15 @@ const _EHtfEp = defineCachedEventHandler(async (event) => {
   // 1 week
 });
 
-const _lazy_ULVonr = () => Promise.resolve().then(function () { return renderer$1; });
+const _lazy_eTvuUn = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
-  { route: '', handler: _xokX7Q, lazy: false, middleware: true, method: undefined },
-  { route: '/__nuxt_error', handler: _lazy_ULVonr, lazy: true, middleware: false, method: undefined },
+  { route: '', handler: _bqtTmA, lazy: false, middleware: true, method: undefined },
+  { route: '/__nuxt_error', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_island/**', handler: _SxA8c9, lazy: false, middleware: false, method: undefined },
-  { route: '/api/_nuxt_icon/:collection', handler: _EHtfEp, lazy: false, middleware: false, method: undefined },
-  { route: '/_fonts/**', handler: _lazy_ULVonr, lazy: true, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_ULVonr, lazy: true, middleware: false, method: undefined }
+  { route: '/api/_nuxt_icon/:collection', handler: _pjRERz, lazy: false, middleware: false, method: undefined },
+  { route: '/_fonts/**', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined },
+  { route: '/**', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {

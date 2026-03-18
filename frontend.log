@@ -6,28 +6,53 @@
 ●  Nuxt 4.3.1 (with Nitro 2.13.1, Vite 7.3.1 and Vue 3.5.29)
 
  
-              █▀▀▀▀▀▀▀██▀▀▀█▀██▀█▀▀▀▀▀▀▀█
-              █ █▀▀▀█ ██▀▀ ▄▄██▀█ █▀▀▀█ █
-              █ █   █ █ █ ▄▀▄ ▄▄█ █   █ █
-              █ ▀▀▀▀▀ █▀▄ █▀▄▀█ █ ▀▀▀▀▀ █
-              █▀▀███▀▀▀█ ▀█ ▀▄▀▀███▀▀████
-              █▀▀▄▄▀▀▀█▀▀▄▀▀▄█ ▄▄▀▀▄ ▄ ▀█
-              █▄▄█▀▄▀▀ ▀▀ ▄▀█ ▄ ▀▀█▄▄██ █
-              █ ▄▀▄▀▀▀ █▀ █▄ ▄ █▀█▀█▀█ ▀█
-              █ █  ▀ ▀▀▄ ▀ ▀▀▄█ ▀▀▀ █ █▄█
-              █▀▀▀▀▀▀▀█ ▄█  ▀▄▄ █▀█ ▀▄█▀█
-              █ █▀▀▀█ █▄ ▄█▄▀▄▀ ▀▀▀ ▀▀███
-              █ █   █ ██▀▄▄ ████▀▄▄█▄▀▄ █
-              █ ▀▀▀▀▀ █  █▀▄█▀  █ ▄▄▀██ █
+              █▀▀▀▀▀▀▀███▀█▀▀████▀▀▀▀▀▀▀█
+              █ █▀▀▀█ █▄█▄█▀▄▄ ▀█ █▀▀▀█ █
+              █ █   █ █▄ ▄█▄▄▀▄▄█ █   █ █
+              █ ▀▀▀▀▀ █ ▄▀▄ █▀▄▀█ ▀▀▀▀▀ █
+              █▀▀▀▀▀█▀▀▀ ▄ ▀▀▄  ▀█▀█▀█▀██
+              █▄▄ ██ ▀  █ █▄█ ▀█▀█▀▀▀█ ▀█
+              ██▀▀▄██▀▄▀▀▀ ▀▀▄▀▀█▀▀▀█▀▀ █
+              █ ▄█ ▀▀▀▀ ▄▀▄ █▄▀█▄▀██ █ ▀█
+              █ █▀▄ ▄▀▀▀ ▀█▄▀▄█ ▀▀▀ ▄▀█▄█
+              █▀▀▀▀▀▀▀█  █▄  ▄▄ █▀█   ▀▀█
+              █ █▀▀▀█ █▀███▄▀█  ▀▀▀  ▀▄██
+              █ █   █ █  ▀▄ █  ▀▀▄▄▄█ ▄ █
+              █ ▀▀▀▀▀ █ ▀▄█▄▀▄▀▄█▄   ▀▀ █
               ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
  
   ➜ Local:    http://0.0.0.0:5000/
-  ➜ Network:  http://192.168.1.239:5000/ [QR code]
+  ➜ Network:  http://83.228.244.151:5000/ [QR code]
 
   ➜ DevTools: press Shift + Alt + D in the browser (v3.2.2)
 
 ℹ Nuxt Icon server bundle mode is set to local
-✔ Vite client built in 101ms
-✔ Vite server built in 89ms
-[nitro] ✔ Nuxt Nitro server built in 1895ms
-ℹ Vite client warmed up in 5ms
+✔ Vite client built in 43ms
+✔ Vite server built in 46ms
+[nitro] ✔ Nuxt Nitro server built in 970ms
+ℹ Vite client warmed up in 2ms
+ℹ hmr update /components/SyncButton.vue, /assets/css/main.css
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs
+[nuxt] ℹ Compiled plugins.server.mjs in 809.98ms
+[nuxt] ℹ Compiled plugins.client.mjs in 812.15ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 813.88ms
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x2)
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x3)
+[nuxt] ℹ Compiled plugins.client.mjs in 577.86ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 604.21ms
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x4)
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x5)
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x6)
+[nuxt] ℹ Compiled plugins.server.mjs in 922.44ms
+[nuxt] ℹ Compiled plugins.client.mjs in 924.68ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 926.57ms
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x7)
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x8)
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x9)
+[nuxt] ℹ Compiled plugins.server.mjs in 560.7ms
+[nuxt] ℹ Compiled plugins.client.mjs in 562.87ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 564.06ms
+ℹ hmr update /pages/index.vue, /assets/css/main.css, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fubuntu%2Fmarki16%2Ffrontend%2F.nuxt%2Froutes.mjs (x10)
+[nuxt] ℹ Compiled plugins.server.mjs in 848.38ms
+[nuxt] ℹ Compiled plugins.client.mjs in 850.17ms
+[nuxt] ℹ Compiled types/plugins.d.ts in 851.58ms
