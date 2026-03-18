@@ -192,7 +192,8 @@ async function testerConnexion() {
   testStatus.value = 'loading'
   testMessage.value = ''
   try {
-    const result = await $fetch('/api/smtp/test', {
+    const config = useRuntimeConfig()
+    const result = await $fetch(`${config.public.apiBaseUrl}/api/smtp/test`, {
       method: 'POST',
       body: {
         host:     form.value.host,
