@@ -7,8 +7,14 @@ echo "🚀 Démarrage des serveurs Marki16..."
 echo "===================================="
 
 # Vérifier que nous sommes à la racine du projet
-if [ ! -d "backend" ] || [ ! -d "frontend" ]; then
+if [ ! -d "frontend" ]; then
     echo "❌ Erreur: Ce script doit être exécuté depuis la racine du projet"
+    exit 1
+fi
+
+# Vérifier que le backend existe au nouvel emplacement
+if [ ! -d "~/serveur/dev" ]; then
+    echo "❌ Erreur: Le backend n'est pas trouvé dans ~/serveur/dev"
     exit 1
 fi
 
@@ -84,7 +90,7 @@ fi
 
 # Démarrer le backend
 echo "🔥 Démarrage du backend Parse Server..."
-cd backend || { echo "❌ Impossible de se déplacer dans backend/"; exit 1; }
+cd ~/serveur/dev || { echo "❌ Impossible de se déplacer dans ~/serveur/dev/"; exit 1; }
 
 # Vérifier si les dépendances sont installées
 if [ ! -d "node_modules" ]; then
@@ -111,7 +117,7 @@ fi
 
 # Démarrer le frontend
 echo "🎨 Démarrage du frontend Nuxt..."
-cd ../frontend || { echo "❌ Impossible de se déplacer dans frontend/"; exit 1; }
+cd ~/marki16/frontend || { echo "❌ Impossible de se déplacer dans ~/marki16/frontend/"; exit 1; }
 
 # Vérifier si les dépendances sont installées
 if [ ! -d "node_modules" ]; then
@@ -137,7 +143,7 @@ else
 fi
 
 # Retour à la racine
-cd ..
+cd ~/marki16
 
 # Démarrer Caddy
 echo "🌐 Démarrage de Caddy..."

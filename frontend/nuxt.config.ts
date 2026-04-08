@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       parseAppId: process.env.PARSE_APP_ID || 'marki15-app-id',
-      parseServerURL: process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com:8444/parse',
+      parseServerURL: process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com/parse',
       parseJavaScriptKey: process.env.PARSE_JS_KEY || '',
       apiBaseUrl: process.env.API_BASE_URL || 'https://adti.api.markidiags.com:8445',
     }

@@ -13,8 +13,14 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # Verifier que nous sommes a la racine du projet
-if [ ! -d "backend" ] || [ ! -d "frontend" ]; then
+if [ ! -d "frontend" ]; then
     echo "? Erreur: Ce script doit etre execute depuis la racine du projet"
+    exit 1
+fi
+
+# Verifier que le backend existe au nouvel emplacement
+if [ ! -d "~/serveur/dev" ]; then
+    echo "? Erreur: Le backend n'est pas trouve dans ~/serveur/dev"
     exit 1
 fi
 
@@ -44,7 +50,7 @@ done
 
 # Demarrer le backend
 echo "? Demarrage du backend Parse Server..."
-cd backend || { echo "? Impossible de se deplacer dans backend/"; exit 1; }
+cd ~/serveur/dev || { echo "? Impossible de se deplacer dans ~/serveur/dev/"; exit 1; }
 
 # Verifier si les dependances sont installees
 if [ ! -d "node_modules" ]; then
@@ -70,7 +76,7 @@ fi
 
 # Demarrer le frontend
 echo "? Construction et demarrage du frontend Nuxt en production..."
-cd ../frontend || { echo "? Impossible de se deplacer dans frontend/"; exit 1; }
+cd ~/marki16/frontend || { echo "? Impossible de se deplacer dans ~/marki16/frontend/"; exit 1; }
 
 # Verifier si les dependances sont installees
 if [ ! -d "node_modules" ]; then
@@ -100,7 +106,7 @@ else
 fi
 
 # Retour a la racine
-cd ..
+cd ~/marki16
 
 # Sauvegarder la liste des processus pm2 pour un redemarrage automatique
 echo "? Configuration de pm2 pour un demarrage automatique..."
