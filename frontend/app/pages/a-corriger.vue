@@ -207,6 +207,7 @@ async function chargerImpayesSansPayeur() {
   try {
     const q = new $parse.Query('Impaye')
     q.doesNotExist('payeur')
+    q.equalTo('facture_soldee', false)
     q.limit(200)
 
     const results = await q.find()
