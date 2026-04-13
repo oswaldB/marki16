@@ -144,10 +144,26 @@ async function attribuer() {
     const cibles = props.impayes.filter(i => selection.value.has(i.objectId))
 
     for (const item of cibles) {
-      await $parse.Cloud.run('assignerSequence', {
-        impayelId:  item.objectId,
-        sequenceId: sequenceChoisie.value,
-      })
+      // Mise à jour directe en frontend au lieu d'appeler le cloud
+      const impayeObj = $parse.Object.extend('Impaye').createWithoutData(item.objectId)
+      const sequenceObj = $parse.Object.extend('Sequence').createWithoutData(sequenceChoisie.value)
+      impayeObj.set('sequence', sequenceObj)
+      await impayeObj.save()
+      
+      // Mettre à jour directement dans le store pour la réactivité
+      const impayeIndex = useImpayesStore().allImpayes.findIndex(i => i.objectId === item.objectId)
+      if (impayeIndex !== -1) {
+        useImpayesStore().allImpayes[impayeIndex] = useImpayesStore().rowToPlain(impayeObj)
+      }
+      
+      // Appeler la fonction cloud pour créer les relances
+      try {
+        await $parse.Cloud.run('createOneRelanceWithTemplates', { impayeId: item.objectId })
+        console.log(`Relances créées pour l'impayé ${item.objectId}`)
+      } catch (error) {
+        console.error(`Erreur création relances pour ${item.objectId}:`, error)
+        // Ne pas bloquer l'assignation même si la création des relances échoue
+      }
     }
 
     toast.add({
@@ -157,6 +173,7 @@ async function attribuer() {
 
     emit('update:open', false)
     emit('assigned')
+    
   } catch (err) {
     toast.add({ title: 'Erreur lors de l\'attribution', description: err.message, color: 'red' })
   } finally {

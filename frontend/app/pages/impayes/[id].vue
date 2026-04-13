@@ -772,7 +772,7 @@ async function retirerEmailRelance() {
     console.log('Relances en attente trouvées pour mise à jour:', pendingRelances.length)
     
     // Recalculer le destinataire sans email_relance (utilisera payeur_email par défaut)
-    const nouveauTo = await construireDestinataires('[[payeur_email]]', impayeToUpdate)
+    const nouveauTo = await construireDestinataires( '[[]payeur_email[]]', impayeToUpdate)
     console.log('Nouveau destinataire calculé (sans email_relance):', nouveauTo)
     
     for (const relance of pendingRelances) {
@@ -829,7 +829,7 @@ async function handleEmailSelected(email, contactId) {
     console.log('Relances en attente trouvées:', pendingRelances.length)
     
     // Recalculer le destinataire avec le nouveau contact
-    const nouveauTo = await construireDestinataires('[[payeur_email]]', impayeToUpdate)
+    const nouveauTo = await construireDestinataires( '[[]payeur_email[]]', impayeToUpdate)
     console.log('Nouveau destinataire calculé:', nouveauTo)
     
     for (const relance of pendingRelances) {

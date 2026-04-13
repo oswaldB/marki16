@@ -86,7 +86,7 @@ Exemple complet :
         | Numéro de facture | Montant |
         |-------------------|---------|
         | [[nfacture]]      | [[montant]] |
-        | [[nfacture+]]     | [[montant+]] |
+        | [[nfacture+]]   | [[montant+]] |
     - format: both
       objet: "Rappel : Plusieurs factures impayées"
       corps: |
@@ -126,7 +126,7 @@ Exemple complet :
         | Numéro de facture | Montant |
         |-------------------|---------|
         | [[nfacture]]      | [[montant]] |
-        | [[nfacture+]]     | [[montant+]] |
+        | [[nfacture+]]   | [[montant+]] |
     - format: both
       objet: "Mise en demeure – Factures impayées"
       corps: |
@@ -251,7 +251,7 @@ Pour plusieurs impayés, utilisez la syntaxe avec + :
 | Numéro de facture | Montant |
 |-------------------|---------|
 | [[nfacture]]      | [[montant]] |
-| [[nfacture+]]     | [[montant+]] |
+| [[nfacture+]]   | [[montant+]] |
 `
     await copyToClipboard(prompt)
   }

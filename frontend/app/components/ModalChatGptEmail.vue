@@ -26,9 +26,9 @@
           <UTextarea
             v-model="response"
             :rows="8"
-            placeholder="Bonjour [[payeur_nom]],
+            placeholder="Bonjour {{payeur_nom}},
 
-Votre facture [[nfacture]] est en retard..."
+Votre facture {{nfacture}} est en retard..."
             class="w-full"
           />
         </div>

@@ -448,11 +448,7 @@
     <UModal v-model:open="modalAssignerOuvert" title="Assigner une séquence">
       <template #body>
         <div class="space-y-4">
-          <USelect
-            v-model="sequenceChoisie"
-            :items="sequenceOptionsModal"
-            placeholder="Choisir une séquence..."
-          />
+          <h3 class="text-sm font-medium text-gray-700">Sélectionnez une séquence</h3>
 
           <UAlert
             v-if="sequences.length === 0"
@@ -469,11 +465,56 @@
             </template>
           </UAlert>
         </div>
+        
+        <!-- Affichage des séquences sous forme de cards -->
+        <div v-if="sequences.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          <UCard
+            v-for="sequence in sequences"
+            :key="sequence.id"
+            :class="{
+              'border-2 border-primary-500': sequenceChoisie === sequence.id,
+              'cursor-pointer hover:border-gray-300': true
+            }"
+            @click="sequenceChoisie = sequence.id"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium text-gray-900">{{ sequence.get('nom') }}</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  {{ sequence.get('description') || 'Aucune description' }}
+                </p>
+              </div>
+              <UBadge
+                :color="sequence.get('publiee') ? 'green' : 'gray'"
+                variant="subtle"
+              >
+                {{ sequence.get('publiee') ? 'Publiée' : 'Non publiée' }}
+              </UBadge>
+            </div>
+          </UCard>
+        </div>
+        
+        <UAlert
+          v-if="sequences.length === 0"
+          icon="i-heroicons-information-circle"
+          color="primary"
+          variant="subtle"
+          class="mt-4"
+        >
+          <template #description>
+            Aucune séquence disponible.
+            <NuxtLink to="/sequences" class="font-medium text-primary-600 hover:text-primary-700 underline">
+              Créer une séquence
+            </NuxtLink>
+          </template>
+        </UAlert>
       </template>
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" @click="modalAssignerOuvert = false">Annuler</UButton>
-          <UButton :loading="assignant" :disabled="!sequenceChoisie" @click="assignerSequenceWrapper">Assigner</UButton>
+          <UButton :loading="assignant" :disabled="!sequenceChoisie" @click="assignerSequenceWrapper">
+            Assigner la séquence sélectionnée
+          </UButton>
         </div>
       </template>
     </UModal>
@@ -687,7 +728,10 @@ function toggleSelection(item) {
 
 // Options pour le modal
 const sequenceOptionsModal = computed(() =>
-  sequences.value.map(s => ({ label: s.get('nom'), value: s.id }))
+  sequences.value.map(s => ({
+    label: s.get('nom'),
+    value: s.id
+  }))
 )
 
 // ── Helpers ──
@@ -785,6 +829,8 @@ async function assignerSequenceWrapper() {
     selection.value = []
     impayesCibles.value = []
     modalAssignerOuvert.value = false
+    // Rafraîchissement supplémentaire pour s'assurer que le tableau est à jour
+    await charger()
   } catch (err) {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
   } finally {

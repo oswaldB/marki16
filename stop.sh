@@ -3,6 +3,9 @@
 # Marki16 - Script d'arrêt des serveurs
 # Ce script arrête proprement le backend et le frontend
 
+# Se positionner à la racine du projet
+cd ~/marki16 || { echo "❌ Impossible de se déplacer dans ~/marki16/"; exit 1; }
+
 echo "🛑 Arrêt des serveurs Marki16..."
 echo "===================================="
 

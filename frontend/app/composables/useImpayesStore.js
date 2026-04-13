@@ -91,16 +91,48 @@ export function useImpayesStoreComposable() {
       const cibles = impayesCibles.length ? impayesCibles : selection.value.map(r => r._parse)
       
       for (const impayeObj of cibles) {
-        await $parse.Cloud.run('assignerSequence', {
-          impayelId:  impayeObj.id,
-          sequenceId: sequenceId,
-        })
+        // Mise à jour directe en frontend au lieu d'appeler le cloud
+        const sequenceObj = $parse.Object.extend('Sequence').createWithoutData(sequenceId)
+        impayeObj.set('sequence', sequenceObj)
+        await impayeObj.save()
+        
+        // Mettre à jour directement dans le store pour la réactivité
+        const impayeIndex = store.allImpayes.findIndex(i => i.objectId === impayeObj.id)
+        if (impayeIndex !== -1) {
+          store.allImpayes[impayeIndex] = store.rowToPlain(impayeObj)
+        }
       }
       
-      toast.add({ title: 'Séquence assignée', color: 'green' })
-      // Rafraîchir les données
-      await store.fetchAllImpayes(true)
+      // Appeler la fonction cloud pour créer les relances pour tous les impayés
+      const relancesPromises = cibles.map(async (impayeObj) => {
+        try {
+          const result = await $parse.Cloud.run('createOneRelanceWithTemplates', { impayeId: impayeObj.id })
+          console.log(`Relances créées pour l'impayé ${impayeObj.id}: ${result.relancesCreated} relance(s)`)
+          return result
+        } catch (error) {
+          console.error(`Erreur création relances pour ${impayeObj.id}:`, error)
+          return { success: false, error: error.message }
+        }
+      })
+      
+      // Attendre que toutes les créations de relances soient terminées
+      const relancesResults = await Promise.all(relancesPromises)
+      const successfulRelances = relancesResults.filter(r => r.success).length
+      
+      toast.add({ 
+        title: 'Séquence assignée', 
+        description: successfulRelances > 0 ? `${successfulRelances} relance(s) créée(s)` : 'Aucune relance créée',
+        color: 'green' 
+      })
+      
+      // Forcer le rechargement des vues basées sur allImpayes
+      for (const viewKey in store.viewsData) {
+        store.viewsData[viewKey].loaded = false
+      }
+      
+      // Recharger la vue active
       await charger()
+      
     } catch (err) {
       toast.add({ title: 'Erreur', description: err.message, color: 'red' })
     }

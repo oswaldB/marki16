@@ -93,6 +93,7 @@ const navItems = [
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
   { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
+  { to: '/a-corriger', label: 'À corriger', icon: 'i-heroicons-wrench-screwdriver' },
   { to: '/recalcitrants', label: 'Récalcitrants', icon: 'i-heroicons-exclamation-triangle' },
   { to: '/activites', label: 'Activités', icon: 'i-heroicons-clock' },
 ]

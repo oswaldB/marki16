@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "nuxt": "^4.3.1",
     "parse": "^3.3.0"
   },

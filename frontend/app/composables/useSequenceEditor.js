@@ -1,6 +1,47 @@
 // ── Constants ──────────────────────────────────────────────────
 export const SCENARIO_FORMATS = ['single', 'multiple', 'both', 'broker']
 
+export const DOCUMENTATION = {
+  variables: {
+    title: 'Variables Disponibles',
+    description: 'Utilisez ces variables dans vos templates d\'emails. Elles seront automatiquement remplacées par les données réelles.',
+    categories: [
+      {
+        name: 'Format Simple',
+        description: 'Pour un seul impayé (format single/both)',
+        example: '[[]nfacture[]], [[]montant_total[]], [[]date_piece[]]'
+      },
+      {
+        name: 'Format Multiple',
+        description: 'Pour plusieurs impayés (format multiple)',
+        example: '[[]total_impayes[]], [[]nfactures_liste[]]'
+      },
+      {
+        name: 'Formatage de Dates',
+        description: 'Formatez les dates directement dans le template',
+        example: '[[]date_piece | DD/MM/YYYY[]] → 15/01/2026'
+      }
+    ]
+  },
+  promptsAI: {
+    title: 'Prompts AI pour Génération d\'Emails',
+    examples: [
+      {
+        name: 'Relance Amicale',
+        prompt: 'Rédige un email de relance amical pour un impayé de [[]montant_total[]] € pour la facture [[]nfacture[]]. Le client est [[]payeur_nom[]], un [[]payeur_type[]]. La date d\'échéance était le [[]date_echeance | DD/MM/YYYY[]].'
+      },
+      {
+        name: 'Relance Formelle',
+        prompt: 'Rédige un email de relance formel pour un impayé. Le montant de [[]montant_total[]] € n\'a pas été réglé pour la facture [[]nfacture[]]. Date d\'échéance: [[]date_echeance | DD/MM/YYYY[]]. Adresse du bien: [[]adresse_bien[]], [[]ville[]].'
+      },
+      {
+        name: 'Mise en Demeure',
+        prompt: 'Rédige une mise en demeure pour [[]montant_total[]] € d\'impayés. Factures concernées: [[]nfactures_liste[]]. Date limite de règlement: 8 jours après réception. Coordonnées du payeur: [[]payeur_nom[]], [[]payeur_email[]], [[]payeur_telephone[]].'
+      }
+    ]
+  }
+}
+
 export const SEQUENCE_TYPES = [
   { value: 'relances', label: 'Relances' },
   { value: 'suivi', label: 'Suivi' }
@@ -9,11 +50,12 @@ export const SEQUENCE_TYPES = [
 export const VARIABLES = [
   { groupe: 'PAYEUR',   vars: ['payeur_nom', 'payeur_email', 'payeur_telephone', 'payeur_type'] },
   { groupe: 'FACTURE',  vars: ['nfacture', 'ref_piece', 'date_piece', 'reste_a_payer', 'montant_total', 'date_echeance'] },
-  { groupe: 'BIEN',     vars: ['adresse_bien', 'code_postal', 'ville', 'numero_lot', 'etage', 'porte', 'batiment', 'residence'] },
-  { groupe: 'PROPRIETAIRE', vars: ['proprietaire_nom', 'proprietaire_email', 'proprietaire_telephone', 'proprietaire_adresse'] },
+  { groupe: 'BIEN',     vars: ['adresse_bien', 'code_postal', 'ville', 'numero_lot', 'etage', 'porte', 'escalier', 'entree'] },
+  { groupe: 'PROPRIETAIRE', vars: ['proprietaire_nom', 'proprietaire_email', 'proprietaire_telephone'] },
   { groupe: 'APPORTEUR',   vars: ['apporteur_nom', 'apporteur_email', 'apporteur_telephone', 'apporteur_societe'] },
   { groupe: 'DOSSIER',  vars: ['numero_dossier', 'employe_intervention', 'date_debut_mission'] },
   { groupe: 'MULTIPLE', vars: ['total_impayes', 'nfactures_liste', 'ndossier_liste'] },
+  { groupe: 'FORMATAGE', vars: ['Format de date: [[]date | DD/MM/YYYY[]]', 'Format de date: [[]date | YYYY-MM-DD[]]'] },
 ]
 
 export const EXEMPLE_VARS = {
@@ -22,8 +64,15 @@ export const EXEMPLE_VARS = {
   payeur_nom: 'Jean Dupont', payeur_email: 'jean@example.com',
   payeur_telephone: '0612345678', payeur_type: 'Propriétaire',
   adresse_bien: '123 rue de la Paix', code_postal: '75001', ville: 'Paris',
-  numero_lot: 'A12', numero_dossier: 'DOS-001',
+  numero_lot: 'A12', etage: '2ème', porte: '12', escalier: 'A', entree: 'B',
+  numero_dossier: 'DOS-001',
   employe_intervention: 'Marie Martin', date_debut_mission: '01/01/2024',
+  proprietaire_nom: 'Dupont SAS', proprietaire_email: 'contact@dupont.com',
+  proprietaire_telephone: '0123456789',
+  // Variables pour le format multiple (liste de tous les impayés)
+  total_impayes: '5000',
+  nfactures_liste: 'FA-001, FA-002, FA-003',
+  ndossier_liste: 'DOS-001, DOS-002'
 }
 
 export const champOptions = [
@@ -240,7 +289,7 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
           _key: `email_${i}_${seq.id}`,
           delai: e.delai || 0,
           smtp: e.smtp || '',
-          to: e.to || '[[payeur_email]]',
+          to: e.to || '[[]payeur_email[]]',
           cc: e.cc || '',
           activeScenario: 'single',
           scenarios
@@ -317,7 +366,7 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
       _key: `email_new_${Date.now()}`,
       delai: 0,
       smtp: '',
-      to: '[[payeur_email]]',
+      to: '[[]payeur_email[]]',
       cc: '',
       activeScenario: 'single',
       scenarios: SCENARIO_FORMATS.map(format => ({ format, active: true, smtp: '', cc: '', objet: '', corps: '' }))

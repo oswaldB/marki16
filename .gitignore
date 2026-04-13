@@ -8,9 +8,13 @@ node_modules/
 # Build output
 output/
 dist/
+frontend/.output/
 
 # Logs
 *.log
+backend.log
+frontend.log
+backend/logs/
 
 # IDE/Editor
 .idea/

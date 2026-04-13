@@ -48,7 +48,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git -C /home/ubuntu/marki16 diff --name-only HEAD)",
+      "Bash(git -C /home/ubuntu/marki16 ls-files --others --exclude-standard)",
+      "Bash(git -C /home/ubuntu/marki16 diff HEAD -- frontend/app/layouts/default.vue frontend/app/pages/contacts/index.vue frontend/app/pages/impayes/index.vue frontend/app/pages/login.vue frontend/app/pages/relances.vue frontend/app/pages/sequences/index.vue frontend/app/assets/css/main.css)",
+      "Bash(git:*)"
     ]
   }
 }

@@ -72,7 +72,7 @@
                 ref="lienPaiementTextareaEl"
                 v-model="lienPaiementEdit"
                 class="w-full border border-gray-300 rounded-md p-2 font-mono text-sm resize-y min-h-24 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                placeholder="https://paiement.exemple.com?facture=[[nfacture]]&montant=[[reste_a_payer]]"
+                placeholder="https://paiement.exemple.com?facture={{nfacture}}&montant={{reste_a_payer}}"
               />
               <div v-if="lienPaiementEdit" class="bg-gray-50 rounded p-2 mt-2">
                 <p class="text-xs text-gray-500 mb-1">Aperçu (valeurs d'exemple)</p>

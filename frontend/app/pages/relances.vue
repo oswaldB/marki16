@@ -604,8 +604,7 @@ function sortableHeader(label) {
 }
 
 const colonnes = [
-  { accessorKey: 'dateEnvoi',   header: sortableHeader('Date envoi') },
-  { accessorKey: 'email_index', header: sortableHeader('Relance n°'), cell: ({ row }) => row.original.email_index != null ? `n° ${row.original.email_index + 1}` : '—' },
+  { accessorKey: 'dateEnvoi',   header: sortableHeader('Date envoi prévue') },
   { accessorKey: 'objet',       header: sortableHeader('Objet') },
   { accessorKey: 'to',          header: sortableHeader('Destinataire') },
   {
@@ -630,6 +629,16 @@ const colonnes = [
     }
   },
   { accessorKey: 'statut',      header: sortableHeader('Statut') },
+  {
+    accessorKey: 'valide',
+    header: sortableHeader('Validé'),
+    cell: ({ row }) => {
+      const isValide = row.original.valide
+      return h('span', {
+        class: isValide ? 'text-green-600 font-medium' : 'text-yellow-600 font-medium'
+      }, isValide ? 'Oui' : 'Non')
+    }
+  },
   {
     id: 'actions',
     header: ' ',
@@ -751,14 +760,20 @@ function toDateInput(val) {
 
 function parseImpaye(i) {
   if (!i) return null
+  
+  // Handle both Parse Objects and plain JavaScript objects
+  const getValue = (key) => {
+    return i.get ? i.get(key) : i[key]
+  }
+  
   return {
     id:           i.id,
-    nfacture:     i.get('nfacture') || '—',
-    statut:       i.get('statut') || '',
-    resteAPayer:  i.get('reste_a_payer') ?? null,
-    montantTotal: i.get('total_ttc') ?? null,
-    adresseBien:  i.get('adresse_bien') || '',
-    payeurNom:    i.get('payeur_nom') || '',
+    nfacture:     getValue('nfacture') || '—',
+    statut:       getValue('statut') || '',
+    resteAPayer:  getValue('reste_a_payer') ?? null,
+    montantTotal: getValue('total_ttc') ?? null,
+    adresseBien:  getValue('adresse_bien') || '',
+    payeurNom:    getValue('payeur_nom') || '',
   }
 }
 
@@ -767,25 +782,50 @@ function parseRelance(r) {
   const impayes = r.get('impayes')   // array de Pointer si peuplé
   const impaye  = r.get('impaye')    // single Pointer fallback
 
+  // Handle the case where impayes contains object IDs (strings) instead of Parse Objects
   const impayeliste = Array.isArray(impayes) && impayes.length > 0
-    ? impayes.map(parseImpaye).filter(Boolean)
+    ? impayes.map(i => {
+        // If it's a string (object ID), we can't parse it, so return basic info from metadata
+        if (typeof i === 'string' || !i.get) {
+          return null
+        }
+        return parseImpaye(i)
+      }).filter(Boolean)
     : impaye ? [parseImpaye(impaye)] : []
 
   // Toujours retourner une seule ligne, avec toutes les factures
+  // Handle both old and new field names for backward compatibility
+  const getValue = (key) => {
+    return r.get ? r.get(key) : r[key]
+  }
+  
+  const metadata = getValue('metadata') || {}
+  const templateData = metadata.templateData || {}
+  
+  // Get facture number from metadata if impayeliste is empty
+  const nfactureFromMetadata = templateData.nfacture || templateData.nfactures_liste
+  const factureNumber = impayeliste.length > 0 
+    ? impayeliste.map(imp => imp.nfacture).join(', ')
+    : (nfactureFromMetadata ? String(nfactureFromMetadata) : '—')
+  
+  // Also try to get email from contact if available
+  const contact = r.get('contact')
+  const contactEmail = contact ? (contact.get ? contact.get('email') : contact.email) : null
+  
   return {
     _parse:      r,
     id:          r.id,
-    dateEnvoi:   r.get('dateEnvoi'),
-    objet:       r.get('objet') || '',
-    to:          r.get('to') || r.get('destinataire') || '',
-    cc:          r.get('cc') || '',
-    corps:       r.get('corps') || '',
-    statut:      r.get('statut') || 'pending',
-    manuelle:    r.get('manuelle') || false,
-    valide:      r.get('valide') !== false, // par défaut true si non défini
-    nfacture:    impayeliste.length > 0 ? impayeliste.map(imp => imp.nfacture).join(', ') : '—',
+    dateEnvoi:   getValue('date_envoi_prevue') || getValue('date_envoi') || getValue('dateEnvoi'),
+    objet:       getValue('sujet') || getValue('objet') || '',
+    to:          templateData.payeur_email || templateData.proprio_email || contactEmail || getValue('to') || getValue('destinataire') || '',
+    cc:          getValue('cc') || '',
+    corps:       getValue('contenu') || getValue('corps') || '',
+    statut:      getValue('statut') || 'pending',
+    manuelle:    getValue('manuelle') || false,
+    valide:      getValue('valide') !== false, // par défaut true si non défini
+    nfacture:    factureNumber,
     impayelId:   impayeliste.length > 0 ? impayeliste.map(imp => imp.id) : null,
-    email_index: r.get('email_index') ?? null,
+    email_index: getValue('email_index') ?? null,
     impayes:     impayeliste,
     isGrouped:   impayeliste.length > 1,
   }
@@ -799,8 +839,9 @@ async function charger() {
     const q = new $parse.Query('Relance')
     q.include('impaye')
     q.include('impayes')
+    q.include('contact')
     q.include('sequence')
-    q.descending('dateEnvoi')
+    q.descending('date_envoi_prevue')
     q.limit(500)
 
     if (filtreStatut.value !== 'tous' && filtreStatut.value !== 'non-validees') {

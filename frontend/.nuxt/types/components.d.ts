@@ -30,6 +30,7 @@ interface _GlobalComponents {
   SequenceEmailCard: typeof import("../../app/components/SequenceEmailCard.vue")['default']
   SequenceRulesSection: typeof import("../../app/components/SequenceRulesSection.vue")['default']
   SequenceSuiviCard: typeof import("../../app/components/SequenceSuiviCard.vue")['default']
+  SequenceTestSlideover: typeof import("../../app/components/SequenceTestSlideover.vue")['default']
   SmtpDrawer: typeof import("../../app/components/SmtpDrawer.vue")['default']
   SyncButton: typeof import("../../app/components/SyncButton.vue")['default']
   ToastuiEditor: typeof import("../../app/components/ToastuiEditor.vue")['default']
@@ -198,6 +199,7 @@ interface _GlobalComponents {
   LazySequenceEmailCard: LazyComponent<typeof import("../../app/components/SequenceEmailCard.vue")['default']>
   LazySequenceRulesSection: LazyComponent<typeof import("../../app/components/SequenceRulesSection.vue")['default']>
   LazySequenceSuiviCard: LazyComponent<typeof import("../../app/components/SequenceSuiviCard.vue")['default']>
+  LazySequenceTestSlideover: LazyComponent<typeof import("../../app/components/SequenceTestSlideover.vue")['default']>
   LazySmtpDrawer: LazyComponent<typeof import("../../app/components/SmtpDrawer.vue")['default']>
   LazySyncButton: LazyComponent<typeof import("../../app/components/SyncButton.vue")['default']>
   LazyToastuiEditor: LazyComponent<typeof import("../../app/components/ToastuiEditor.vue")['default']>
