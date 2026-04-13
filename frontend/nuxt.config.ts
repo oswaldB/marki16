@@ -16,10 +16,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css', '@toast-ui/editor/dist/toastui-editor.css'],
   runtimeConfig: {
     public: {
-      parseAppId: process.env.PARSE_APP_ID || 'marki15-app-id',
+      parseAppId: process.env.PARSE_APP_ID || 'marki15-app',
       parseServerURL: process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com/parse',
       parseJavaScriptKey: process.env.PARSE_JS_KEY || '',
-      apiBaseUrl: process.env.API_BASE_URL || 'https://adti.api.markidiags.com:8445',
+      apiBaseUrl: process.env.API_BASE_URL || 'https://dev.api.markidiags.com',
     }
   },
   vite: {
@@ -29,10 +29,16 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/api': {
-          target: 'https://adti.api.markidiags.com:8445',
+          target: 'https://dev.api.markidiags.com',
           changeOrigin: true,
+        },
+        '/parse': {
+          target: 'http://localhost:1555',
+          changeOrigin: true,
+          secure: false,
         }
-      }
+      },
+      allowedHosts: ['dev.markidiags.com']
     }
   },
 })

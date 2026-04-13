@@ -29,7 +29,6 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/warn.dev.server.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")> &
   InjectionType<typeof import("../../app/plugins/chartjs.client.js")> &
-  InjectionType<typeof import("../../app/plugins/parse-auth-guard.client.js")> &
   InjectionType<typeof import("../../app/plugins/parse.client.js")>
 
 declare module '#app' {

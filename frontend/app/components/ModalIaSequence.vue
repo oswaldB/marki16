@@ -24,9 +24,9 @@
 - delai: 7
   scenarios:
     - format: single
-      objet: &quot;Rappel facture [[nfacture]]&quot;
+      objet: &quot;Rappel facture {{nfacture}}&quot;
       corps: |
-        Bonjour [[payeur_nom]], ..."
+        Bonjour {{payeur_nom}}, ..."
             class="w-full"
           />
         </div>

@@ -112,7 +112,7 @@
         <UInput
           :value="props.email?.to"
           @input="updateTo($event.target.value)"
-          placeholder="[[payeur_email]]"
+          placeholder="{{payeur_email}}"
           class="w-full"
         />
       </div>

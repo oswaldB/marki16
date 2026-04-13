@@ -1,0 +1,45 @@
+Résumé des erreurs et corrections effectuées sur la page /relances et création de la page À corriger:
+
+1. **Erreur 'i.get is not a function' sur /relances**:
+   - Problème: La fonction parseImpaye essayait d'appeler .get() sur des objets qui pouvaient être des objets JavaScript simples
+   - Solution: Ajout d'une fonction getValue() qui vérifie si l'objet a une méthode get() avant de l'utiliser
+   - Fichier: frontend/app/pages/relances.vue (ligne 751-767)
+
+2. **Mise à jour de la structure de la table Relance**:
+   - Problème: La table Relance a changé de structure (date_envoi, sujet, contenu au lieu de dateEnvoi, objet, corps)
+   - Solution: Mise à jour de parseRelance() pour gérer les nouveaux noms de champs tout en gardant la compatibilité
+   - Fichier: frontend/app/pages/relances.vue (ligne 768-810)
+
+3. **Colonne 'Relance n°' supprimée**:
+   - Suppression de la colonne email_index du tableau
+   - Fichier: frontend/app/pages/relances.vue (ligne 607)
+
+4. **Colonnes Destinataire et Facture vides**:
+   - Problème: Les colonnes n'affichaient pas les données correctement
+   - Solution: Ajout de includes pour Contact et Impaye, amélioration de parseRelance() pour extraire les données des métadonnées
+   - Fichier: frontend/app/pages/relances.vue (ligne 817-820 et 780-810)
+
+5. **Date d'envoi mise à jour**:
+   - Problème: Utilisait date_envoi au lieu de date_envoi_prevue
+   - Solution: Mise à jour pour utiliser date_envoi_prevue en priorité
+   - Fichier: frontend/app/pages/relances.vue (ligne 817 et 843)
+
+6. **Colonne Validé ajoutée**:
+   - Ajout d'une colonne pour afficher le statut de validation (Oui/Non)
+   - Fichier: frontend/app/pages/relances.vue (ligne 625-633)
+
+7. **Renommage de colonne**:
+   - Date envoi renommée en Date envoi prévue
+   - Fichier: frontend/app/pages/relances.vue (ligne 607)
+
+8. **Création de la page 'À corriger'**:
+   - Nouvelle page créée pour lister les contacts sans email et les impayés sans payeur
+   - Ajout d'un lien dans la navigation
+   - Fichiers: frontend/app/pages/a-corriger.vue (nouveau) et frontend/app/layouts/default.vue (ligne 96)
+
+9. **Correction de l'erreur 'q.not a function'**:
+   - Problème: La méthode q.or() n'était pas disponible
+   - Solution: Remplacée par deux requêtes séparées combinées manuellement
+   - Fichier: frontend/app/pages/a-corriger.vue (ligne 180-210)
+
+Toutes les corrections ont été testées et devraient résoudre les problèmes signalés.

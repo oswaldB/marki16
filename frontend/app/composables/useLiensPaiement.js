@@ -29,11 +29,20 @@ export function useLiensPaiement(parse) {
     return url
   })
 
-  // ── API ───────────────────────────────────────────────────────
+  // ── API (requêtes directes Parse, sans cloud code) ───────────────────────────────────────────────────────
   async function chargerLiensPaiement() {
     try {
-      const liens = await parse.Cloud.run('listLiensPaiement')
-      liensPaiement.value = liens
+      const LienPaiement = parse.Object.extend('LienPaiement')
+      const query = new parse.Query(LienPaiement)
+      query.ascending('nom')
+      const liens = await query.find()
+      liensPaiement.value = liens.map(lien => ({
+        id: lien.id,
+        nom: lien.get('nom'),
+        url: lien.get('url'),
+        createdAt: lien.createdAt,
+        updatedAt: lien.updatedAt
+      }))
     } catch (err) {
       console.error('Erreur lors du chargement des liens de paiement:', err)
       toast.add({ title: 'Erreur', description: 'Impossible de charger les liens de paiement', color: 'red' })
@@ -46,15 +55,27 @@ export function useLiensPaiement(parse) {
       return
     }
     try {
+      const LienPaiement = parse.Object.extend('LienPaiement')
       const lienData = {
         nom: nouveauLienNom.value.trim(),
         url: lienPaiementEdit.value.trim()
       }
+      
+      let lien
       if (editingLienId.value) {
-        await parse.Cloud.run('updateLienPaiement', { lienId: editingLienId.value, ...lienData })
+        // Mise à jour
+        const query = new parse.Query(LienPaiement)
+        lien = await query.get(editingLienId.value)
+        lien.set('nom', lienData.nom)
+        lien.set('url', lienData.url)
+        await lien.save()
         toast.add({ title: 'Lien mis à jour', color: 'green' })
       } else {
-        await parse.Cloud.run('createLienPaiement', lienData)
+        // Création
+        lien = new LienPaiement()
+        lien.set('nom', lienData.nom)
+        lien.set('url', lienData.url)
+        await lien.save()
         toast.add({ title: 'Lien créé', color: 'green' })
       }
       await chargerLiensPaiement()
@@ -68,7 +89,10 @@ export function useLiensPaiement(parse) {
   async function supprimerLienPaiement(lienId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce lien de paiement ?')) return
     try {
-      await parse.Cloud.run('deleteLienPaiement', { lienId })
+      const LienPaiement = parse.Object.extend('LienPaiement')
+      const query = new parse.Query(LienPaiement)
+      const lien = await query.get(lienId)
+      await lien.destroy()
       await chargerLiensPaiement()
       toast.add({ title: 'Lien supprimé', color: 'green' })
     } catch (err) {
@@ -101,7 +125,7 @@ export function useLiensPaiement(parse) {
 
   function insererVariableEnLien(varName) {
     const el = lienPaiementTextareaEl.value
-    const v = `[[${varName}]]`
+    const v = `{{${varName}}}`
     if (el) {
       const s = el.selectionStart ?? lienPaiementEdit.value.length
       const e = el.selectionEnd ?? lienPaiementEdit.value.length

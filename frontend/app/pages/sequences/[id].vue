@@ -32,6 +32,13 @@
       >
         Lancer attribution auto
       </UButton>
+      <UButton
+        icon="i-heroicons-beaker"
+        color="orange"
+        @click="showTestModal = true"
+      >
+        Tester la séquence
+      </UButton>
     </div>
 
     <!-- ── Type de séquence ── -->
@@ -157,6 +164,13 @@
       @updated="chargerLiensPaiement"
     />
 
+    <SequenceTestSlideover
+      v-model="showTestModal"
+      :sequence="sequence"
+      :emails="emails"
+      @test-sent="onTestSent"
+    />
+
     <ModalIaSequence
       v-model:open="showIaModal"
       v-model="iaResponse"
@@ -187,6 +201,7 @@ import DrawerLienPaiement from '~/components/DrawerLienPaiement.vue'
 import ModalIaSequence from '~/components/ModalIaSequence.vue'
 import ModalChatGptEmail from '~/components/ModalChatGptEmail.vue'
 import SmtpDrawer from '~/components/SmtpDrawer.vue'
+import SequenceTestSlideover from '~/components/SequenceTestSlideover.vue'
 import { useSequenceEditor, updateCorps, VARIABLES, SEQUENCE_TYPES, getCurrentCorps, SCENARIO_FORMATS, editorOptions } from '~/composables/useSequenceEditor'
 import { useSequenceRules } from '~/composables/useSequenceRules'
 import { useIaSequence } from '~/composables/useIaSequence'
@@ -195,6 +210,7 @@ import { h } from 'vue'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
 
 const { $parse } = useNuxtApp()
+const toast = useToast()
 
 // ── Composables règles ────────────────────────────────────────
 const {
@@ -261,9 +277,15 @@ const {
 // ── State local ────────────────────────────────────────────────
 const runningAutoAssign = ref(false)
 const sequenceTypes = SEQUENCE_TYPES
+const showTestModal = ref(false)
 
 // Fonction pour ajouter un email de suivi (sans délai)
 function ajouterEmailSuivi() {
+
+// Gestion du test de séquence
+function onTestSent() {
+  toast.add({ title: 'Test envoyé', description: 'Les emails de test ont été envoyés avec succès', color: 'green' })
+}
   emails.value = [{
     _key: `email_suivi_${Date.now()}`,
     delai: 0, // Pas de délai pour les emails de suivi
@@ -321,7 +343,7 @@ async function lancerAttributionAutomatique() {
       sequenceId: sequence.value.id,
     })
     
-    useToast().add({
+    toast.add({
       title: 'Succès',
       description: `${result.assigned} impayés ont reçu cette séquence`,
       color: 'green'

@@ -41,7 +41,7 @@
               <pre class="bg-gray-100 p-2 rounded mt-1 text-xs">| Numéro de facture | Montant |
 |-------------------|---------|
 | [[nfacture]]      | [[montant]] |
-| [[nfacture+]]     | [[montant+]] |</pre>
+| [[nfacture+]]   | [[montant+]] |</pre>
             </template>
           </UAlert>
         </template>
