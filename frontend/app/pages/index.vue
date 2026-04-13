@@ -521,6 +521,7 @@ async function chargerImpayes() {
   const q = new $parse.Query('Impaye')
   q.descending('createdAt')
   q.equalTo('facture_soldee', false)
+  q.doesNotExist('payeur_nom')
   q.limit(5)
   const results = await q.find()
   impayes_recents.value = results.map(r => ({
