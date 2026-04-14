@@ -898,18 +898,13 @@ async function createRelancesForAllActiveSequences() {
     const response = await $parse.Cloud.run('createRelancesWithTemplates')
     
     console.log('Réponse de la fonction cloud:', response)
-    
-    if (response.success) {
-      const createdCount = response.result?.createRelances?.created || 0
-      toast.add({ 
-        title: 'Succès', 
-        description: `${createdCount} relance(s) créée(s) avec succès !`, 
-        color: 'green' 
-      })
-      await charger()
-    } else {
-      toast.add({ title: 'Erreur', description: response.error || 'Erreur inconnue.', color: 'red' })
-    }
+
+    toast.add({
+      title: 'Succès',
+      description: `${response.relancesCrees} relance(s) créée(s), ${response.relancesMisesAJour} mise(s) à jour.`,
+      color: 'green'
+    })
+    await charger()
   } catch (error) {
     console.error('Erreur lors de la création des relances:', error)
     toast.add({ title: 'Erreur', description: error.message || 'Erreur lors de la création des relances.', color: 'red' })
