@@ -1,50 +1,61 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-4 md:p-6 space-y-6">
 
     <!-- ── Header ── -->
-    <div class="flex items-center gap-4">
-      <NuxtLink to="/sequences" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
-        <UIcon name="i-heroicons-arrow-left" class="size-4" />
-        Retour
-      </NuxtLink>
-      <UInput v-model="nom" class="flex-1 text-xl font-semibold" placeholder="Nom de la séquence" />
-      <UBadge :color="publiee ? 'success' : 'neutral'" variant="subtle" class="shrink-0">
-        {{ publiee ? 'Publiée' : 'Brouillon' }}
-      </UBadge>
-      <UButton
-        :icon="publiee ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
-        :color="publiee ? 'neutral' : 'success'"
-        :variant="publiee ? 'outline' : 'solid'"
-        :loading="publishing"
-        @click="togglePublication"
-      >
-        {{ publiee ? 'Dépublier' : 'Publier' }}
-      </UButton>
-      <UButton icon="i-heroicons-floppy-disk" :loading="saving" @click="sauvegarder(editorRefs)">
-        Enregistrer
-      </UButton>
-      <UButton
-        v-if="attributionAutomatique"
-        icon="i-heroicons-play"
-        color="primary"
-        :loading="runningAutoAssign"
-        @click="lancerAttributionAutomatique"
-      >
-        Lancer attribution auto
-      </UButton>
-      <UButton
-        icon="i-heroicons-beaker"
-        color="orange"
-        @click="showTestModal = true"
-      >
-        Tester la séquence
-      </UButton>
+    <div class="flex flex-col gap-4 md:flex-row md:items-center">
+      <div class="flex items-center gap-4">
+        <NuxtLink to="/sequences" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+          <UIcon name="i-heroicons-arrow-left" class="size-4" />
+          Retour
+        </NuxtLink>
+        <UInput v-model="nom" class="flex-1 text-xl font-semibold" placeholder="Nom de la séquence" />
+      </div>
+      
+      <div class="flex flex-wrap gap-2 justify-end">
+        <UBadge :color="publiee ? 'success' : 'neutral'" variant="subtle" class="shrink-0 self-center">
+          {{ publiee ? 'Publiée' : 'Brouillon' }}
+        </UBadge>
+        <UButton
+          :icon="publiee ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+          :color="publiee ? 'neutral' : 'success'"
+          :variant="publiee ? 'outline' : 'solid'"
+          :loading="publishing"
+          @click="togglePublication"
+          size="sm"
+          class="md:size-auto"
+        >
+          {{ publiee ? 'Dépublier' : 'Publier' }}
+        </UButton>
+        <UButton icon="i-heroicons-floppy-disk" :loading="saving" @click="sauvegarder(editorRefs)" size="sm" class="md:size-auto">
+          Enregistrer
+        </UButton>
+        <UButton
+          v-if="attributionAutomatique"
+          icon="i-heroicons-play"
+          color="primary"
+          :loading="runningAutoAssign"
+          @click="lancerAttributionAutomatique"
+          size="sm"
+          class="md:size-auto"
+        >
+          Lancer attribution auto
+        </UButton>
+        <UButton
+          icon="i-heroicons-beaker"
+          color="orange"
+          @click="showTestModal = true"
+          size="sm"
+          class="md:size-auto"
+        >
+          Tester la séquence
+        </UButton>
+      </div>
     </div>
 
     <!-- ── Type de séquence ── -->
-    <div class="flex items-center gap-4">
-      <span class="text-sm font-medium text-gray-700 w-36 shrink-0">Type de séquence</span>
-      <div class="flex gap-4">
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+      <span class="text-sm font-medium text-gray-700 w-full md:w-36 shrink-0">Type de séquence</span>
+      <div class="flex flex-wrap gap-4">
         <label v-for="seqType in sequenceTypes" :key="seqType.value" class="flex items-center gap-2">
           <input
             type="radio"
@@ -59,22 +70,24 @@
     </div>
 
     <!-- ── Toggle validation obligatoire ── -->
-    <div class="flex items-center gap-4">
-      <span class="text-sm font-medium text-gray-700 w-36 shrink-0">Validation obligatoire</span>
-      <ToggleSwitch v-model="validationObligatoire" />
-      <span class="text-sm text-gray-500">
-        {{ validationObligatoire ? 'Validation obligatoire activée' : 'Validation obligatoire désactivée' }}
-      </span>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+      <span class="text-sm font-medium text-gray-700 w-full md:w-36 shrink-0">Validation obligatoire</span>
+      <div class="flex items-center gap-4">
+        <ToggleSwitch v-model="validationObligatoire" />
+        <span class="text-sm text-gray-500">
+          {{ validationObligatoire ? 'Validation obligatoire activée' : 'Validation obligatoire désactivée' }}
+        </span>
+      </div>
     </div>
 
     <!-- ── Section EMAILS (conditionnelle selon le type) ── -->
     <UCard>
       <template #header>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <span class="font-semibold text-gray-800">
             {{ type === 'relances' ? 'EMAILS DE RELANCE' : 'EMAIL DE SUIVI' }}
           </span>
-          <UButton variant="outline" size="sm" @click="showIaModal = true">
+          <UButton variant="outline" size="sm" @click="showIaModal = true" class="w-full md:w-auto">
             <UIcon name="i-heroicons-sparkles" class="size-4" />
             Générer par IA
           </UButton>
@@ -338,16 +351,62 @@ async function lancerAttributionAutomatique() {
     // Sauvegarder d'abord la séquence pour s'assurer qu'elle est à jour
     await sauvegarder(editorRefs)
     
-    // Appeler le cloud function pour attribuer cette séquence
-    const result = await $parse.Cloud.run('assignSequenceToMatchingImpayes', {
-      sequenceId: sequence.value.id,
-    })
+    // Vérifier si la fonction assignSpecificSequence existe
+    let result
+    try {
+      // Essayer d'appeler la fonction assignSpecificSequence
+      result = await $parse.Cloud.run('assignSpecificSequence', {
+        sequenceId: sequence.value.id,
+      })
+    } catch (functionError) {
+      // Si la fonction n'existe pas, essayer une approche alternative
+      if (functionError.message && functionError.message.includes('Invalid function')) {
+        console.log('La fonction assignSpecificSequence n\'existe pas, utilisation de l\'approche alternative')
+        
+        // Approche alternative: utiliser createRelancesWithTemplates directement
+        // (Cette partie doit être adaptée à votre logique métier)
+        result = {
+          assigned: 0,
+          assignedImpayeIds: []
+        }
+        
+        // Ici vous pourriez appeler une autre fonction ou afficher un message
+        toast.add({
+          title: 'Information',
+          description: 'La fonction d\'attribution automatique n\'est pas encore disponible',
+          color: 'blue'
+        })
+        
+        runningAutoAssign.value = false
+        return
+      } else {
+        // Si c'est une autre erreur, la relancer
+        throw functionError
+      }
+    }
     
-    toast.add({
-      title: 'Succès',
-      description: `${result.assigned} impayés ont reçu cette séquence`,
-      color: 'green'
-    })
+    // Créer les relances pour les impayés nouvellement attribués
+    if (result.assignedImpayeIds && result.assignedImpayeIds.length > 0) {
+      console.log(`Création des relances pour ${result.assignedImpayeIds.length} impayés`);
+      
+      // Appeler la fonction pour créer les relances
+      const relancesResult = await $parse.Cloud.run('createRelancesWithTemplates', {
+        impayeIds: result.assignedImpayeIds,
+        sequenceId: sequence.value.id,
+      });
+      
+      toast.add({
+        title: 'Succès',
+        description: `${result.assigned} impayés ont reçu cette séquence et ${relancesResult.relancesCrees} relances ont été créées`,
+        color: 'green'
+      })
+    } else {
+      toast.add({
+        title: 'Succès',
+        description: `${result.assigned} impayés ont reçu cette séquence`,
+        color: 'green'
+      })
+    }
     
     // Recalculer l'aperçu
     await calculerApercu()
@@ -386,3 +445,40 @@ async function lancerAttributionAutomatique() {
   }
 }
 </script>
+
+<style scoped>
+/* Responsive improvements */
+@media (max-width: 767px) {
+  .responsive-input {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .responsive-badge {
+    align-self: center;
+  }
+  
+  .button-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* Scrollbar styling for better UX */
+::-webkit-scrollbar {
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>
