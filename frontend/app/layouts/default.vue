@@ -93,6 +93,15 @@
                 <span class="text-sm mt-2 font-medium">Plus</span>
               </button>
             </UDropdown>
+            
+            <!-- Logout button -->
+            <button
+              class="flex flex-col items-center justify-center min-w-[80px] h-full text-gray-500 hover:text-gray-700"
+              @click="handleLogout"
+            >
+              <UIcon name="i-heroicons-arrow-right-on-rectangle" class="size-8" />
+              <span class="text-sm mt-2 font-medium">Quitter</span>
+            </button>
           </div>
         </div>
       </div>
@@ -147,8 +156,7 @@ const settingsDropdownItems = computed(() => [
     label: item.label,
     icon: item.icon,
     to: item.to
-  }])),
-  [{ label: 'Déconnexion', icon: 'i-heroicons-arrow-right-on-rectangle', click: handleLogout }]
+  }]))
 ])
 
 const userName = computed(() => {
