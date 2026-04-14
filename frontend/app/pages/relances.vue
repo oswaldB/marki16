@@ -53,6 +53,16 @@
           placeholder="Rechercher..."
           class="w-52"
         />
+        
+        <!-- Bouton pour créer des relances -->
+        <UButton
+          icon="i-heroicons-plus-circle"
+          color="primary"
+          :loading="creatingRelances"
+          @click="createRelancesForAllActiveSequences"
+        >
+          Créer des relances
+        </UButton>
       </div>
     </div>
 
@@ -391,6 +401,8 @@
 
     </template>
 
+
+    
     <!-- ══════════════════════════════════════
          SLIDEOVER — Modifier / Voir une relance
     ══════════════════════════════════════ -->
@@ -526,6 +538,7 @@ const sequences = ref([])
 const selection = ref([])
 const annulantGroupe = ref(false)
 const validantGroupe = ref(false)
+const creatingRelances = ref(false)
 
 
 // Filtres
@@ -584,6 +597,8 @@ const STATUT_CONFIG = {
   'annulé':  { label: 'Annulé',     color: 'orange'  },
   'optimisee': { label: 'Optimisée', color: 'purple' },
 }
+
+
 
 function sortableHeader(label) {
   return ({ column }) => {
@@ -876,6 +891,33 @@ async function chargerSequences() {
 }
 
 // ── Actions ────────────────────────────────────────────────────
+async function createRelancesForAllActiveSequences() {
+  creatingRelances.value = true
+  try {
+    console.log('Début de la création des relances...')
+    const response = await $parse.Cloud.run('createRelancesWithTemplates')
+    
+    console.log('Réponse de la fonction cloud:', response)
+    
+    if (response.success) {
+      const createdCount = response.result?.createRelances?.created || 0
+      toast.add({ 
+        title: 'Succès', 
+        description: `${createdCount} relance(s) créée(s) avec succès !`, 
+        color: 'green' 
+      })
+      await charger()
+    } else {
+      toast.add({ title: 'Erreur', description: response.error || 'Erreur inconnue.', color: 'red' })
+    }
+  } catch (error) {
+    console.error('Erreur lors de la création des relances:', error)
+    toast.add({ title: 'Erreur', description: error.message || 'Erreur lors de la création des relances.', color: 'red' })
+  } finally {
+    creatingRelances.value = false
+  }
+}
+
 async function annulerRelance(row) {
   try {
     row._parse.set('statut', 'annulé')
