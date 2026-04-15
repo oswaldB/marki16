@@ -2,6 +2,8 @@
 .env
 .env.*
 
+backend*
+frontend/node_modules
 # Dependencies
 node_modules/
 
