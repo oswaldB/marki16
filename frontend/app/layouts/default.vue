@@ -126,6 +126,7 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
   { to: '/impayes', label: 'Impayés', icon: 'i-heroicons-banknotes' },
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
+  { to: '/blacklist', label: 'Blacklist', icon: 'i-heroicons-no-symbol' },
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
   { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
   { to: '/a-corriger', label: 'À corriger', icon: 'i-heroicons-wrench-screwdriver' },
