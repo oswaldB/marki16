@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   },
   vite: {
     optimizeDeps: {
-      include: ['@toast-ui/editor'],
+      include: ['@toast-ui/editor', 'js-yaml'],
     },
     server: {
       proxy: {
