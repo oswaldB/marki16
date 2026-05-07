@@ -1,11 +1,18 @@
 const EXEMPLE_VARS = {
   nfacture: 'FA-2024-01', ref_piece: 'REF-001', date_piece: '01/01/2024',
   reste_a_payer: '1200', montant_total: '1500', date_echeance: '31/01/2024',
-  payeur_nom: 'Jean Dupont', payeur_email: 'jean@example.com',
+  payeur_nom: 'Dupont', payeur_prenom: 'Jean', payeur_email: 'jean@example.com',
   payeur_telephone: '0612345678', payeur_type: 'Propriétaire',
+  payeur_contact_nom: 'Martin', payeur_contact_prenom: 'Pierre', payeur_contact_email: 'pierre@example.com',
   adresse_bien: '123 rue de la Paix', code_postal: '75001', ville: 'Paris',
   numero_lot: 'A12', numero_dossier: 'DOS-001',
   employe_intervention: 'Marie Martin', date_debut_mission: '01/01/2024',
+  proprietaire_nom: 'Dupont', proprietaire_prenom: 'Paul', proprietaire_email: 'contact@dupont.com',
+  proprietaire_telephone: '0123456789',
+  proprietaire_contact_nom: 'Durand', proprietaire_contact_prenom: 'Sophie', proprietaire_contact_email: 'sophie@dupont.com',
+  apporteur_nom: 'Martin', apporteur_prenom: 'Pierre', apporteur_email: 'pierre@agence.com',
+  apporteur_telephone: '0600000000', apporteur_societe: 'Agence Immobilière',
+  apporteur_contact_nom: 'Bernard', apporteur_contact_prenom: 'Luc', apporteur_contact_email: 'luc@agence.com',
 }
 
 export function useLiensPaiement(parse) {
