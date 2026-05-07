@@ -19,6 +19,8 @@ const size = [
 export default {
   "slots": {
     "content": "min-w-32 bg-default shadow-lg rounded-md ring ring-default overflow-hidden data-[state=open]:animate-[scale-in_100ms_ease-out] data-[state=closed]:animate-[scale-out_100ms_ease-in] origin-(--reka-dropdown-menu-content-transform-origin) flex flex-col",
+    "input": "border-b border-default",
+    "empty": "text-center text-muted",
     "viewport": "relative divide-y divide-default scroll-py-1 overflow-y-auto flex-1",
     "arrow": "fill-bg stroke-default",
     "group": "p-1 isolate",
@@ -72,6 +74,7 @@ export default {
       "xs": {
         "label": "p-1 text-xs gap-1",
         "item": "p-1 text-xs gap-1",
+        "empty": "p-2 text-xs",
         "itemLeadingIcon": "size-4",
         "itemLeadingAvatarSize": "3xs",
         "itemTrailingIcon": "size-4",
@@ -81,6 +84,7 @@ export default {
       "sm": {
         "label": "p-1.5 text-xs gap-1.5",
         "item": "p-1.5 text-xs gap-1.5",
+        "empty": "p-2.5 text-xs",
         "itemLeadingIcon": "size-4",
         "itemLeadingAvatarSize": "3xs",
         "itemTrailingIcon": "size-4",
@@ -90,6 +94,7 @@ export default {
       "md": {
         "label": "p-1.5 text-sm gap-1.5",
         "item": "p-1.5 text-sm gap-1.5",
+        "empty": "p-2.5 text-sm",
         "itemLeadingIcon": "size-5",
         "itemLeadingAvatarSize": "2xs",
         "itemTrailingIcon": "size-5",
@@ -99,6 +104,7 @@ export default {
       "lg": {
         "label": "p-2 text-sm gap-2",
         "item": "p-2 text-sm gap-2",
+        "empty": "p-3 text-sm",
         "itemLeadingIcon": "size-5",
         "itemLeadingAvatarSize": "2xs",
         "itemTrailingIcon": "size-5",
@@ -108,6 +114,7 @@ export default {
       "xl": {
         "label": "p-2 text-base gap-2",
         "item": "p-2 text-base gap-2",
+        "empty": "p-3 text-base",
         "itemLeadingIcon": "size-6",
         "itemLeadingAvatarSize": "xs",
         "itemTrailingIcon": "size-6",

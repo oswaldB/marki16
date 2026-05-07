@@ -17,9 +17,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       parseAppId: process.env.PARSE_APP_ID || 'marki15-app',
-      parseServerURL: process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com/parse',
+      parseServerURL: process.env.PARSE_SERVER_URL || '/parse',
       parseJavaScriptKey: process.env.PARSE_JS_KEY || '',
-      apiBaseUrl: process.env.API_BASE_URL || 'https://dev.api.markidiags.com',
+      apiBaseUrl: process.env.API_BASE_URL || '',
     }
   },
   vite: {
@@ -27,17 +27,20 @@ export default defineNuxtConfig({
       include: ['@toast-ui/editor', 'js-yaml'],
     },
     server: {
-      proxy: {
-        '/api': {
-          target: 'https://dev.api.markidiags.com',
-          changeOrigin: true,
-        },
-        '/parse': {
-          target: 'http://localhost:1555',
-          changeOrigin: true,
-          secure: false,
-        }
-      },
+      // Proxy désactivé : appels directs vers https://adti.api.markidiags.com:8445/parse
+      // proxy: {
+      //   '/api': {
+      //     target: 'http://localhost:1555/parse',
+      //     changeOrigin: true,
+      //     rewrite: (path) => path.replace(/^\/api/, ''),
+      //   },
+      //   '/parse': {
+      //     target: 'http://localhost:1555/parse',
+      //     changeOrigin: true,
+      //     rewrite: (path) => path.replace(/^\/parse/, ''),
+      //     secure: false,
+      //   }
+      // },
       allowedHosts: ['dev.markidiags.com']
     }
   },

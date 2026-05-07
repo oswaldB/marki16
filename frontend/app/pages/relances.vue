@@ -241,27 +241,63 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <span class="font-semibold">Relances à valider</span>
-                <span class="text-sm text-gray-500">{{ relancesAValider.length }} relance(s)</span>
+                <div class="flex items-center gap-2">
+                  <USelect
+                    v-model="modeTriValidation"
+                    :items="[
+                      { value: 'chronologique', label: 'Tri chronologique' },
+                      { value: 'destinataire', label: 'Tri par destinataire' }
+                    ]"
+                    size="xs"
+                    class="w-40"
+                  />
+                  <span class="text-sm text-gray-500">{{ relancesAValider.length }} relance(s)</span>
+                </div>
+              </div>
+              <div class="mt-2 flex items-center gap-2" v-if="selectedRelancesForBulk.length > 0">
+                <span class="text-sm text-gray-600">{{ selectedRelancesForBulk.length }} sélectionnée(s)</span>
+                <UButton
+                  color="primary"
+                  size="sm"
+                  :loading="bulkValidating"
+                  @click="validateAllSelected"
+                >
+                  Valider tout
+                </UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  @click="selectedRelancesForBulk = []"
+                >
+                  Désélectionner
+                </UButton>
               </div>
             </template>
             <div class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               <div
                 v-for="(relance, index) in relancesAValider"
                 :key="relance.id"
-                class="p-3 border border-gray-100 rounded-lg cursor-pointer transition-colors"
+                class="p-3 border border-gray-100 rounded-lg transition-colors"
                 :class="{
                   'bg-blue-50 border-blue-200': relance.id === relanceCourante?.id,
                   'hover:bg-gray-50': relance.id !== relanceCourante?.id
                 }"
-                @click="selectionnerRelancePourValidation(relance)"
               >
-                <div class="flex items-start gap-3">
+                <div class="flex items-start gap-3" @click="selectionnerRelancePourValidation(relance)" style="cursor: pointer;">
                   <div class="flex-1">
                     <p class="font-medium text-sm truncate">{{ relance.objet || '(sans objet)' }}</p>
                     <p class="text-xs text-gray-500 truncate">{{ relance.to }}</p>
                     <p class="text-xs text-gray-400">{{ formatDate(relance.dateEnvoi) }}</p>
                   </div>
                   <span class="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-medium shrink-0">{{ index + 1 }}</span>
+                </div>
+                <div class="mt-2 flex justify-end">
+                  <UCheckbox
+                    v-model="selectedRelancesForBulk"
+                    :value="relance.id"
+                    @click.stop
+                  />
                 </div>
               </div>
               <div v-if="relancesAValider.length === 0" class="p-6 text-center text-gray-400">
@@ -338,6 +374,7 @@
                 <label class="text-xs text-gray-500 mb-1 block">Corps de l'email</label>
                 <div class="border border-gray-200 rounded-md overflow-hidden bg-white">
                   <ToastuiEditor
+                    :key="relanceCourante?.id"
                     :initial-value="relanceCourante.corps"
                     :options="{
                       height: '400px',
@@ -385,6 +422,14 @@
                 </UButton>
                 <UButton color="primary" :loading="validantWorkflow" @click="validerRelanceWorkflow" :disabled="!relanceCourante">
                   Valider cette relance
+                </UButton>
+                <UButton
+                  color="red"
+                  :loading="blacklistStore.loading"
+                  @click="blacklistEtSupprimerRelances"
+                  :disabled="!relanceCourante"
+                >
+                  Blacklister et supprimer relances
                 </UButton>
               </div>
             </div>
@@ -524,11 +569,13 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
 import PdfIframe from '~/components/PdfIframe.vue'
+import { useBlacklistStore } from '~/stores/blacklistStore'
 
 const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3').then(m => m.default ?? m))
 
 const { $parse } = useNuxtApp()
 const toast = useToast()
+const blacklistStore = useBlacklistStore()
 
 // ── State ──────────────────────────────────────────────────────
 const vue = ref('tableau')
@@ -568,15 +615,35 @@ const originalToValue = ref('') // Valeur originale du champ To pour détecter l
 // Validation workflow
 const relanceCourante = ref(null)
 const validantWorkflow = ref(false)
+const modeTriValidation = ref('chronologique') // 'chronologique' ou 'destinataire'
+
+// Validation en masse
+const selectedRelancesForBulk = ref([])
+const bulkValidating = ref(false)
 
 // Computed ref pour le drawer
 const relanceDrawer = computed(() => drawerRow.value)
 
 // Computed pour le workflow de validation
 const relancesAValider = computed(() => {
-  return relances.value.filter(r => !r.valide).sort((a, b) => {
-    return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
-  })
+  const relancesNonValidees = relances.value.filter(r => !r.valide)
+  
+  if (modeTriValidation.value === 'chronologique') {
+    return relancesNonValidees.sort((a, b) => {
+      return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
+    })
+  } else { // 'destinataire'
+    return relancesNonValidees.sort((a, b) => {
+      // 1. Grouper par destinataire (tri alphabétique)
+      const destinataireA = a.to?.toLowerCase() || ''
+      const destinataireB = b.to?.toLowerCase() || ''
+      if (destinataireA !== destinataireB) {
+        return destinataireA.localeCompare(destinataireB)
+      }
+      // 2. Dans chaque groupe, trier par date d'envoi croissante (du plus ancien au plus récent)
+      return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
+    })
+  }
 })
 
 const positionRelanceCourante = computed(() => {
@@ -895,13 +962,16 @@ async function createRelancesForAllActiveSequences() {
   creatingRelances.value = true
   try {
     console.log('Début de la création des relances...')
-    const response = await $parse.Cloud.run('createRelancesWithTemplates')
+    const response = await $parse.Cloud.run('triggerImportInvoices')
     
     console.log('Réponse de la fonction cloud:', response)
+    
+    const relancesCrees = response.result?.createRelances?.created || response.result?.createRelances?.relancesCrees || 0
+    const relancesMisesAJour = response.result?.createRelances?.updated || 0
 
     toast.add({
       title: 'Succès',
-      description: `${response.relancesCrees} relance(s) créée(s), ${response.relancesMisesAJour} mise(s) à jour.`,
+      description: `${relancesCrees} relance(s) créée(s), ${relancesMisesAJour} mise(s) à jour.`,
       color: 'green'
     })
     await charger()
@@ -1142,6 +1212,53 @@ async function validerRelanceWorkflow() {
   }
 }
 
+// Validation en masse
+async function validateAllSelected() {
+  if (selectedRelancesForBulk.value.length === 0) {
+    toast.add({ title: 'Aucune relance sélectionnée', color: 'yellow' })
+    return
+  }
+
+  bulkValidating.value = true
+  try {
+    // Filtrer les relances qui ne sont pas encore validées
+    const relancesToValidate = relancesAValider.value
+      .filter(r => selectedRelancesForBulk.value.includes(r.id) && !r.valide)
+    
+    if (relancesToValidate.length === 0) {
+      toast.add({ title: 'Toutes les relances sélectionnées sont déjà validées', color: 'yellow' })
+      return
+    }
+
+    // Valider toutes les relances sélectionnées
+    await $parse.Object.saveAll(relancesToValidate.map(r => {
+      r._parse.set('valide', true)
+      r.valide = true
+      return r._parse
+    }))
+
+    toast.add({
+      title: `${relancesToValidate.length} relance(s) validée(s)`,
+      color: 'green'
+    })
+    
+    // Réinitialiser la sélection
+    selectedRelancesForBulk.value = []
+    
+    // Recharger les données
+    await charger()
+    
+    // Si la relance courante a été validée, passer à la première non validée
+    if (relanceCourante.value?.valide) {
+      relanceCourante.value = relancesAValider.value[0] || null
+    }
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    bulkValidating.value = false
+  }
+}
+
 function passerRelanceWorkflow() {
   passerARelanceSuivante()
 }
@@ -1161,6 +1278,43 @@ function passerARelanceSuivante() {
     : indexCourant + 1
   
   relanceCourante.value = relancesAValider.value[indexSuivant]
+}
+
+/**
+ * Met le contact de la relance courante à la blacklist et supprime toutes ses relances
+ */
+async function blacklistEtSupprimerRelances() {
+  if (!relanceCourante.value) return
+
+  // Récupérer le contact de la relance courante
+  const contact = relanceCourante.value._parse.get('contact')
+  if (!contact?.id) {
+    toast.add({ title: 'Erreur', description: 'Contact introuvable pour cette relance', color: 'red' })
+    return
+  }
+
+  try {
+    const result = await blacklistStore.addToBlacklistWithOptions(
+      [contact.id],
+      true // deleteRelances: true
+    )
+
+    toast.add({
+      title: 'Succès',
+      description: `${result.contactsAdded} contact(s) blacklisté(s), ${result.relancesDeleted} relance(s) supprimée(s)`,
+      color: 'green'
+    })
+
+    // Rafraîchir la liste des relances
+    await charger()
+
+    // Si la relance courante a été supprimée, passer à la première disponible
+    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
+      relanceCourante.value = relancesAValider.value[0] || null
+    }
+  } catch (error) {
+    toast.add({ title: 'Erreur', description: error.message || 'Impossible de blacklister le contact', color: 'red' })
+  }
 }
 
 // Auto-sélectionner la première relance quand on arrive sur la vue validation

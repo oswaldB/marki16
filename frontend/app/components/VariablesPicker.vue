@@ -34,20 +34,19 @@
               {{ v.isPaymentLink ? v.display : v }}
             </button>
           </div>
-          <UAlert v-if="group.groupe === 'MULTIPLE'" icon="i-heroicons-information-circle" color="sky" variant="soft" title="Variables multiples" class="text-xs mt-2 p-2">
-            <template #description>
-              Pour afficher plusieurs impayés, utilisez les variables avec <code class="bg-gray-100 px-1 rounded">+</code> suivi d'un numéro.<br>
-              Exemple :
-              <pre class="bg-gray-100 p-2 rounded mt-1 text-xs">| Numéro de facture | Montant |
-|-------------------|---------|
-| [[nfacture]]      | [[montant]] |
-| [[nfacture+]]   | [[montant+]] |</pre>
-            </template>
-          </UAlert>
+           <UAlert v-if="group.groupe === 'MULTIPLE'" icon="i-heroicons-information-circle" color="sky" variant="soft" title="Variables multiples" class="text-xs mt-2 p-2">
+             <template #description>
+               Pour afficher plusieurs impayés, utilisez des boucles : <code class="bg-gray-100 px-1 rounded">[[loop impayes]]</code>.<br>
+               Exemple :
+               <pre class="bg-gray-100 p-2 rounded mt-1 text-xs">[[loop impayes]]
+| [[nfacture]] | [[montant]] |
+[[endloop]]</pre>
+             </template>
+           </UAlert>
         </template>
       </div>
     </div>
-    <p class="text-xs text-gray-400 pt-1.5 mt-1.5 border-t border-gray-100">Clic → copié · Ctrl+V</p>
+
   </div>
 </template>
 

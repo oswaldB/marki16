@@ -83,62 +83,25 @@ Exemple complet :
 
         [Régler mes factures](MET ICI LE LIEN DE PAIEMENT)
 
-        | Numéro de facture | Montant |
-        |-------------------|---------|
-        | [[nfacture]]      | [[montant]] |
-        | [[nfacture+]]   | [[montant+]] |
-    - format: both
-      objet: "Rappel : Plusieurs factures impayées"
-      corps: |
-        Bonjour [[payeur_nom]],
+         | Numéro de facture | Montant |
+         |-------------------|---------|
+[[loop impayes]]
+         | [[nfacture]]      | [[montant]] |
+[[endloop]]
+         Sans règlement global sous 8 jours, nous engagerons une procédure de recouvrement.
 
-        Plusieurs de vos factures sont en attente de règlement, dont [[nfacture]] ([[reste_a_payer]] €).
-        Votre apporteur [[apporteur_nom]] est également informé.
+         | Numéro de facture | Montant |
+         |-------------------|---------|
+[[loop impayes]]
+         | [[nfacture]]      | [[montant]] |
+[[endloop]]
+         Votre apporteur [[apporteur_nom]] est informé de cette procédure.
 
-        [Régler mes factures](MET ICI LE LIEN DE PAIEMENT)
-    - format: broker
-      objet: "Rappel : Facture [[nfacture]] impayée"
-      corps: |
-        Bonjour [[payeur_nom]],
-
-        Votre facture [[nfacture]] d'un montant de [[reste_a_payer]] € est en attente de règlement.
-        Votre apporteur [[apporteur_nom]] est également informé.
-
-        [Régler ma facture](MET ICI LE LIEN DE PAIEMENT)
-
-- delai: 14
-  scenarios:
-    - format: single
-      objet: "Mise en demeure – Facture [[nfacture]]"
-      corps: |
-        Bonjour [[payeur_nom]],
-
-        Malgré notre rappel, votre facture [[nfacture]] ([[reste_a_payer]] €) reste impayée.
-        Sans règlement sous 8 jours, nous engagerons une procédure de recouvrement.
-    - format: multiple
-      objet: "Mise en demeure – Factures impayées"
-      corps: |
-        Bonjour [[payeur_nom]],
-
-        Malgré nos rappels, plusieurs de vos factures dont [[nfacture]] restent impayées.
-        Sans règlement global sous 8 jours, nous engagerons une procédure de recouvrement.
-
-        | Numéro de facture | Montant |
-        |-------------------|---------|
-        | [[nfacture]]      | [[montant]] |
-        | [[nfacture+]]   | [[montant+]] |
-    - format: both
-      objet: "Mise en demeure – Factures impayées"
-      corps: |
-        Bonjour [[payeur_nom]],
-
-        Malgré nos rappels, plusieurs de vos factures dont [[nfacture]] restent impayées.
-        Votre apporteur [[apporteur_nom]] est informé de cette procédure.
-
-        | Numéro de facture | Montant |
-        |-------------------|---------|
-        | [[nfacture]]      | [[montant]] |
-        | [[nfacture+]]     | [[montant+]] |
+         | Numéro de facture | Montant |
+         |-------------------|---------|
+[[loop impayes]]
+         | [[nfacture]]      | [[montant]] |
+[[endloop]]
     - format: broker
       objet: "Mise en demeure – Facture [[nfacture]]"
       corps: |
@@ -247,11 +210,12 @@ Votre facture [[nfacture]] est en retard.
 |---------|-----------------|-------------|---------------|
 | [[nfacture]] | [[date_echeance]] | [[montant_total]] € | [[reste_a_payer]] € |
 
-Pour plusieurs impayés, utilisez la syntaxe avec + :
-| Numéro de facture | Montant |
-|-------------------|---------|
-| [[nfacture]]      | [[montant]] |
-| [[nfacture+]]   | [[montant+]] |
+ Pour plusieurs impayés, utilisez des boucles :
+         | Numéro de facture | Montant |
+         |-------------------|---------|
+[[loop impayes]]
+         | [[nfacture]]      | [[montant]] |
+[[endloop]]
 `
     await copyToClipboard(prompt)
   }

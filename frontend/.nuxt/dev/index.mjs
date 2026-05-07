@@ -1,43 +1,44 @@
 import process from 'node:process';globalThis._importMeta_={url:import.meta.url,env:process.env};import { tmpdir } from 'node:os';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, createError, getQuery as getQuery$1, readBody, getResponseStatus, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///home/ubuntu/marki16/frontend/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, createError, getQuery as getQuery$1, readBody, getResponseStatus, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/h3/dist/index.mjs';
 import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { escapeHtml } from 'file:///home/ubuntu/marki16/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, joinRelativeURL } from 'file:///home/ubuntu/marki16/frontend/node_modules/ufo/dist/index.mjs';
-import destr, { destr as destr$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/destr/dist/index.mjs';
-import { createHooks } from 'file:///home/ubuntu/marki16/frontend/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///home/ubuntu/marki16/frontend/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file:///home/ubuntu/marki16/frontend/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file:///home/ubuntu/marki16/frontend/node_modules/unstorage/drivers/fs.mjs';
-import { digest, hash as hash$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/ohash/dist/index.mjs';
-import { klona } from 'file:///home/ubuntu/marki16/frontend/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file:///home/ubuntu/marki16/frontend/node_modules/defu/dist/defu.mjs';
-import { snakeCase } from 'file:///home/ubuntu/marki16/frontend/node_modules/scule/dist/index.mjs';
-import { getContext } from 'file:///home/ubuntu/marki16/frontend/node_modules/unctx/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file:///home/ubuntu/marki16/frontend/node_modules/radix3/dist/index.mjs';
+import { escapeHtml } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, joinRelativeURL } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/ufo/dist/index.mjs';
+import destr, { destr as destr$1 } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/destr/dist/index.mjs';
+import { createHooks } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/nitropack/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file:///home/ubuntu/prod/adti/frontend/node_modules/unstorage/drivers/fs.mjs';
+import { digest, hash as hash$1 } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/ohash/dist/index.mjs';
+import { klona } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/defu/dist/defu.mjs';
+import { snakeCase } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/scule/dist/index.mjs';
+import { getContext } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/unctx/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/radix3/dist/index.mjs';
 import { readFile } from 'node:fs/promises';
-import consola, { consola as consola$1 } from 'file:///home/ubuntu/marki16/frontend/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file:///home/ubuntu/marki16/frontend/node_modules/youch-core/build/index.js';
-import { Youch } from 'file:///home/ubuntu/marki16/frontend/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file:///home/ubuntu/marki16/frontend/node_modules/source-map/source-map.js';
+import consola, { consola as consola$1 } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/youch-core/build/index.js';
+import { Youch } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { stringify, uneval } from 'file:///home/ubuntu/marki16/frontend/node_modules/devalue/index.js';
-import { captureRawStackTrace, parseRawStackTrace } from 'file:///home/ubuntu/marki16/frontend/node_modules/errx/dist/index.js';
-import { isVNode, isRef, toValue } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue/index.mjs';
+import { stringify, uneval } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/devalue/index.js';
+import { captureRawStackTrace, parseRawStackTrace } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/errx/dist/index.js';
+import { isVNode, isRef, toValue } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/vue/index.mjs';
+import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file:///home/ubuntu/prod/adti/frontend/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
 import { promises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname as dirname$1, resolve as resolve$1, basename } from 'file:///home/ubuntu/marki16/frontend/node_modules/pathe/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///home/ubuntu/marki16/frontend/node_modules/unhead/dist/server.mjs';
-import { renderToString } from 'file:///home/ubuntu/marki16/frontend/node_modules/vue/server-renderer/index.mjs';
-import { walkResolver } from 'file:///home/ubuntu/marki16/frontend/node_modules/unhead/dist/utils.mjs';
-import { getIcons } from 'file:///home/ubuntu/marki16/frontend/node_modules/@iconify/utils/lib/index.js';
-import { collections } from 'file:///home/ubuntu/marki16/frontend/.nuxt/nuxt-icon-server-bundle.mjs';
+import { dirname as dirname$1, resolve as resolve$1, basename } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/pathe/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/unhead/dist/server.mjs';
+import { renderToString } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/vue/server-renderer/index.mjs';
+import { walkResolver } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/unhead/dist/utils.mjs';
+import { getIcons } from 'file:///home/ubuntu/prod/adti/frontend/node_modules/@iconify/utils/lib/index.js';
+import { collections } from 'file:///home/ubuntu/prod/adti/frontend/.nuxt/nuxt-icon-server-bundle.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"/home/ubuntu/marki16/frontend/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"/home/ubuntu/prod/adti/frontend/server/assets"}];
 
 const assets$1 = createStorage();
 
@@ -49,11 +50,11 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets$1);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/marki16/frontend","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/marki16/frontend/server","watchOptions":{"ignored":[null]}}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/marki16/frontend/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/marki16/frontend/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"/home/ubuntu/marki16/frontend/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/prod/adti/frontend","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"/home/ubuntu/prod/adti/frontend/server","watchOptions":{"ignored":[null]}}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/prod/adti/frontend/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"/home/ubuntu/prod/adti/frontend/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"/home/ubuntu/prod/adti/frontend/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -579,7 +580,7 @@ const cachedEventHandler = defineCachedEventHandler;
 
 const defineAppConfig = (config) => config;
 
-const appConfig0 = defineAppConfig({
+const cfg0 = defineAppConfig({
   ui: {
     colors: {
       primary: "sky"
@@ -892,7 +893,7 @@ const inlineAppConfig = {
   }
 };
 
-const appConfig = defuFn(appConfig0, inlineAppConfig);
+const appConfig = defuFn(cfg0, inlineAppConfig);
 
 function getEnv(key, opts) {
   const envKey = snakeCase(key).toUpperCase();
@@ -966,10 +967,10 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "parseAppId": "marki15-app",
-    "parseServerURL": "/parse",
+    "parseAppId": "adti-marki",
+    "parseServerURL": "https://adti.api.markidiags.com:8445/parse",
     "parseJavaScriptKey": "c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda",
-    "apiBaseUrl": "https://dev.api.markidiags.com"
+    "apiBaseUrl": ""
   },
   "icon": {
     "serverKnownCssClasses": []
@@ -980,7 +981,7 @@ const envOptions = {
   altPrefix: _inlineRuntimeConfig.nitro.envPrefix ?? process.env.NITRO_ENV_PREFIX ?? "_",
   envExpansion: _inlineRuntimeConfig.nitro.envExpansion ?? process.env.NITRO_ENV_EXPANSION ?? false
 };
-const _sharedRuntimeConfig = _deepFreeze(
+const _sharedRuntimeConfig = _deepFreeze$1(
   applyEnv(klona(_inlineRuntimeConfig), envOptions)
 );
 function useRuntimeConfig(event) {
@@ -995,18 +996,13 @@ function useRuntimeConfig(event) {
   event.context.nitro.runtimeConfig = runtimeConfig;
   return runtimeConfig;
 }
-const _sharedAppConfig = _deepFreeze(klona(appConfig));
-function useAppConfig(event) {
-  {
-    return _sharedAppConfig;
-  }
-}
-function _deepFreeze(object) {
+_deepFreeze$1(klona(appConfig));
+function _deepFreeze$1(object) {
   const propNames = Object.getOwnPropertyNames(object);
   for (const name of propNames) {
     const value = object[name];
     if (value && typeof value === "object") {
-      _deepFreeze(value);
+      _deepFreeze$1(value);
     }
   }
   return Object.freeze(object);
@@ -1143,7 +1139,7 @@ function isJsonRequest(event) {
 }
 function hasReqHeader(event, name, includes) {
 	const value = getRequestHeader(event, name);
-	return value && typeof value === "string" && value.toLowerCase().includes(includes);
+	return !!(value && typeof value === "string" && value.toLowerCase().includes(includes));
 }
 
 const iframeStorageBridge = (nonce) => `
@@ -1505,7 +1501,7 @@ function webComponentScript(base64HTML, startMinimized) {
     iframe.id = 'frame';
     iframe.src = 'data:text/html;base64,${base64HTML}';
     iframe.title = 'Detailed error stack trace';
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-top-navigation-by-user-activation');
 
     const preview = el('div');
     preview.id = 'preview';
@@ -2356,13 +2352,13 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _BqTSlkd6rp7MRPZuDqWWCsZC1pQZcQMJXXircU59vm8 = (function(nitro) {
+const _Byf6QQRvjdQOXJW00lbABgztTMvERnW1eDGURXhj4QA = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script$1}<\/script>`);
   });
 });
 
-const rootDir = "/home/ubuntu/marki16/frontend";
+const rootDir = "/home/ubuntu/prod/adti/frontend";
 
 const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[]};
 
@@ -2391,7 +2387,7 @@ const asyncContext = getContext("nuxt-dev", {
 	asyncContext: true,
 	AsyncLocalStorage
 });
-const _1EumwEU2_U7z99PJeUpNZL51qVuAxSknuVDxWOrKA_c = (nitroApp) => {
+const _kBiejxOt3QpbFdFmcR7Z1hoLDtjZpTVZf3UGeZkU6Y = (nitroApp) => {
 	const handler = nitroApp.h3App.handler;
 	nitroApp.h3App.handler = (event) => {
 		return asyncContext.callAsync({
@@ -2466,16 +2462,17 @@ function onConsoleLog(callback) {
 
 const script = "\"use strict\";(()=>{const t=window,e=document.documentElement,c=[\"dark\",\"light\"],n=getStorageValue(\"localStorage\",\"nuxt-color-mode\")||\"light\";let i=n===\"system\"?u():n;const r=e.getAttribute(\"data-color-mode-forced\");r&&(i=r),l(i),t[\"__NUXT_COLOR_MODE__\"]={preference:n,value:i,getColorScheme:u,addColorScheme:l,removeColorScheme:d};function l(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.add(s):e.className+=\" \"+s,a&&e.setAttribute(\"data-\"+a,o)}function d(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.remove(s):e.className=e.className.replace(new RegExp(s,\"g\"),\"\"),a&&e.removeAttribute(\"data-\"+a)}function f(o){return t.matchMedia(\"(prefers-color-scheme\"+o+\")\")}function u(){if(t.matchMedia&&f(\"\").media!==\"not all\"){for(const o of c)if(f(\":\"+o).matches)return o}return\"light\"}})();function getStorageValue(t,e){switch(t){case\"localStorage\":return window.localStorage.getItem(e);case\"sessionStorage\":return window.sessionStorage.getItem(e);case\"cookie\":return getCookie(e);default:return null}}function getCookie(t){const c=(\"; \"+window.document.cookie).split(\"; \"+t+\"=\");if(c.length===2)return c.pop()?.split(\";\").shift()}";
 
-const _0IcHlR3tMVG2zEe3_j9J1GctISgLgOYInSnJ2Kswtps = (function(nitro) {
+const _gCWq66AdAi75iCBep7i0D2Sbe9UiWBxhDGze09zlTo = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
 });
 
 const plugins = [
-  _BqTSlkd6rp7MRPZuDqWWCsZC1pQZcQMJXXircU59vm8,
-_1EumwEU2_U7z99PJeUpNZL51qVuAxSknuVDxWOrKA_c,
-_0IcHlR3tMVG2zEe3_j9J1GctISgLgOYInSnJ2Kswtps
+  _Byf6QQRvjdQOXJW00lbABgztTMvERnW1eDGURXhj4QA,
+_kBiejxOt3QpbFdFmcR7Z1hoLDtjZpTVZf3UGeZkU6Y,
+_gCWq66AdAi75iCBep7i0D2Sbe9UiWBxhDGze09zlTo,
+_wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw
 ];
 
 const assets = {};
@@ -2503,7 +2500,7 @@ function getAsset (id) {
 
 const METHODS = /* @__PURE__ */ new Set(["HEAD", "GET"]);
 const EncodingMap = { gzip: ".gz", br: ".br" };
-const _bqtTmA = eventHandler((event) => {
+const _f9QXLF = eventHandler((event) => {
   if (event.method && !METHODS.has(event.method)) {
     return;
   }
@@ -2589,6 +2586,10 @@ function resolveUnrefHeadInput(input) {
   return walkResolver(input, VueResolver);
 }
 
+const NUXT_PAYLOAD_INLINE = true;
+
+const payloadCache = useStorage("cache:nuxt:payload") ;
+
 // @__NO_SIDE_EFFECTS__
 function createHead(options = {}) {
   const head = createHead$1({
@@ -2643,7 +2644,7 @@ const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
 // @ts-expect-error file will be produced after app build
 const getServerEntry = () => Promise.resolve().then(function () { return server$1; }).then((r) => r.default || r);
 // @ts-expect-error file will be produced after app build
-const getClientManifest = () => import('file:///home/ubuntu/marki16/frontend/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
+const getClientManifest = () => import('file:///home/ubuntu/prod/adti/frontend/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 // -- SSR Renderer --
 const getSSRRenderer = lazyCachedFunction(async () => {
 	// Load server bundle
@@ -2826,7 +2827,7 @@ function replaceIslandTeleports(ssrContext, html) {
 }
 
 const ISLAND_SUFFIX_RE = /\.json(?:\?.*)?$/;
-const _SxA8c9 = defineEventHandler(async (event) => {
+const handler$1 = defineEventHandler(async (event) => {
 	const nitroApp = useNitroApp();
 	setResponseHeaders(event, {
 		"content-type": "application/json;charset=utf-8",
@@ -2904,24 +2905,35 @@ const _SxA8c9 = defineEventHandler(async (event) => {
 	});
 	return islandResponse;
 });
+const ISLAND_PATH_PREFIX = "/__nuxt_island/";
+const VALID_COMPONENT_NAME_RE = /^[a-z][\w.-]*$/i;
 async function getIslandContext(event) {
-	// TODO: Strict validation for url
 	let url = event.path || "";
-	const componentParts = url.substring("/__nuxt_island".length + 1).replace(ISLAND_SUFFIX_RE, "").split("_");
+	if (!url.startsWith(ISLAND_PATH_PREFIX)) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid island request path"
+		});
+	}
+	const componentParts = url.substring(ISLAND_PATH_PREFIX.length).replace(ISLAND_SUFFIX_RE, "").split("_");
 	const hashId = componentParts.length > 1 ? componentParts.pop() : undefined;
 	const componentName = componentParts.join("_");
-	// TODO: Validate context
+	if (!componentName || !VALID_COMPONENT_NAME_RE.test(componentName)) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid island component name"
+		});
+	}
 	const context = event.method === "GET" ? getQuery$1(event) : await readBody(event);
-	const ctx = {
-		url: "/",
-		...context,
+	// Only extract known context fields to prevent arbitrary data injection
+	return {
+		url: typeof context?.url === "string" ? context.url : "/",
 		id: hashId,
 		name: componentName,
 		props: destr$1(context.props) || {},
 		slots: {},
 		components: {}
 	};
-	return ctx;
 }
 
 function defineRenderHandler(render) {
@@ -3000,9 +3012,331 @@ async function runTask(name, {
   }
 }
 
+const inlineConfig = {
+  "nuxt": {},
+  "ui": {
+    "colors": {
+      "primary": "green",
+      "secondary": "blue",
+      "success": "green",
+      "info": "blue",
+      "warning": "yellow",
+      "error": "red",
+      "neutral": "slate"
+    },
+    "icons": {
+      "arrowDown": "i-lucide-arrow-down",
+      "arrowLeft": "i-lucide-arrow-left",
+      "arrowRight": "i-lucide-arrow-right",
+      "arrowUp": "i-lucide-arrow-up",
+      "caution": "i-lucide-circle-alert",
+      "check": "i-lucide-check",
+      "chevronDoubleLeft": "i-lucide-chevrons-left",
+      "chevronDoubleRight": "i-lucide-chevrons-right",
+      "chevronDown": "i-lucide-chevron-down",
+      "chevronLeft": "i-lucide-chevron-left",
+      "chevronRight": "i-lucide-chevron-right",
+      "chevronUp": "i-lucide-chevron-up",
+      "close": "i-lucide-x",
+      "copy": "i-lucide-copy",
+      "copyCheck": "i-lucide-copy-check",
+      "dark": "i-lucide-moon",
+      "drag": "i-lucide-grip-vertical",
+      "ellipsis": "i-lucide-ellipsis",
+      "error": "i-lucide-circle-x",
+      "external": "i-lucide-arrow-up-right",
+      "eye": "i-lucide-eye",
+      "eyeOff": "i-lucide-eye-off",
+      "file": "i-lucide-file",
+      "folder": "i-lucide-folder",
+      "folderOpen": "i-lucide-folder-open",
+      "hash": "i-lucide-hash",
+      "info": "i-lucide-info",
+      "light": "i-lucide-sun",
+      "loading": "i-lucide-loader-circle",
+      "menu": "i-lucide-menu",
+      "minus": "i-lucide-minus",
+      "panelClose": "i-lucide-panel-left-close",
+      "panelOpen": "i-lucide-panel-left-open",
+      "plus": "i-lucide-plus",
+      "reload": "i-lucide-rotate-ccw",
+      "search": "i-lucide-search",
+      "stop": "i-lucide-square",
+      "success": "i-lucide-circle-check",
+      "system": "i-lucide-monitor",
+      "tip": "i-lucide-lightbulb",
+      "upload": "i-lucide-upload",
+      "warning": "i-lucide-triangle-alert"
+    },
+    "tv": {
+      "twMergeConfig": {}
+    }
+  },
+  "icon": {
+    "provider": "iconify",
+    "class": "",
+    "aliases": {},
+    "iconifyApiEndpoint": "https://api.iconify.design",
+    "localApiEndpoint": "/api/_nuxt_icon",
+    "fallbackToApi": true,
+    "cssSelectorPrefix": "i-",
+    "cssWherePseudo": true,
+    "cssLayer": "base",
+    "mode": "css",
+    "attrs": {
+      "aria-hidden": true
+    },
+    "collections": [
+      "academicons",
+      "akar-icons",
+      "ant-design",
+      "arcticons",
+      "basil",
+      "bi",
+      "bitcoin-icons",
+      "bpmn",
+      "brandico",
+      "bx",
+      "bxl",
+      "bxs",
+      "bytesize",
+      "carbon",
+      "catppuccin",
+      "cbi",
+      "charm",
+      "ci",
+      "cib",
+      "cif",
+      "cil",
+      "circle-flags",
+      "circum",
+      "clarity",
+      "codex",
+      "codicon",
+      "covid",
+      "cryptocurrency",
+      "cryptocurrency-color",
+      "cuida",
+      "dashicons",
+      "devicon",
+      "devicon-plain",
+      "dinkie-icons",
+      "duo-icons",
+      "ei",
+      "el",
+      "emojione",
+      "emojione-monotone",
+      "emojione-v1",
+      "entypo",
+      "entypo-social",
+      "eos-icons",
+      "ep",
+      "et",
+      "eva",
+      "f7",
+      "fa",
+      "fa-brands",
+      "fa-regular",
+      "fa-solid",
+      "fa6-brands",
+      "fa6-regular",
+      "fa6-solid",
+      "fa7-brands",
+      "fa7-regular",
+      "fa7-solid",
+      "fad",
+      "famicons",
+      "fe",
+      "feather",
+      "file-icons",
+      "flag",
+      "flagpack",
+      "flat-color-icons",
+      "flat-ui",
+      "flowbite",
+      "fluent",
+      "fluent-color",
+      "fluent-emoji",
+      "fluent-emoji-flat",
+      "fluent-emoji-high-contrast",
+      "fluent-mdl2",
+      "fontelico",
+      "fontisto",
+      "formkit",
+      "foundation",
+      "fxemoji",
+      "gala",
+      "game-icons",
+      "garden",
+      "geo",
+      "gg",
+      "gis",
+      "gravity-ui",
+      "gridicons",
+      "grommet-icons",
+      "guidance",
+      "healthicons",
+      "heroicons",
+      "heroicons-outline",
+      "heroicons-solid",
+      "hugeicons",
+      "humbleicons",
+      "ic",
+      "icomoon-free",
+      "icon-park",
+      "icon-park-outline",
+      "icon-park-solid",
+      "icon-park-twotone",
+      "iconamoon",
+      "iconoir",
+      "icons8",
+      "il",
+      "ion",
+      "iwwa",
+      "ix",
+      "jam",
+      "la",
+      "lets-icons",
+      "line-md",
+      "lineicons",
+      "logos",
+      "ls",
+      "lsicon",
+      "lucide",
+      "lucide-lab",
+      "mage",
+      "majesticons",
+      "maki",
+      "map",
+      "marketeq",
+      "material-icon-theme",
+      "material-symbols",
+      "material-symbols-light",
+      "mdi",
+      "mdi-light",
+      "medical-icon",
+      "memory",
+      "meteocons",
+      "meteor-icons",
+      "mi",
+      "mingcute",
+      "mono-icons",
+      "mynaui",
+      "nimbus",
+      "nonicons",
+      "noto",
+      "noto-v1",
+      "nrk",
+      "octicon",
+      "oi",
+      "ooui",
+      "openmoji",
+      "oui",
+      "pajamas",
+      "pepicons",
+      "pepicons-pencil",
+      "pepicons-pop",
+      "pepicons-print",
+      "ph",
+      "picon",
+      "pixel",
+      "pixelarticons",
+      "prime",
+      "proicons",
+      "ps",
+      "qlementine-icons",
+      "quill",
+      "radix-icons",
+      "raphael",
+      "ri",
+      "rivet-icons",
+      "roentgen",
+      "si",
+      "si-glyph",
+      "sidekickicons",
+      "simple-icons",
+      "simple-line-icons",
+      "skill-icons",
+      "solar",
+      "stash",
+      "streamline",
+      "streamline-block",
+      "streamline-color",
+      "streamline-cyber",
+      "streamline-cyber-color",
+      "streamline-emojis",
+      "streamline-flex",
+      "streamline-flex-color",
+      "streamline-freehand",
+      "streamline-freehand-color",
+      "streamline-kameleon-color",
+      "streamline-logos",
+      "streamline-pixel",
+      "streamline-plump",
+      "streamline-plump-color",
+      "streamline-sharp",
+      "streamline-sharp-color",
+      "streamline-stickies-color",
+      "streamline-ultimate",
+      "streamline-ultimate-color",
+      "subway",
+      "svg-spinners",
+      "system-uicons",
+      "tabler",
+      "tdesign",
+      "teenyicons",
+      "temaki",
+      "token",
+      "token-branded",
+      "topcoat",
+      "twemoji",
+      "typcn",
+      "uil",
+      "uim",
+      "uis",
+      "uit",
+      "uiw",
+      "unjs",
+      "vaadin",
+      "vs",
+      "vscode-icons",
+      "websymbol",
+      "weui",
+      "whh",
+      "wi",
+      "wpf",
+      "zmdi",
+      "zondicons"
+    ],
+    "fetchTimeout": 1500
+  }
+};
+
+const _inlineAppConfig = /*@__PURE__*/ defuFn(cfg0, inlineConfig);
+
+// App config
+const _sharedAppConfig = _deepFreeze(klona(_inlineAppConfig));
+function useAppConfig(event) {
+	// Backwards compatibility with ambient context
+	{
+		return _sharedAppConfig;
+	}
+}
+// --- Utils ---
+function _deepFreeze(object) {
+	const propNames = Object.getOwnPropertyNames(object);
+	for (const name of propNames) {
+		const value = object[name];
+		if (value && typeof value === "object") {
+			_deepFreeze(value);
+		}
+	}
+	return Object.freeze(object);
+}
+
 const warnOnceSet = /* @__PURE__ */ new Set();
 const DEFAULT_ENDPOINT = "https://api.iconify.design";
-const _pjRERz = defineCachedEventHandler(async (event) => {
+const _NyEhXA = defineCachedEventHandler(async (event) => {
   const url = getRequestURL(event);
   if (!url)
     return createError({ status: 400, message: "Invalid icon request" });
@@ -3060,15 +3394,15 @@ const _pjRERz = defineCachedEventHandler(async (event) => {
   // 1 week
 });
 
-const _lazy_eTvuUn = () => Promise.resolve().then(function () { return renderer$1; });
+const _lazy_kcdUYv = () => Promise.resolve().then(function () { return renderer; });
 
 const handlers = [
-  { route: '', handler: _bqtTmA, lazy: false, middleware: true, method: undefined },
-  { route: '/__nuxt_error', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined },
-  { route: '/__nuxt_island/**', handler: _SxA8c9, lazy: false, middleware: false, method: undefined },
-  { route: '/api/_nuxt_icon/:collection', handler: _pjRERz, lazy: false, middleware: false, method: undefined },
-  { route: '/_fonts/**', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_eTvuUn, lazy: true, middleware: false, method: undefined }
+  { route: '', handler: _f9QXLF, lazy: false, middleware: true, method: undefined },
+  { route: '/__nuxt_error', handler: _lazy_kcdUYv, lazy: true, middleware: false, method: undefined },
+  { route: '/__nuxt_island/**', handler: handler$1, lazy: false, middleware: false, method: undefined },
+  { route: '/api/_nuxt_icon/:collection', handler: _NyEhXA, lazy: false, middleware: false, method: undefined },
+  { route: '/_fonts/**', handler: _lazy_kcdUYv, lazy: true, middleware: false, method: undefined },
+  { route: '/**', handler: _lazy_kcdUYv, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {
@@ -3341,7 +3675,7 @@ const styles$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
 
 function renderPayloadResponse(ssrContext) {
 	return {
-		body: stringify(splitPayload(ssrContext).payload, ssrContext["~payloadReducers"]) ,
+		body: encodeForwardSlashes(stringify(splitPayload(ssrContext).payload, ssrContext["~payloadReducers"])) ,
 		statusCode: getResponseStatus(ssrContext.event),
 		statusMessage: getResponseStatusText(ssrContext.event),
 		headers: {
@@ -3351,7 +3685,7 @@ function renderPayloadResponse(ssrContext) {
 	};
 }
 function renderPayloadJsonScript(opts) {
-	const contents = opts.data ? stringify(opts.data, opts.ssrContext["~payloadReducers"]) : "";
+	const contents = opts.data ? encodeForwardSlashes(stringify(opts.data, opts.ssrContext["~payloadReducers"])) : "";
 	const payload = {
 		"type": "application/json",
 		"innerHTML": contents,
@@ -3366,6 +3700,14 @@ function renderPayloadJsonScript(opts) {
 	}
 	const config = uneval(opts.ssrContext.config);
 	return [payload, { innerHTML: `window.__NUXT__={};window.__NUXT__.config=${config}` }];
+}
+/**
+* Encode forward slashes as unicode escape sequences to prevent
+* Google from treating them as internal links and trying to crawl them.
+* @see https://github.com/nuxt/nuxt/issues/24175
+*/
+function encodeForwardSlashes(str) {
+	return str.replaceAll("/", "\\u002F");
 }
 function splitPayload(ssrContext) {
 	const { data, prerenderedAt, ...initial } = ssrContext.payload;
@@ -3392,7 +3734,7 @@ const APP_TELEPORT_OPEN_TAG = HAS_APP_TELEPORTS ? `<${appTeleportTag}${propsToSt
 const APP_TELEPORT_CLOSE_TAG = HAS_APP_TELEPORTS ? `</${appTeleportTag}>` : "";
 const PAYLOAD_URL_RE = /^[^?]*\/_payload.json(?:\?.*)?$/ ;
 const PAYLOAD_FILENAME = "_payload.json" ;
-const renderer = defineRenderHandler(async (event) => {
+const handler = defineRenderHandler(async (event) => {
 	const nitroApp = useNitroApp();
 	// Whether we're rendering an error page
 	const ssrError = event.path.startsWith("/__nuxt_error") ? getQuery$1(event) : null;
@@ -3426,11 +3768,18 @@ const renderer = defineRenderHandler(async (event) => {
 	const routeOptions = getRouteRules(event);
 	// Whether we are prerendering route or using ISR/SWR caching
 	const _PAYLOAD_EXTRACTION = !ssrContext.noSSR && ((routeOptions.isr || routeOptions.cache));
+	// When NUXT_PAYLOAD_INLINE is true (payloadExtraction: 'client'), we inline the full payload
+	// in the HTML to avoid a separate _payload.json fetch on initial load (which would trigger a
+	// second render or lambda invocation). The _payload.json endpoint still works for client-side nav.
+	const _PAYLOAD_INLINE = !_PAYLOAD_EXTRACTION || NUXT_PAYLOAD_INLINE;
 	const isRenderingPayload = (_PAYLOAD_EXTRACTION || routeOptions.prerender) && PAYLOAD_URL_RE.test(ssrContext.url);
 	if (isRenderingPayload) {
 		const url = ssrContext.url.substring(0, ssrContext.url.lastIndexOf("/")) || "/";
 		ssrContext.url = url;
 		event._path = event.node.req.url = url;
+		if (payloadCache && await payloadCache.hasItem(url)) {
+			return payloadCache.getItem(url);
+		}
 	}
 	if (routeOptions.ssr === false) {
 		ssrContext.noSSR = true;
@@ -3467,31 +3816,30 @@ const renderer = defineRenderHandler(async (event) => {
 	// Directly render payload routes
 	if (isRenderingPayload) {
 		const response = renderPayloadResponse(ssrContext);
+		if (payloadCache) {
+			await payloadCache.setItem(ssrContext.url, response);
+		}
 		return response;
+	}
+	if (_PAYLOAD_EXTRACTION) {
+		// Cache payload from the current SSR context so _payload.json requests can be served
+		// without a full re-render (during prerender via LRU+FS, at runtime via in-memory TTL cache)
+		if (payloadCache) {
+			await payloadCache.setItem(ssrContext.url === "/" ? "/" : ssrContext.url.replace(/\/$/, ""), renderPayloadResponse(ssrContext));
+		}
 	}
 	const NO_SCRIPTS = routeOptions.noScripts;
 	// Setup head
 	const { styles, scripts } = getRequestDependencies(ssrContext, renderer.rendererContext);
 	// 1. Preload payloads and app manifest
-	if (_PAYLOAD_EXTRACTION && !NO_SCRIPTS) {
+	// Skip preload when inlining full payload in HTML (no separate fetch needed for initial load)
+	if (_PAYLOAD_EXTRACTION && !_PAYLOAD_INLINE && !NO_SCRIPTS) {
 		ssrContext.head.push({ link: [{
 			rel: "preload",
 			as: "fetch",
 			crossorigin: "anonymous",
 			href: payloadURL
 		} ] }, headEntryOptions);
-	}
-	if (ssrContext["~preloadManifest"] && !NO_SCRIPTS) {
-		ssrContext.head.push({ link: [{
-			rel: "preload",
-			as: "fetch",
-			fetchpriority: "low",
-			crossorigin: "anonymous",
-			href: buildAssetsURL(`builds/meta/${ssrContext.runtimeConfig.app.buildId}.json`)
-		}] }, {
-			...headEntryOptions,
-			tagPriority: "low"
-		});
 	}
 	// 2. Styles
 	if (inlinedStyles.length) {
@@ -3527,13 +3875,13 @@ const renderer = defineRenderHandler(async (event) => {
 		ssrContext.head.push({ link: getPreloadLinks(ssrContext, renderer.rendererContext) }, headEntryOptions);
 		ssrContext.head.push({ link: getPrefetchLinks(ssrContext, renderer.rendererContext) }, headEntryOptions);
 		// 5. Payloads
-		ssrContext.head.push({ script: _PAYLOAD_EXTRACTION ? renderPayloadJsonScript({
+		ssrContext.head.push({ script: _PAYLOAD_INLINE ? renderPayloadJsonScript({
+			ssrContext,
+			data: ssrContext.payload
+		})  : renderPayloadJsonScript({
 			ssrContext,
 			data: splitPayload(ssrContext).initial,
 			src: payloadURL
-		})  : renderPayloadJsonScript({
-			ssrContext,
-			data: ssrContext.payload
 		})  }, {
 			...headEntryOptions,
 			tagPosition: "bodyClose",
@@ -3597,8 +3945,8 @@ function renderHTMLDocument(html) {
 	return "<!DOCTYPE html>" + `<html${joinAttrs(html.htmlAttrs)}>` + `<head>${joinTags(html.head)}</head>` + `<body${joinAttrs(html.bodyAttrs)}>${joinTags(html.bodyPrepend)}${joinTags(html.body)}${joinTags(html.bodyAppend)}</body>` + "</html>";
 }
 
-const renderer$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+const renderer = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
-  default: renderer
+  default: handler
 }, Symbol.toStringTag, { value: 'Module' }));
 //# sourceMappingURL=index.mjs.map

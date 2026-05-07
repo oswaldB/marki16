@@ -49,6 +49,16 @@
         >
           Tester la séquence
         </UButton>
+        <UButton
+          icon="i-heroicons-arrow-path"
+          color="primary"
+          :loading="regenerating"
+          @click="showRegenererSlideover = true"
+          size="sm"
+          class="md:size-auto"
+        >
+          Régénérer les relances
+        </UButton>
       </div>
     </div>
 
@@ -202,6 +212,12 @@
 
     <SmtpDrawer v-model="showSmtpModal" :mode-edition="false" @saved="onSmtpSaved" />
 
+    <SlideoverRegenererRelances
+      v-model:open="showRegenererSlideover"
+      :sequence="sequence"
+      @confirmed="regenererRelances"
+    />
+
   </div>
 </template>
 
@@ -215,6 +231,7 @@ import ModalIaSequence from '~/components/ModalIaSequence.vue'
 import ModalChatGptEmail from '~/components/ModalChatGptEmail.vue'
 import SmtpDrawer from '~/components/SmtpDrawer.vue'
 import SequenceTestSlideover from '~/components/SequenceTestSlideover.vue'
+import SlideoverRegenererRelances from '~/components/SlideoverRegenererRelances.vue'
 import { useSequenceEditor, updateCorps, VARIABLES, SEQUENCE_TYPES, getCurrentCorps, SCENARIO_FORMATS, editorOptions } from '~/composables/useSequenceEditor'
 import { useSequenceRules } from '~/composables/useSequenceRules'
 import { useIaSequence } from '~/composables/useIaSequence'
@@ -291,16 +308,14 @@ const {
 const runningAutoAssign = ref(false)
 const sequenceTypes = SEQUENCE_TYPES
 const showTestModal = ref(false)
+const showRegenererSlideover = ref(false)
+const regenerating = ref(false)
 
 // Fonction pour ajouter un email de suivi (sans délai)
 function ajouterEmailSuivi() {
-
-// Gestion du test de séquence
-function onTestSent() {
-  toast.add({ title: 'Test envoyé', description: 'Les emails de test ont été envoyés avec succès', color: 'green' })
-}
   emails.value = [{
     _key: `email_suivi_${Date.now()}`,
+    email_index: 1,
     delai: 0, // Pas de délai pour les emails de suivi
     smtp: '',
     to: '[[payeur_email]]',
@@ -316,6 +331,11 @@ function onTestSent() {
       corps: ''
     }))
   }]
+}
+
+// Gestion du test de séquence
+function onTestSent() {
+  toast.add({ title: 'Test envoyé', description: 'Les emails de test ont été envoyés avec succès', color: 'green' })
 }
 
 // Watcher pour gérer le changement de type
@@ -442,6 +462,106 @@ async function lancerAttributionAutomatique() {
       })
   } finally {
     runningAutoAssign.value = false
+  }
+}
+
+// ── Régénération des relances ─────────────────────────────────────
+async function regenererRelances(options) {
+  regenerating.value = true
+  const toast = useToast()
+
+  console.log('[REGEN_SEQ] DEBUT - Options:', { resetDates: options.resetDates, includeSent: options.includeSent })
+
+  try {
+    // 1. Sauvegarder la sequence
+    console.log('[REGEN_SEQ] Etape 1/5: Sauvegarde de la sequence...')
+    await sauvegarder(editorRefs)
+    console.log('[REGEN_SEQ] Sequence sauvegardee avec succes')
+
+    // 2. Recuperer les relances de cette sequence
+    console.log('[REGEN_SEQ] Etape 2/5: Recuperation des relances pour sequence ID:', sequence.value?.id)
+    const Relance = $parse.Object.extend('Relance')
+    const query = new $parse.Query(Relance)
+    query.equalTo('sequence', sequence.value)
+    query.limit(10000)
+    const allRelances = await query.find()
+    console.log('[REGEN_SEQ] Relances trouvees:', allRelances.length)
+
+    // 3. Filtrer selon options
+    console.log('[REGEN_SEQ] Etape 3/5: Filtrage - includeSent:', options.includeSent)
+    const relancesToProcess = allRelances.filter(relance => {
+      const statut = relance.get('statut')
+      const shouldExclude = !options.includeSent && statut === 'envoyé'
+      console.log('[REGEN_SEQ] Relance ID:', relance.id, '- Statut:', statut, '- Exclue:', shouldExclude)
+      if (shouldExclude) {
+        return false
+      }
+      return true
+    })
+
+    console.log('[REGEN_SEQ] Relances a traiter:', relancesToProcess.length)
+
+    if (relancesToProcess.length === 0) {
+      console.log('[REGEN_SEQ] AUCUNE RELANCE A TRAITER')
+      toast.add({ title: 'Rien à régénérer', color: 'blue' })
+      return
+    }
+
+    // 4. Traiter les relances
+    console.log('[REGEN_SEQ] Etape 4/5: Traitement des', relancesToProcess.length, 'relances - resetDates:', options.resetDates)
+    const updates = relancesToProcess.map(async (relance) => {
+      console.log('[REGEN_SEQ] Traitement relance ID:', relance.id)
+      if (options.resetDates) {
+        // Supprimer la relance
+        console.log('[REGEN_SEQ] Suppression relance ID:', relance.id)
+        await relance.destroy()
+        console.log('[REGEN_SEQ] Relance', relance.id, 'supprimee')
+      } else {
+        // Garder la date mais reinitialiser le statut
+        console.log('[REGEN_SEQ] Mise a jour relance ID:', relance.id, '- Nouveau statut: En attente de generation')
+        relance.set('statut', 'En attente de generation')
+        if (options.includeSent) {
+          console.log('[REGEN_SEQ] Reinitialisation dates pour relance ID:', relance.id)
+          relance.set('dateEnvoi', null)
+          relance.set('date_envoi_prevue', null)
+        }
+        await relance.save()
+        console.log('[REGEN_SEQ] Relance', relance.id, 'mise a jour')
+      }
+    })
+
+    await Promise.all(updates)
+    console.log('[REGEN_SEQ] Toutes les relances traitees')
+
+    // 5. Relancer la creation
+    console.log('[REGEN_SEQ] Etape 5/5: Appel triggerImportInvoices...')
+    const result = await $parse.Cloud.run('triggerImportInvoices')
+    console.log('[REGEN_SEQ] Resultat triggerImportInvoices:', result)
+
+    const created = result.result?.createRelances?.created || 0
+    const updated = result.result?.createRelances?.updated || 0
+    console.log('[REGEN_SEQ] Relances - Crees:', created, 'Mises a jour:', updated)
+
+    toast.add({
+      title: 'Regeneration terminee',
+      description: `${created} creees, ${updated} mises a jour pour ${sequence.value.get('nom')}`,
+      color: 'green'
+    })
+    console.log('[REGEN_SEQ] Toast de succes affiche')
+
+    await calculerApercu()
+    console.log('[REGEN_SEQ] Apercu recalcule')
+
+  } catch (error) {
+    console.error('[REGEN_SEQ] ERREUR:', error.message, error.stack)
+    toast.add({
+      title: 'Erreur',
+      description: error.message || 'Echec de la regeneration',
+      color: 'red'
+    })
+  } finally {
+    regenerating.value = false
+    console.log('[REGEN_SEQ] FIN - Etat regenerating: false')
   }
 }
 </script>

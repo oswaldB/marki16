@@ -24,7 +24,7 @@ export function useLiensPaiement(parse) {
   const lienPaiementApercu = computed(() => {
     let url = lienPaiementEdit.value
     for (const [k, v] of Object.entries(EXEMPLE_VARS)) {
-      url = url.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), v)
+      url = url.replace(new RegExp(`\[\[${k}\]\]`, 'g'), v)
     }
     return url
   })
@@ -123,19 +123,25 @@ export function useLiensPaiement(parse) {
     lienPaiementEdit.value = ''
   }
 
+  // Variables de date qui doivent avoir le formatage par défaut
+  const DATE_VARIABLES = ['date_piece', 'date_echeance', 'date_debut_mission']
+
   function insererVariableEnLien(varName) {
     const el = lienPaiementTextareaEl.value
-    const v = `{{${varName}}}`
+    // Si la variable est une date, ajouter le formatage par défaut
+    const formattedVar = DATE_VARIABLES.includes(varName) 
+      ? `[[${varName}, date("DD/MM/YYYY")]]`
+      : `[[${varName}]]`
     if (el) {
       const s = el.selectionStart ?? lienPaiementEdit.value.length
       const e = el.selectionEnd ?? lienPaiementEdit.value.length
-      lienPaiementEdit.value = lienPaiementEdit.value.slice(0, s) + v + lienPaiementEdit.value.slice(e)
+      lienPaiementEdit.value = lienPaiementEdit.value.slice(0, s) + formattedVar + lienPaiementEdit.value.slice(e)
       nextTick(() => {
-        el.selectionStart = el.selectionEnd = s + v.length
+        el.selectionStart = el.selectionEnd = s + formattedVar.length
         el.focus()
       })
     } else {
-      lienPaiementEdit.value += v
+      lienPaiementEdit.value += formattedVar
     }
   }
 

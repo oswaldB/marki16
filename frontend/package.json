@@ -7,12 +7,18 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test:e2e": "playwright test tests/e2e",
+    "test:e2e:ui": "playwright test tests/e2e/regenerer-relances.spec.js",
+    "test:e2e:headed": "playwright test tests/e2e --headed",
+    "test:e2e:debug": "playwright test tests/e2e --headed --debug"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "dotenv-cli": "^11.0.0",
     "nuxt": "^4.3.1",
-    "parse": "^3.3.0"
+    "parse": "^3.3.0",
+    "playwright": "^1.59.1"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",
@@ -23,6 +29,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@toast-ui/vue-editor": "^3.2.3",
     "chart.js": "^4.5.1",
+    "js-yaml": "^4.1.1",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1",
     "vue-chartjs": "^5.3.3"
@@ -33,5 +40,6 @@
     "marki"
   ],
   "author": "Marki Team",
-  "license": "MIT"
+  "license": "MIT",
+  "main": "index.js"
 }

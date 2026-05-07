@@ -25,13 +25,13 @@
       <!-- Délai -->
       <div>
         <label class="text-xs text-gray-500 mb-1 block">J+</label>
-        <UInput v-model.number="email.delai" type="number" min="0" class="w-full" />
+        <UInput v-model.number="email.delai" type="number" class="w-full" />
       </div>
 
       <!-- À -->
       <div>
         <label class="text-xs text-gray-500 mb-1 block">À</label>
-        <UInput v-model="email.to" placeholder="[[payeur_email]]" class="w-full" />
+        <UInput v-model="email.to" placeholder="&lt;%= payeur_email %&gt;" class="w-full" />
       </div>
 
       <!-- Onglets scénario -->
@@ -94,7 +94,7 @@
               <!-- Objet -->
               <div>
                 <label class="text-xs text-gray-500 mb-1 block">Objet</label>
-                <UInput v-model="currentScenario.objet" placeholder="Relance — [[nfacture]]" class="w-full" />
+                <UInput v-model="currentScenario.objet" placeholder="Relance — &lt;%= nfacture %&gt;" class="w-full" />
               </div>
 
               <!-- Corps -->
@@ -180,7 +180,12 @@ const variablesForEmail = computed(() => {
 })
 
 async function onCopyVariable(varName) {
-  await navigator.clipboard.writeText(`[[${varName}]]`)
+  // Variables de date qui doivent avoir le formatage par défaut
+  const DATE_VARIABLES = ['date_piece', 'date_echeance', 'date_debut_mission']
+  const formattedVar = DATE_VARIABLES.includes(varName)
+    ? `[[${varName}, date("DD/MM/YYYY")]]`
+    : `[[${varName}]]`
+  await navigator.clipboard.writeText(formattedVar)
   toast.add({ title: 'Copié', description: "Collez avec Ctrl+V dans l'éditeur", color: 'green', timeout: 2000 })
 }
 

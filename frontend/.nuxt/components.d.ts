@@ -31,6 +31,7 @@ export const SequenceEmailCard: typeof import("../app/components/SequenceEmailCa
 export const SequenceRulesSection: typeof import("../app/components/SequenceRulesSection.vue")['default']
 export const SequenceSuiviCard: typeof import("../app/components/SequenceSuiviCard.vue")['default']
 export const SequenceTestSlideover: typeof import("../app/components/SequenceTestSlideover.vue")['default']
+export const SlideoverRegenererRelances: typeof import("../app/components/SlideoverRegenererRelances.vue")['default']
 export const SmtpDrawer: typeof import("../app/components/SmtpDrawer.vue")['default']
 export const SyncButton: typeof import("../app/components/SyncButton.vue")['default']
 export const ToastuiEditor: typeof import("../app/components/ToastuiEditor.vue")['default']
@@ -63,6 +64,9 @@ export const UChatMessages: typeof import("../node_modules/@nuxt/ui/dist/runtime
 export const UChatPalette: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPalette.vue")['default']
 export const UChatPrompt: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPrompt.vue")['default']
 export const UChatPromptSubmit: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPromptSubmit.vue")['default']
+export const UChatReasoning: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatReasoning.vue")['default']
+export const UChatShimmer: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatShimmer.vue")['default']
+export const UChatTool: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatTool.vue")['default']
 export const UCheckbox: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue")['default']
 export const UCheckboxGroup: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/CheckboxGroup.vue")['default']
 export const UChip: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Chip.vue")['default']
@@ -142,6 +146,7 @@ export const UScrollArea: typeof import("../node_modules/@nuxt/ui/dist/runtime/c
 export const USelect: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Select.vue")['default']
 export const USelectMenu: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue")['default']
 export const USeparator: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Separator.vue")['default']
+export const USidebar: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Sidebar.vue")['default']
 export const USkeleton: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue")['default']
 export const USlideover: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue")['default']
 export const USlider: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Slider.vue")['default']
@@ -168,10 +173,9 @@ export const NuxtLink: typeof import("../node_modules/nuxt/dist/app/components/n
 export const NuxtLoadingIndicator: typeof import("../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']
 export const NuxtTime: typeof import("../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']
 export const NuxtRouteAnnouncer: typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
+export const NuxtAnnouncer: typeof import("../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']
 export const NuxtImg: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
 export const NuxtPicture: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-export const Icon: typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
-export const ColorScheme: typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
 export const NuxtPage: typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']
 export const NoScript: typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']
 export const Link: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -182,6 +186,8 @@ export const Style: typeof import("../node_modules/nuxt/dist/head/runtime/compon
 export const Head: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Head']
 export const Html: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']
 export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
+export const Icon: typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
+export const ColorScheme: typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const LazyContactDeleteModal: LazyComponent<typeof import("../app/components/ContactDeleteModal.vue")['default']>
 export const LazyContactsDrawer: LazyComponent<typeof import("../app/components/ContactsDrawer.vue")['default']>
@@ -200,6 +206,7 @@ export const LazySequenceEmailCard: LazyComponent<typeof import("../app/componen
 export const LazySequenceRulesSection: LazyComponent<typeof import("../app/components/SequenceRulesSection.vue")['default']>
 export const LazySequenceSuiviCard: LazyComponent<typeof import("../app/components/SequenceSuiviCard.vue")['default']>
 export const LazySequenceTestSlideover: LazyComponent<typeof import("../app/components/SequenceTestSlideover.vue")['default']>
+export const LazySlideoverRegenererRelances: LazyComponent<typeof import("../app/components/SlideoverRegenererRelances.vue")['default']>
 export const LazySmtpDrawer: LazyComponent<typeof import("../app/components/SmtpDrawer.vue")['default']>
 export const LazySyncButton: LazyComponent<typeof import("../app/components/SyncButton.vue")['default']>
 export const LazyToastuiEditor: LazyComponent<typeof import("../app/components/ToastuiEditor.vue")['default']>
@@ -232,6 +239,9 @@ export const LazyUChatMessages: LazyComponent<typeof import("../node_modules/@nu
 export const LazyUChatPalette: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPalette.vue")['default']>
 export const LazyUChatPrompt: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPrompt.vue")['default']>
 export const LazyUChatPromptSubmit: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatPromptSubmit.vue")['default']>
+export const LazyUChatReasoning: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatReasoning.vue")['default']>
+export const LazyUChatShimmer: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatShimmer.vue")['default']>
+export const LazyUChatTool: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/ChatTool.vue")['default']>
 export const LazyUCheckbox: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue")['default']>
 export const LazyUCheckboxGroup: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/CheckboxGroup.vue")['default']>
 export const LazyUChip: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Chip.vue")['default']>
@@ -311,6 +321,7 @@ export const LazyUScrollArea: LazyComponent<typeof import("../node_modules/@nuxt
 export const LazyUSelect: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Select.vue")['default']>
 export const LazyUSelectMenu: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue")['default']>
 export const LazyUSeparator: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Separator.vue")['default']>
+export const LazyUSidebar: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Sidebar.vue")['default']>
 export const LazyUSkeleton: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue")['default']>
 export const LazyUSlideover: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue")['default']>
 export const LazyUSlider: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/Slider.vue")['default']>
@@ -337,10 +348,9 @@ export const LazyNuxtLink: LazyComponent<typeof import("../node_modules/nuxt/dis
 export const LazyNuxtLoadingIndicator: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']>
 export const LazyNuxtTime: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']>
 export const LazyNuxtRouteAnnouncer: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
+export const LazyNuxtAnnouncer: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']>
 export const LazyNuxtImg: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
 export const LazyNuxtPicture: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-export const LazyIcon: LazyComponent<typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
-export const LazyColorScheme: LazyComponent<typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
 export const LazyNuxtPage: LazyComponent<typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']>
 export const LazyNoScript: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
 export const LazyLink: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']>
@@ -351,6 +361,8 @@ export const LazyStyle: LazyComponent<typeof import("../node_modules/nuxt/dist/h
 export const LazyHead: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Head']>
 export const LazyHtml: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']>
 export const LazyBody: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']>
+export const LazyIcon: LazyComponent<typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
+export const LazyColorScheme: LazyComponent<typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
 export const LazyNuxtIsland: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
 
 export const componentNames: string[]

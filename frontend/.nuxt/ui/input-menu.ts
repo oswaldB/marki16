@@ -99,7 +99,7 @@ export default {
         "itemTrailingIcon": "size-4",
         "tagsItem": "text-[10px]/3",
         "tagsItemDeleteIcon": "size-3",
-        "empty": "p-1 text-xs"
+        "empty": "p-2 text-xs"
       },
       "sm": {
         "base": "px-2.5 py-1.5 text-sm/4 gap-1.5",
@@ -117,7 +117,7 @@ export default {
         "itemTrailingIcon": "size-4",
         "tagsItem": "text-[10px]/3",
         "tagsItemDeleteIcon": "size-3",
-        "empty": "p-1.5 text-xs"
+        "empty": "p-2.5 text-xs"
       },
       "md": {
         "base": "px-2.5 py-1.5 text-base/5 gap-1.5",
@@ -135,7 +135,7 @@ export default {
         "itemTrailingIcon": "size-5",
         "tagsItem": "text-xs",
         "tagsItemDeleteIcon": "size-3.5",
-        "empty": "p-1.5 text-sm"
+        "empty": "p-2.5 text-sm"
       },
       "lg": {
         "base": "px-3 py-2 text-base/5 gap-2",
@@ -153,7 +153,7 @@ export default {
         "itemTrailingIcon": "size-5",
         "tagsItem": "text-xs",
         "tagsItemDeleteIcon": "size-3.5",
-        "empty": "p-2 text-sm"
+        "empty": "p-3 text-sm"
       },
       "xl": {
         "base": "px-3 py-2 text-base gap-2",
@@ -171,7 +171,7 @@ export default {
         "itemTrailingIcon": "size-6",
         "tagsItem": "text-sm",
         "tagsItemDeleteIcon": "size-4",
-        "empty": "p-2 text-base"
+        "empty": "p-3 text-base"
       }
     },
     "variant": {

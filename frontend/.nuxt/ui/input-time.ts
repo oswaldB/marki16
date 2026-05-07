@@ -39,7 +39,8 @@ export default {
     "segment": [
       "rounded text-center outline-hidden data-placeholder:text-dimmed data-[segment=literal]:text-muted data-invalid:text-error data-disabled:cursor-not-allowed data-disabled:opacity-75",
       "transition-colors"
-    ]
+    ],
+    "separatorIcon": "shrink-0 size-4 text-muted"
   },
   "variants": {
     "fieldGroup": {

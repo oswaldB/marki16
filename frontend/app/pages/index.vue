@@ -25,12 +25,12 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Impayés actifs</p>
-                <UTooltip text="Nombre d'impayés dont le statut n'est pas 'payé' (impayé + en cours)">
+                <UTooltip text="Nombre d'impayés dont l'échéance est dépassée et le statut n'est pas 'payé'">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.impayes_actifs }}</p>
-              <p class="text-xs text-gray-400">en cours + impayé</p>
+              <p class="text-xs text-gray-400">échéance dépassée, non payé</p>
             </div>
           </div>
         </UCard>
@@ -43,7 +43,7 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Montant total impayé</p>
-                <UTooltip text="Somme du champ 'reste à payer' pour tous les impayés non payés">
+                <UTooltip text="Somme du champ 'reste à payer' pour les impayés échus non payés">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -79,12 +79,12 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Taux de recouvrement</p>
-                <UTooltip text="Pourcentage d'impayés avec statut 'payé' par rapport au total (12 derniers mois)">
+                <UTooltip text="Pourcentage d'impayés échus avec statut 'payé' par rapport au total échu (12 derniers mois)">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.taux_recouvrement }}%</p>
-              <p class="text-xs text-gray-400">des dossiers payés (12 mois)</p>
+              <p class="text-xs text-gray-400">des échus payés (12 mois)</p>
             </div>
           </div>
         </UCard>
@@ -102,7 +102,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Moins de 7 jours</p>
-                <UTooltip text="Factures impayées émises il y a moins de 7 jours">
+                <UTooltip text="Factures impayées dont l'échéance est dans moins de 7 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -120,7 +120,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">8 à 30 jours</p>
-                <UTooltip text="Factures impayées émises entre 8 et 30 jours">
+                <UTooltip text="Factures impayées dont l'échéance est entre 8 et 30 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -138,7 +138,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">31 à 60 jours</p>
-                <UTooltip text="Factures impayées émises entre 31 et 60 jours">
+                <UTooltip text="Factures impayées dont l'échéance est entre 31 et 60 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -156,7 +156,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Plus de 120 jours</p>
-                <UTooltip text="Factures impayées émises il y a plus de 120 jours">
+                <UTooltip text="Factures impayées dont l'échéance est dépassée de plus de 120 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -176,7 +176,7 @@
           <template #header>
             <div class="flex items-center gap-1.5">
               <p class="text-sm font-semibold text-gray-700">Montant facturé vs reste à payer par mois (12 mois + avant)</p>
-              <UTooltip text="Montant total TTC (bleu + orange) et reste à payer (orange) pour les factures dont la date de pièce est dans le mois">
+              <UTooltip text="Montant total TTC (bleu + orange) et reste à payer (orange) pour les factures dont la date d'échéance est dans le mois">
                 <UIcon name="i-heroicons-information-circle" class="size-4 text-gray-400" />
               </UTooltip>
             </div>
@@ -358,10 +358,22 @@ async function chargerKpi() {
   const twelveMonthsAgo = new Date()
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
 
-  const [actifs, total_count, paye_count, relances, contacts_sans_email] = await Promise.all([
-    new $parse.Query('Impaye').equalTo('facture_soldee', false).greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
-    new $parse.Query('Impaye').greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
-    new $parse.Query('Impaye').equalTo('facture_soldee', true).greaterThanOrEqualTo('date_piece', twelveMonthsAgo).count(),
+  // Filtre : date_echeance < today (échéance dépassée)
+  const qEchus = new $parse.Query('Impaye')
+    .lessThan('date_echeance', today)
+
+  const qEchusActifs = new $parse.Query('Impaye')
+    .lessThan('date_echeance', today)
+    .equalTo('facture_soldee', false)
+
+  const qEchusPayes = new $parse.Query('Impaye')
+    .lessThan('date_echeance', today)
+    .equalTo('facture_soldee', true)
+
+  const [actifs, total_echus, paye_count, relances, contacts_sans_email] = await Promise.all([
+    qEchusActifs.count(),
+    qEchus.count(),
+    qEchusPayes.count(),
     new $parse.Query('Relance')
       .equalTo('statut', 'pending')
       .lessThanOrEqualTo('dateEnvoi', today)
@@ -371,10 +383,10 @@ async function chargerKpi() {
       .count(),
   ])
 
-  // Montant total impayé (somme des actifs non soldés des 12 derniers mois, chargés en batch)
+  // Montant total impayé (somme des échus non soldés)
   const qMontant = new $parse.Query('Impaye')
+  qMontant.lessThan('date_echeance', today)
   qMontant.equalTo('facture_soldee', false)
-  qMontant.greaterThanOrEqualTo('date_piece', twelveMonthsAgo)
   qMontant.select('reste_a_payer')
   qMontant.limit(1000)
   const impayes_actifs = await qMontant.find()
@@ -384,7 +396,7 @@ async function chargerKpi() {
     impayes_actifs:    actifs,
     montant_total:     montant,
     relances_jour:     relances,
-    taux_recouvrement: total_count > 0 ? Math.round((paye_count / total_count) * 100) : 0,
+    taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
     contacts_sans_email: contacts_sans_email,
   }
 }
@@ -400,23 +412,23 @@ async function chargerAging() {
 
   const q = new $parse.Query('Impaye')
   q.equalTo('facture_soldee', false)
-  q.select('date_piece', 'reste_a_payer')
+  q.select('date_echeance', 'reste_a_payer')
   q.limit(2000)
   const items = await q.find()
 
   const bucket = { j7: { count: 0, montant: 0 }, j30: { count: 0, montant: 0 }, j60: { count: 0, montant: 0 }, j120: { count: 0, montant: 0 } }
 
   for (const item of items) {
-    const dp  = item.get('date_piece')
+    const de  = item.get('date_echeance')
     const rap = item.get('reste_a_payer') || 0
-    if (!dp) continue
-    if (dp >= cutoff7) {
+    if (!de) continue
+    if (de >= cutoff7) {
       bucket.j7.count++;   bucket.j7.montant   += rap
-    } else if (dp >= cutoff30) {
+    } else if (de >= cutoff30) {
       bucket.j30.count++;  bucket.j30.montant  += rap
-    } else if (dp >= cutoff60) {
+    } else if (de >= cutoff60) {
       bucket.j60.count++;  bucket.j60.montant  += rap
-    } else if (dp < cutoff120) {
+    } else if (de < cutoff120) {
       bucket.j120.count++; bucket.j120.montant += rap
     }
   }
@@ -441,9 +453,9 @@ async function chargerMontantsMois() {
     debut12Mois.setHours(0, 0, 0, 0)
 
     const qAvant = new $parse.Query('Impaye')
-    qAvant.lessThan('date_piece', debut12Mois)  // Avant le début des 12 derniers mois
+    qAvant.lessThan('date_echeance', debut12Mois)  // Avant le début des 12 derniers mois
     qAvant.equalTo('facture_soldee', false)  // Seulement les factures non soldées
-    qAvant.select('total_ttc', 'reste_a_payer', 'date_piece')
+    qAvant.select('total_ttc', 'reste_a_payer', 'date_echeance')
     qAvant.limit(1000)
     const itemsAvant = await qAvant.find()
     
@@ -468,8 +480,8 @@ async function chargerMontantsMois() {
     fin.setHours(23, 59, 59, 999)
 
     const q = new $parse.Query('Impaye')
-    q.greaterThanOrEqualTo('date_piece', debut)
-    q.lessThanOrEqualTo('date_piece', fin)
+    q.greaterThanOrEqualTo('date_echeance', debut)
+    q.lessThanOrEqualTo('date_echeance', fin)
     q.select('total_ttc', 'reste_a_payer', 'facture_soldee')
     q.limit(500)
     const items = await q.find()

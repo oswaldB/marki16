@@ -31,6 +31,7 @@ interface _GlobalComponents {
   SequenceRulesSection: typeof import("../../app/components/SequenceRulesSection.vue")['default']
   SequenceSuiviCard: typeof import("../../app/components/SequenceSuiviCard.vue")['default']
   SequenceTestSlideover: typeof import("../../app/components/SequenceTestSlideover.vue")['default']
+  SlideoverRegenererRelances: typeof import("../../app/components/SlideoverRegenererRelances.vue")['default']
   SmtpDrawer: typeof import("../../app/components/SmtpDrawer.vue")['default']
   SyncButton: typeof import("../../app/components/SyncButton.vue")['default']
   ToastuiEditor: typeof import("../../app/components/ToastuiEditor.vue")['default']
@@ -63,6 +64,9 @@ interface _GlobalComponents {
   UChatPalette: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPalette.vue")['default']
   UChatPrompt: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPrompt.vue")['default']
   UChatPromptSubmit: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPromptSubmit.vue")['default']
+  UChatReasoning: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatReasoning.vue")['default']
+  UChatShimmer: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatShimmer.vue")['default']
+  UChatTool: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatTool.vue")['default']
   UCheckbox: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue")['default']
   UCheckboxGroup: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/CheckboxGroup.vue")['default']
   UChip: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Chip.vue")['default']
@@ -142,6 +146,7 @@ interface _GlobalComponents {
   USelect: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Select.vue")['default']
   USelectMenu: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue")['default']
   USeparator: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Separator.vue")['default']
+  USidebar: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Sidebar.vue")['default']
   USkeleton: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue")['default']
   USlideover: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue")['default']
   USlider: typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Slider.vue")['default']
@@ -168,10 +173,9 @@ interface _GlobalComponents {
   NuxtLoadingIndicator: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']
   NuxtTime: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']
   NuxtRouteAnnouncer: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
+  NuxtAnnouncer: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']
   NuxtImg: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
   NuxtPicture: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-  Icon: typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
-  ColorScheme: typeof import("../../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
   NuxtPage: typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']
   NoScript: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']
   Link: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -182,6 +186,8 @@ interface _GlobalComponents {
   Head: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Head']
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
+  Icon: typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
+  ColorScheme: typeof import("../../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
   LazyContactDeleteModal: LazyComponent<typeof import("../../app/components/ContactDeleteModal.vue")['default']>
   LazyContactsDrawer: LazyComponent<typeof import("../../app/components/ContactsDrawer.vue")['default']>
@@ -200,6 +206,7 @@ interface _GlobalComponents {
   LazySequenceRulesSection: LazyComponent<typeof import("../../app/components/SequenceRulesSection.vue")['default']>
   LazySequenceSuiviCard: LazyComponent<typeof import("../../app/components/SequenceSuiviCard.vue")['default']>
   LazySequenceTestSlideover: LazyComponent<typeof import("../../app/components/SequenceTestSlideover.vue")['default']>
+  LazySlideoverRegenererRelances: LazyComponent<typeof import("../../app/components/SlideoverRegenererRelances.vue")['default']>
   LazySmtpDrawer: LazyComponent<typeof import("../../app/components/SmtpDrawer.vue")['default']>
   LazySyncButton: LazyComponent<typeof import("../../app/components/SyncButton.vue")['default']>
   LazyToastuiEditor: LazyComponent<typeof import("../../app/components/ToastuiEditor.vue")['default']>
@@ -232,6 +239,9 @@ interface _GlobalComponents {
   LazyUChatPalette: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPalette.vue")['default']>
   LazyUChatPrompt: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPrompt.vue")['default']>
   LazyUChatPromptSubmit: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatPromptSubmit.vue")['default']>
+  LazyUChatReasoning: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatReasoning.vue")['default']>
+  LazyUChatShimmer: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatShimmer.vue")['default']>
+  LazyUChatTool: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/ChatTool.vue")['default']>
   LazyUCheckbox: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue")['default']>
   LazyUCheckboxGroup: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/CheckboxGroup.vue")['default']>
   LazyUChip: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Chip.vue")['default']>
@@ -311,6 +321,7 @@ interface _GlobalComponents {
   LazyUSelect: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Select.vue")['default']>
   LazyUSelectMenu: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue")['default']>
   LazyUSeparator: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Separator.vue")['default']>
+  LazyUSidebar: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Sidebar.vue")['default']>
   LazyUSkeleton: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue")['default']>
   LazyUSlideover: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue")['default']>
   LazyUSlider: LazyComponent<typeof import("../../node_modules/@nuxt/ui/dist/runtime/components/Slider.vue")['default']>
@@ -337,10 +348,9 @@ interface _GlobalComponents {
   LazyNuxtLoadingIndicator: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']>
   LazyNuxtTime: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']>
   LazyNuxtRouteAnnouncer: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
+  LazyNuxtAnnouncer: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']>
   LazyNuxtImg: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
   LazyNuxtPicture: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-  LazyIcon: LazyComponent<typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
-  LazyColorScheme: LazyComponent<typeof import("../../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
   LazyNuxtPage: LazyComponent<typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']>
   LazyNoScript: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
   LazyLink: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']>
@@ -351,6 +361,8 @@ interface _GlobalComponents {
   LazyHead: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Head']>
   LazyHtml: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']>
   LazyBody: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']>
+  LazyIcon: LazyComponent<typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
+  LazyColorScheme: LazyComponent<typeof import("../../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
   LazyNuxtIsland: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
 }
 

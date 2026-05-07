@@ -64,7 +64,9 @@ export function useContactsStoreComposable() {
       telephone: contact.get('telephone') || '—',
       source: contact.get('source') || 'inconnu',
       nb_impayes: contact.get('nb_impayes') || 0,
-      entreprise: contact.get('entreprise')
+      entreprise: contact.get('entreprise'),
+      isBlacklisted: contact.get('isBlacklisted') || false,
+      blacklistedAt: contact.get('blacklistedAt') || null
     }
   }
   

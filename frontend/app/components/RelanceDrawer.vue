@@ -127,7 +127,7 @@ async function chargerLiensPaiement() {
 }
 
 function insererVariable(varName) {
-  editorRef.value?.getInstance()?.insertText(`[[${varName}]]`)
+  editorRef.value?.getInstance()?.insertText(`&lt;%= ${varName} %&gt;`)
 }
 
 function insererLienPaiement(lien) {

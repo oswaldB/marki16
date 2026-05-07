@@ -3,40 +3,58 @@ export const SCENARIO_FORMATS = ['single', 'multiple', 'both', 'broker']
 
 export const DOCUMENTATION = {
   variables: {
-    title: 'Variables Disponibles',
-    description: 'Utilisez ces variables dans vos templates d\'emails. Elles seront automatiquement remplacées par les données réelles.',
+    title: 'Variables Disponibles (Syntaxe EJS)',
+    description: 'Utilisez ces variables dans vos templates d\'emails avec la syntaxe EJS. Toutes les variables sont accessibles directement.',
     categories: [
       {
-        name: 'Format Simple',
-        description: 'Pour un seul impayé (format single/both)',
-        example: '[[]nfacture[]], [[]montant_total[]], [[]date_piece[]]'
+        name: 'Variables Simples',
+        description: 'Variables de base pour tous les scénarios',
+        example: '[[nfacture]], [[montant_total]], [[payeur_nom]]'
       },
       {
-        name: 'Format Multiple',
-        description: 'Pour plusieurs impayés (format multiple)',
-        example: '[[]total_impayes[]], [[]nfactures_liste[]]'
+        name: 'Formatage des dates',
+        description: 'Utilisez la syntaxe [[var, date("format")]] pour formater les dates. Ex: [[date_echeance, date("DD/MM/YYYY")]]',
+        example: '[[date_piece, date("DD/MM/YYYY")]] affiche 15/01/2026'
       },
       {
-        name: 'Formatage de Dates',
-        description: 'Formatez les dates directement dans le template',
-        example: '[[]date_piece | DD/MM/YYYY[]] → 15/01/2026'
+        name: 'Boucles (pour plusieurs impayés)',
+        description: 'Utilisez [[loop var]] ... [[endloop]] pour parcourir une collection',
+        example: '[[loop impayes]] [[impaye.nfacture]] [[endloop]]'
       }
     ]
   },
   promptsAI: {
-    title: 'Prompts AI pour Génération d\'Emails',
+    title: 'Exemples de Templates EJS',
     examples: [
       {
-        name: 'Relance Amicale',
-        prompt: 'Rédige un email de relance amical pour un impayé de [[]montant_total[]] € pour la facture [[]nfacture[]]. Le client est [[]payeur_nom[]], un [[]payeur_type[]]. La date d\'échéance était le [[]date_echeance | DD/MM/YYYY[]].'
+        name: 'Email Simple avec Variable',
+        prompt: 'Bonjour [[payeur_nom]], votre facture [[nfacture]] de [[montant_total]] est en retard.'
+      },
+       {
+         name: 'Email avec Date Formatée',
+         prompt: 'Facture [[nfacture]] émise le [[date_piece, date("DD/MM/YYYY")]]. Échéance: [[date_echeance, date("DD/MM/YYYY")]].'
+       },
+      {
+        name: 'Email avec Boucle pour Plusieurs Impayés',
+        prompt: `<table>
+  <tr>
+    <th>Facture</th>
+    <th>Montant</th>
+    <th>Échéance</th>
+  </tr>
+  [[loop impayes]]
+  <tr>
+    <td>[[nfacture]]</td>
+    <td>[[montant_total]]</td>
+    <td>[[date_echeance, date()]]</td>
+  </tr>
+  [[endloop]]
+</table>
+Total: [[total_impayes]]`
       },
       {
-        name: 'Relance Formelle',
-        prompt: 'Rédige un email de relance formel pour un impayé. Le montant de [[]montant_total[]] € n\'a pas été réglé pour la facture [[]nfacture[]]. Date d\'échéance: [[]date_echeance | DD/MM/YYYY[]]. Adresse du bien: [[]adresse_bien[]], [[]ville[]].'
-      },
-      {
-        name: 'Mise en Demeure',
-        prompt: 'Rédige une mise en demeure pour [[]montant_total[]] € d\'impayés. Factures concernées: [[]nfactures_liste[]]. Date limite de règlement: 8 jours après réception. Coordonnées du payeur: [[]payeur_nom[]], [[]payeur_email[]], [[]payeur_telephone[]].'
+        name: 'Condition avec Montant Élevé',
+        prompt: '[[ if (total_impayes > 1000) { +]]⚠️ Votre solde de [[total_impayes]] dépasse 1000€.[[ } else { +]]Votre solde est de [[total_impayes]].[[ } +]]'
       }
     ]
   }
@@ -55,7 +73,7 @@ export const VARIABLES = [
   { groupe: 'APPORTEUR',   vars: ['apporteur_nom', 'apporteur_email', 'apporteur_telephone', 'apporteur_societe'] },
   { groupe: 'DOSSIER',  vars: ['numero_dossier', 'employe_intervention', 'date_debut_mission'] },
   { groupe: 'MULTIPLE', vars: ['total_impayes', 'nfactures_liste', 'ndossier_liste'] },
-  { groupe: 'FORMATAGE', vars: ['Format de date: [[]date | DD/MM/YYYY[]]', 'Format de date: [[]date | YYYY-MM-DD[]]'] },
+  { groupe: 'FORMATAGE', vars: ['Pour formater une date : [[date_echeance, date("DD/MM/YYYY")]] - Remplacez le format par celui souhaité (ex: "YYYY-MM-DD", "MM/DD/YYYY", etc.)'] },
 ]
 
 export const EXEMPLE_VARS = {
@@ -287,9 +305,10 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
         }
         return {
           _key: `email_${i}_${seq.id}`,
+          email_index: i + 1,
           delai: e.delai || 0,
           smtp: e.smtp || '',
-          to: e.to || '[[]payeur_email[]]',
+          to: e.to || '[[payeur_email]]',
           cc: e.cc || '',
           activeScenario: 'single',
           scenarios
@@ -364,9 +383,10 @@ export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerL
   function ajouterEmail() {
     emails.value.push({
       _key: `email_new_${Date.now()}`,
+      email_index: emails.value.length + 1,
       delai: 0,
       smtp: '',
-      to: '[[]payeur_email[]]',
+      to: '[[payeur_email]]',
       cc: '',
       activeScenario: 'single',
       scenarios: SCENARIO_FORMATS.map(format => ({ format, active: true, smtp: '', cc: '', objet: '', corps: '' }))
