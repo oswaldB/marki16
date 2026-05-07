@@ -119,6 +119,11 @@
             <span v-else class="text-gray-400 italic">—</span>
           </template>
 
+          <template #prenom-cell="{ row }">
+            <span v-if="row.original.prenom" class="text-gray-700">{{ row.original.prenom }}</span>
+            <span v-else class="text-gray-400 italic">—</span>
+          </template>
+
           <template #actions-cell="{ row }">
             <UButton
               color="primary"
@@ -194,12 +199,17 @@
               />
               <UIcon v-else name="i-heroicons-user-circle" class="size-4 text-gray-400 flex-shrink-0" />
               <span :class="row.original.isParticulier ? 'font-semibold text-gray-900' : 'text-gray-700'">
-                {{ row.original.nom }}
+                {{ row.original.nom }} {{ row.original.isParticulier ? '' : row.original.prenom }}
               </span>
               <UBadge v-if="row.original.isParticulier" color="neutral" variant="subtle">
                 {{ row.original.subRows.length }} membre(s)
               </UBadge>
             </div>
+          </template>
+
+          <template #prenom-cell="{ row }">
+            <span v-if="row.original.prenom" class="text-gray-700">{{ row.original.prenom }}</span>
+            <span v-else class="text-gray-400 italic">—</span>
           </template>
 
           <template #email-cell="{ row }">
@@ -300,6 +310,7 @@ const {
 // Colonnes avec sort défini ici (contexte setup garanti)
 const colonnes = [
   { accessorKey: 'nom',        header: sortHeader('Nom') },
+  { accessorKey: 'prenom',     header: sortHeader('Prénom') },
   { accessorKey: 'email',      header: 'Email' },
   { accessorKey: 'telephone',  header: 'Téléphone' },
   { accessorKey: 'source',     header: 'Source' },

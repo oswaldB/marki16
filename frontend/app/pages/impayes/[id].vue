@@ -236,7 +236,7 @@
               <!-- Indicateur email_relance ou relanceContact -->
               <div v-if="impaye.email_relance || impaye.relanceContact" class="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
                 <span class="text-gray-400">Email relances :</span>
-                <span class="font-medium text-gray-700">{{ impaye.email_relance?.nom || impaye.relanceContact?.nom }}</span>
+                <span class="font-medium text-gray-700">{{ impaye.email_relance?.nom || '' }} {{ impaye.email_relance?.prenom || impaye.relanceContact?.prenom || '' }}</span>
                 <span v-if="impaye.email_relance?.email || impaye.relanceContact?.email" class="text-gray-500">· {{ impaye.email_relance?.email || impaye.relanceContact?.email }}</span>
               </div>
               <div class="flex items-center gap-2">

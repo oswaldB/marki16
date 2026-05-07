@@ -35,7 +35,7 @@
         
         <!-- Nom -->
         <span :class="row.original.isEntite ? 'font-semibold text-gray-900' : 'text-gray-700'">
-          {{ row.original.nom }}
+          {{ row.original.nom }} {{ row.original.isEntite ? '' : row.original.prenom }}
         </span>
         
         <!-- Badge avec nombre d'employés pour les entreprises -->
@@ -66,6 +66,11 @@
       <span class="text-gray-700">
         {{ row.original.telephone }}
       </span>
+    </template>
+
+    <template #prenom-cell="{ row }">
+      <span v-if="row.original.prenom" class="text-gray-700">{{ row.original.prenom }}</span>
+      <span v-else class="text-gray-400 italic">—</span>
     </template>
 
     <template #actions-cell="{ row }">

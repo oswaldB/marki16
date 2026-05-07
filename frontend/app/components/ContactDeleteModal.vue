@@ -6,7 +6,7 @@
   >
     <template #body>
       <div class="space-y-3">
-        <p>Supprimer <strong>{{ contact?.nom }}</strong> ?</p>
+        <p>Supprimer <strong>{{ contact?.nom }} {{ contact?.prenom }}</strong> ?</p>
         <UAlert
           v-if="impayesCount > 0"
           color="orange"

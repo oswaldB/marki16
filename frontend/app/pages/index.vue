@@ -261,7 +261,7 @@
               class="flex items-center justify-between py-2.5"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ contact.nom }}</p>
+                <p class="text-sm font-medium text-gray-900 truncate">{{ contact.nom }} {{ contact.prenom }}</p>
                 <p class="text-xs text-gray-500">{{ contact.telephone || '—' }}</p>
               </div>
             </div>

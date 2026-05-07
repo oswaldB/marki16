@@ -240,9 +240,10 @@ export const useBlacklistStore = defineStore('blacklist', {
         const searchLower = searchQuery.toLowerCase()
         data = data.filter(contact => {
           const nom = (contact.get('nom') || '').toLowerCase()
+          const prenom = (contact.get('prenom') || '').toLowerCase()
           const email = (contact.get('email') || '').toLowerCase()
           const telephone = (contact.get('telephone') || '').toLowerCase()
-          return nom.includes(searchLower) || email.includes(searchLower) || telephone.includes(searchLower)
+          return nom.includes(searchLower) || prenom.includes(searchLower) || email.includes(searchLower) || telephone.includes(searchLower)
         })
       }
       

@@ -184,7 +184,7 @@
                     @change="() => toggleSelection(contact.id)"
                   />
                   <div class="flex-1 min-w-0">
-                    <p class="font-medium text-gray-900">{{ contact.nom }}</p>
+                    <p class="font-medium text-gray-900">{{ contact.nom }} {{ contact.prenom }}</p>
                     <p class="text-sm text-gray-500">{{ contact.email || contact.telephone || '—' }}</p>
                   </div>
                   <UBadge v-if="contact.isBlacklisted" color="red" variant="subtle" size="xs">

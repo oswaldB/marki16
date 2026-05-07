@@ -2,12 +2,12 @@
   <USlideover
     v-model:open="localOpen"
     side="right"
-    :title="contact?.nom || 'Détails du contact'"
+    :title="`${contact?.nom || ''} ${contact?.prenom || ''}`.trim() || 'Détails du contact'"
   >
     <template v-if="contact" #header>
       <div class="flex items-center justify-between w-full">
         <div class="flex items-center gap-2">
-          <p class="font-semibold">{{ contact.nom }}</p>
+          <p class="font-semibold">{{ contact.nom }} {{ contact.prenom }}</p>
           <UBadge
             :color="contact.source === 'db_externe' ? 'blue' : 'violet'"
             variant="subtle"
@@ -41,6 +41,10 @@
           <div>
             <label class="text-gray-500 mb-1 block">Nom</label>
             <UInput v-model="localForm.nom" :disabled="contact.source === 'db_externe'" />
+          </div>
+          <div>
+            <label class="text-gray-500 mb-1 block">Prénom</label>
+            <UInput v-model="localForm.prenom" :disabled="contact.source === 'db_externe'" />
           </div>
           <div>
             <label class="text-gray-500 mb-1 block">Type</label>
@@ -153,12 +157,13 @@ const typeOptionsForm = [
 ]
 
 // Copie locale initialisée depuis le contact — évite la mutation directe de prop
-const localForm = ref({ nom: '', email: '', telephone: '', type: '' })
+const localForm = ref({ nom: '', prenom: '', email: '', telephone: '', type: '' })
 
 watch(() => props.contact, (c) => {
   if (!c) return
   localForm.value = {
     nom:       c._parse?.get('nom')       || '',
+    prenom:    c._parse?.get('prenom')    || '',
     email:     c._parse?.get('email')     || '',
     telephone: c._parse?.get('telephone') || '',
     type:      c._parse?.get('type')      || '',

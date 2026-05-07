@@ -104,10 +104,11 @@ export function useBlacklist() {
       if (!isBlacklisted) return false
       
       const nom = (contact.get('nom') || '').toLowerCase()
+      const prenom = (contact.get('prenom') || '').toLowerCase()
       const email = (contact.get('email') || '').toLowerCase()
       const telephone = (contact.get('telephone') || '').toLowerCase()
       
-      return nom.includes(searchLower) || email.includes(searchLower) || telephone.includes(searchLower)
+      return nom.includes(searchLower) || prenom.includes(searchLower) || email.includes(searchLower) || telephone.includes(searchLower)
     })
   }
 
@@ -240,6 +241,7 @@ export function useBlacklist() {
     return {
       id: contact.id,
       nom: contact.get('nom') || '—',
+      prenom: contact.get('prenom') || null,
       email: contact.get('email') || '',
       telephone: contact.get('telephone') || '—',
       source: contact.get('source') || 'inconnu',

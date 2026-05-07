@@ -60,6 +60,7 @@ export function useContactsStoreComposable() {
     return {
       id: contact.id,
       nom: contact.get('nom') || '—',
+      prenom: contact.get('prenom') || null,
       email: contact.get('email') || '',
       telephone: contact.get('telephone') || '—',
       source: contact.get('source') || 'inconnu',
@@ -73,6 +74,7 @@ export function useContactsStoreComposable() {
   // Colonnes de base — les headers triables sont définis dans la page via sortHeader()
   const colonnes = [
     { accessorKey: 'nom',        header: 'Nom' },
+    { accessorKey: 'prenom',     header: 'Prénom' },
     { accessorKey: 'email',      header: 'Email' },
     { accessorKey: 'telephone',  header: 'Téléphone' },
     { accessorKey: 'source',     header: 'Source' },
@@ -123,7 +125,8 @@ export function useContactsEntitesComposable() {
         data = data.filter(group => 
           group.nom.toLowerCase().includes(searchLower) ||
           group.contacts.some(c => 
-            (c.get('nom') || '').toLowerCase().includes(searchLower)
+            (c.get('nom') || '').toLowerCase().includes(searchLower) ||
+            (c.get('prenom') || '').toLowerCase().includes(searchLower)
           )
         )
       }
@@ -142,6 +145,7 @@ export function useContactsEntitesComposable() {
             subRows: group.employes.map(employe => ({
               id: employe.id,
               nom: employe.get('nom') || '—',
+              prenom: employe.get('prenom') || null,
               email: employe.get('email') || '',
               telephone: employe.get('telephone') || '—',
               isEntite: false
@@ -159,7 +163,8 @@ export function useContactsEntitesComposable() {
       data = data.filter(group => 
         group.nom.toLowerCase().includes(searchLower) ||
         group.contacts.some(c => 
-          (c.get('nom') || '').toLowerCase().includes(searchLower)
+          (c.get('nom') || '').toLowerCase().includes(searchLower) ||
+          (c.get('prenom') || '').toLowerCase().includes(searchLower)
         )
       )
     }
@@ -177,6 +182,7 @@ export function useContactsEntitesComposable() {
           subRows: group.employes.map(employe => ({
             id: employe.id,
             nom: employe.get('nom') || '—',
+            prenom: employe.get('prenom') || null,
             email: employe.get('email') || '',
             telephone: employe.get('telephone') || '—',
             isEntite: false
@@ -202,6 +208,7 @@ export function useContactsEntitesComposable() {
   
   const colonnesEntites = [
     { accessorKey: 'nom', header: 'Nom' },
+    { accessorKey: 'prenom', header: 'Prénom' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'telephone', header: 'Téléphone' }
   ]
@@ -233,19 +240,24 @@ export function useContactsParticuliersComposable() {
       const searchLower = search.value.toLowerCase()
       data = data.filter(group =>
         group.nom.toLowerCase().includes(searchLower) ||
-        group.membres.some(m => (m.get('nom') || '').toLowerCase().includes(searchLower))
+        group.membres.some(m => 
+          (m.get('nom') || '').toLowerCase().includes(searchLower) ||
+          (m.get('prenom') || '').toLowerCase().includes(searchLower)
+        )
       )
     }
 
     return data.map(group => ({
       id: `particulier-${group.chef.id}`,
       nom: group.nom,
+      prenom: group.chef.get('prenom') || null,
       email: group.chef.get('email') || '',
       telephone: group.chef.get('telephone') || '—',
       isParticulier: true,
       subRows: group.membres.map(m => ({
         id: m.id,
         nom: m.get('nom') || '—',
+        prenom: m.get('prenom') || null,
         email: m.get('email') || '',
         telephone: m.get('telephone') || '—',
         isParticulier: false
@@ -268,6 +280,7 @@ export function useContactsParticuliersComposable() {
   
   const colonnesParticuliers = [
     { accessorKey: 'nom', header: 'Nom' },
+    { accessorKey: 'prenom', header: 'Prénom' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'telephone', header: 'Téléphone' }
   ]
