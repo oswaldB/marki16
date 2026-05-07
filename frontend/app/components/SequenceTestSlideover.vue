@@ -228,17 +228,20 @@ function selectPayeur(payeur) {
 const emailsToSend = computed(() => {
   return props.emails
     .filter(email => {
-      // Filtrer les emails actifs
-      if (!email || !email.activeScenario) return false;
+      // Filtrer les emails invalides
+      if (!email) return false;
       
       // Vérifier que scenarios existe et n'est pas vide
       if (!email.scenarios || !Array.isArray(email.scenarios)) return false;
       
-      const scenario = email.scenarios.find(s => s && s.format === email.activeScenario);
+      // Utiliser activeScenario ou 'single' par défaut
+      const scenarioActif = email.activeScenario || 'single';
+      const scenario = email.scenarios.find(s => s && s.format === scenarioActif);
       return scenario && scenario.active !== false;
     })
     .map(email => {
-      const scenario = email.scenarios.find(s => s && s.format === email.activeScenario);
+      const scenarioActif = email.activeScenario || 'single';
+      const scenario = email.scenarios.find(s => s && s.format === scenarioActif);
       return {
         delai: email.delai || 0,
         objet: scenario?.objet || email.objet || 'Sans objet',
