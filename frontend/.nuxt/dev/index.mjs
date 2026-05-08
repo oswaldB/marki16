@@ -970,7 +970,7 @@ const _inlineRuntimeConfig = {
     "parseAppId": "adti-marki",
     "parseServerURL": "https://adti.api.markidiags.com:8445/parse",
     "parseJavaScriptKey": "c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda",
-    "apiBaseUrl": ""
+    "apiBaseUrl": "https://adti.api.markidiags.com:8445"
   },
   "icon": {
     "serverKnownCssClasses": []

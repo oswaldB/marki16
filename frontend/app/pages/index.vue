@@ -25,7 +25,7 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Impayés actifs</p>
-                <UTooltip text="Nombre d'impayés dont l'échéance est dépassée et le statut n'est pas 'payé'">
+                <UTooltip text="Nombre de factures uniques (nfacture) avec un reste à payer > 0 et échéance dépassée">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -43,7 +43,7 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Montant total impayé</p>
-                <UTooltip text="Somme du champ 'reste à payer' pour les impayés échus non payés">
+                <UTooltip text="Somme du 'reste à payer' par facture unique (nfacture) avec reste > 0 et échéance dépassée">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -79,7 +79,7 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Taux de recouvrement</p>
-                <UTooltip text="Pourcentage d'impayés échus avec statut 'payé' par rapport au total échu (12 derniers mois)">
+                <UTooltip text="Pourcentage de factures uniques avec échéance dépassée et reste = 0 par rapport au total de factures uniques avec échéance dépassée">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -102,7 +102,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Moins de 7 jours</p>
-                <UTooltip text="Factures impayées dont l'échéance est dans moins de 7 jours">
+                <UTooltip text="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de moins de 7 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -120,7 +120,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">8 à 30 jours</p>
-                <UTooltip text="Factures impayées dont l'échéance est entre 8 et 30 jours">
+                <UTooltip text="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 8 à 30 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -138,7 +138,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">31 à 60 jours</p>
-                <UTooltip text="Factures impayées dont l'échéance est entre 31 et 60 jours">
+                <UTooltip text="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 31 à 60 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -156,7 +156,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Plus de 120 jours</p>
-                <UTooltip text="Factures impayées dont l'échéance est dépassée de plus de 120 jours">
+                <UTooltip text="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de plus de 120 jours">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -176,7 +176,7 @@
           <template #header>
             <div class="flex items-center gap-1.5">
               <p class="text-sm font-semibold text-gray-700">Montant facturé vs reste à payer par mois (12 mois + avant)</p>
-              <UTooltip text="Montant total TTC (bleu + orange) et reste à payer (orange) pour les factures dont la date d'échéance est dans le mois">
+              <UTooltip text="Montant payé (vert) = somme TTC des factures uniques avec reste=0. Reste à payer (orange) = somme des restes > 0. Ligne = nb factures impayées (reste > 0)">
                 <UIcon name="i-heroicons-information-circle" class="size-4 text-gray-400" />
               </UTooltip>
             </div>
@@ -361,48 +361,65 @@ async function chargerKpi() {
   // Filtre : date_echeance < today (échéance dépassée)
   const qEchus = new $parse.Query('Impaye')
     .lessThan('date_echeance', today)
-
-  const qEchusActifs = new $parse.Query('Impaye')
-    .lessThan('date_echeance', today)
-    .equalTo('facture_soldee', false)
+    .select('nfacture')
+    .limit(10000)
 
   const qEchusPayes = new $parse.Query('Impaye')
     .lessThan('date_echeance', today)
-    .equalTo('facture_soldee', true)
+    .equalTo('reste_a_payer', 0)
+    .select('nfacture')
+    .limit(10000)
 
-  const [actifs, total_echus, paye_count, relances, contacts_sans_email] = await Promise.all([
-    qEchusActifs.count(),
-    qEchus.count(),
-    qEchusPayes.count(),
+  // Compter nfacture uniques avec reste_a_payer > 0 et échéance dépassée
+  const qEchusActifs = new $parse.Query('Impaye')
+    .lessThan('date_echeance', today)
+    .greaterThan('reste_a_payer', 0)
+    .select('nfacture')
+    .limit(10000)
+  const actifsResult = await qEchusActifs.find()
+  const actifs = [...new Set(actifsResult.map(i => i.get('nfacture')))].length
+
+  const [echusResults, payeResults, relances] = await Promise.all([
+    qEchus.find(),
+    qEchusPayes.find(),
     new $parse.Query('Relance')
       .equalTo('statut', 'pending')
       .lessThanOrEqualTo('dateEnvoi', today)
       .count(),
-    new $parse.Query('Contact')
-      .doesNotExist('email')
-      .count(),
   ])
 
-  // Montant total impayé (somme des échus non soldés)
+  // Compter nfacture uniques
+  const total_echus = [...new Set(echusResults.map(i => i.get('nfacture')))].length
+  const paye_count = [...new Set(payeResults.map(i => i.get('nfacture')))].length
+
+  // Montant total impayé (somme des restes à payer > 0 avec échéance dépassée, par nfacture unique)
   const qMontant = new $parse.Query('Impaye')
   qMontant.lessThan('date_echeance', today)
-  qMontant.equalTo('facture_soldee', false)
-  qMontant.select('reste_a_payer')
-  qMontant.limit(1000)
+  qMontant.greaterThan('reste_a_payer', 0)
+  qMontant.select('nfacture', 'reste_a_payer')
+  qMontant.limit(10000)
   const impayes_actifs = await qMontant.find()
-  const montant = impayes_actifs.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
+  // Grouper par nfacture et prendre le premier reste_a_payer
+  const nfactureMap = new Map()
+  for (const item of impayes_actifs) {
+    const nfact = item.get('nfacture')
+    if (nfact && !nfactureMap.has(nfact)) {
+      nfactureMap.set(nfact, item.get('reste_a_payer') || 0)
+    }
+  }
+  const montant = [...nfactureMap.values()].reduce((s, v) => s + v, 0)
 
   kpi.value = {
     impayes_actifs:    actifs,
     montant_total:     montant,
     relances_jour:     relances,
     taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
-    contacts_sans_email: contacts_sans_email,
   }
 }
 
 async function chargerAging() {
   const now = new Date()
+  const today = endOfDay()
   const daysAgo = (n) => { const d = new Date(now); d.setDate(d.getDate() - n); d.setHours(23, 59, 59, 999); return d }
 
   const cutoff7   = daysAgo(7)
@@ -411,61 +428,100 @@ async function chargerAging() {
   const cutoff120 = daysAgo(120)
 
   const q = new $parse.Query('Impaye')
-  q.equalTo('facture_soldee', false)
-  q.select('date_echeance', 'reste_a_payer')
+  q.lessThan('date_echeance', today)
+  q.greaterThan('reste_a_payer', 0)
+  q.select('nfacture', 'date_echeance', 'reste_a_payer')
   q.limit(2000)
   const items = await q.find()
 
-  const bucket = { j7: { count: 0, montant: 0 }, j30: { count: 0, montant: 0 }, j60: { count: 0, montant: 0 }, j120: { count: 0, montant: 0 } }
+  // Maps pour chaque bucket : nfacture -> reste_a_payer (premier trouvé)
+  const j7Map = new Map()
+  const j30Map = new Map()
+  const j60Map = new Map()
+  const j120Map = new Map()
 
   for (const item of items) {
-    const de  = item.get('date_echeance')
+    const nfact = item.get('nfacture')
+    const de = item.get('date_echeance')
     const rap = item.get('reste_a_payer') || 0
-    if (!de) continue
+    if (!de || !nfact) continue
+
     if (de >= cutoff7) {
-      bucket.j7.count++;   bucket.j7.montant   += rap
+      if (!j7Map.has(nfact)) j7Map.set(nfact, rap)
     } else if (de >= cutoff30) {
-      bucket.j30.count++;  bucket.j30.montant  += rap
+      if (!j30Map.has(nfact)) j30Map.set(nfact, rap)
     } else if (de >= cutoff60) {
-      bucket.j60.count++;  bucket.j60.montant  += rap
+      if (!j60Map.has(nfact)) j60Map.set(nfact, rap)
     } else if (de < cutoff120) {
-      bucket.j120.count++; bucket.j120.montant += rap
+      if (!j120Map.has(nfact)) j120Map.set(nfact, rap)
     }
   }
 
-  aging.value = bucket
+  aging.value = {
+    j7:   { count: j7Map.size,   montant: [...j7Map.values()].reduce((s, v) => s + v, 0) },
+    j30:  { count: j30Map.size,  montant: [...j30Map.values()].reduce((s, v) => s + v, 0) },
+    j60:  { count: j60Map.size,  montant: [...j60Map.values()].reduce((s, v) => s + v, 0) },
+    j120: { count: j120Map.size, montant: [...j120Map.values()].reduce((s, v) => s + v, 0) },
+  }
 }
 
 async function chargerMontantsMois() {
   const montantsTTC   = []
+  const montantsPaye  = []
   const montantsReste = []
   const montantsCount = []
   
   // Calcul pour 12 mois + colonne "avant" + mois courant
   // i=13 → "Avant" (toutes les factures avant les 12 derniers mois)
   // i=12 → mois-12, ..., i=0 → mois courant
-  
-  // Calcul pour la colonne "Avant" (toutes les factures non soldées avant les 12 derniers mois)
-  if (13 >= 0) {
-    const debut12Mois = new Date()
-    debut12Mois.setDate(1)
-    debut12Mois.setMonth(debut12Mois.getMonth() - 12)
-    debut12Mois.setHours(0, 0, 0, 0)
 
-    const qAvant = new $parse.Query('Impaye')
-    qAvant.lessThan('date_echeance', debut12Mois)  // Avant le début des 12 derniers mois
-    qAvant.equalTo('facture_soldee', false)  // Seulement les factures non soldées
-    qAvant.select('total_ttc', 'reste_a_payer', 'date_echeance')
-    qAvant.limit(1000)
-    const itemsAvant = await qAvant.find()
-    
-    const ttcAvant   = itemsAvant.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
-    const resteAvant = itemsAvant.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
+  // Helper pour traiter une période
+  async function getMontantsForPeriode(debut, fin, pourAvant = false) {
+    const q = new $parse.Query('Impaye')
+    if (debut) {
+      q.greaterThanOrEqualTo('date_echeance', debut)
+    }
+    if (fin) {
+      q.lessThanOrEqualTo('date_echeance', fin)
+    }
+    if (pourAvant) {
+      q.greaterThan('reste_a_payer', 0)
+    }
+    q.select('nfacture', 'total_ttc', 'reste_a_payer')
+    q.limit(2000)
+    const items = await q.find()
 
-    montantsTTC.push(ttcAvant)
-    montantsReste.push(resteAvant)
-    montantsCount.push(itemsAvant.length) // déjà filtrés facture_soldee: false
+    const nfactureMap = new Map()
+    for (const item of items) {
+      const nfact = item.get('nfacture')
+      if (nfact && !nfactureMap.has(nfact)) {
+        nfactureMap.set(nfact, {
+          ttc: item.get('total_ttc') || 0,
+          reste: item.get('reste_a_payer') || 0
+        })
+      }
+    }
+
+    const values = [...nfactureMap.values()]
+    return {
+      ttc: values.reduce((s, v) => s + v.ttc, 0),
+      paye: pourAvant ? 0 : values.filter(v => v.reste === 0).reduce((s, v) => s + v.ttc, 0),
+      reste: values.filter(v => v.reste > 0).reduce((s, v) => s + v.reste, 0),
+      count: values.filter(v => v.reste > 0).length
+    }
   }
+
+  // Calcul pour la colonne "Avant" (factures uniques avec reste > 0 avant les 12 derniers mois)
+  const debut12Mois = new Date()
+  debut12Mois.setDate(1)
+  debut12Mois.setMonth(debut12Mois.getMonth() - 12)
+  debut12Mois.setHours(0, 0, 0, 0)
+
+  const avant = await getMontantsForPeriode(null, debut12Mois, true)
+  montantsTTC.push(avant.ttc)
+  montantsPaye.push(avant.paye)
+  montantsReste.push(avant.reste)
+  montantsCount.push(avant.count)
 
   // Calcul pour les 12 mois + mois courant
   for (let i = 12; i >= 0; i--) {
@@ -479,29 +535,19 @@ async function chargerMontantsMois() {
     fin.setDate(0)
     fin.setHours(23, 59, 59, 999)
 
-    const q = new $parse.Query('Impaye')
-    q.greaterThanOrEqualTo('date_echeance', debut)
-    q.lessThanOrEqualTo('date_echeance', fin)
-    q.select('total_ttc', 'reste_a_payer', 'facture_soldee')
-    q.limit(500)
-    const items = await q.find()
-
-    const ttc   = items.reduce((s, i) => s + (i.get('total_ttc') || 0), 0)
-    const reste = items.reduce((s, i) => s + (i.get('reste_a_payer') || 0), 0)
-    const count = items.filter(i => !i.get('facture_soldee')).length
-
-    montantsTTC.push(ttc)
-    montantsReste.push(reste)
-    montantsCount.push(count)
+    const mois = await getMontantsForPeriode(debut, fin)
+    montantsTTC.push(mois.ttc)
+    montantsPaye.push(mois.paye)
+    montantsReste.push(mois.reste)
+    montantsCount.push(mois.count)
   }
 
   montantsMois.value = {
     ttc:   montantsTTC,
+    paye:  montantsPaye,
     reste: montantsReste,
     count: montantsCount,
   }
-  
-  console.log('Montants par mois:', montantsMois.value)
 }
 
 async function chargerRelancesJour() {
@@ -634,7 +680,7 @@ const barData = computed(() => {
       },
       {
         label: 'Montant payé',
-        data: montantsMois.value.ttc.map((ttc, i) => i === 0 ? 0 : ttc - montantsMois.value.reste[i]),
+        data: montantsMois.value.paye,
         backgroundColor: '#22c55e',
         borderRadius: 4,
         yAxisID: 'y',
