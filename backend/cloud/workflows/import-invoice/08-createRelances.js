@@ -273,7 +273,12 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                                 `⏭️ Tous les impayés existent déjà pour payeur ${payeurId} email_index=${scenario.email_index}, skip`,
                                 "import-invoice",
                                 "createRelances",
-                                { payeurId, email_index: scenario.email_index },
+                                {
+                                    payeurId,
+                                    email_index: scenario.email_index,
+                                    existingImpayes: existingRelances.length > 0 ? existingRelances[0].get("impayes") : [],
+                                    newImpayes: impayeIds,
+                                },
                             );
                             stats.skipped++;
                             continue;
