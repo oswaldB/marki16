@@ -323,13 +323,11 @@ async function processAndSaveImpayes({
                     pieceRow.idDossier ||
                     pieceRow.dossier_id;
 
-                // Utiliser nfacture + dossier comme clé composite pour gérer plusieurs dossiers par facture
+                // Utiliser nfacture + dossier comme clé (matcher comportement n8n)
                 let Impaye = Parse.Object.extend("Impaye");
                 let qi = new Parse.Query(Impaye);
                 qi.equalTo("nfacture", externeId);
-                if (dossierNum) {
-                    qi.equalTo("numero_dossier", String(dossierNum));
-                }
+                qi.equalTo("numero_dossier", dossierNum || null);
                 let impaye = await qi.first({ useMasterKey: true });
                 let isNewImpaye = !impaye;
 
@@ -391,21 +389,7 @@ async function processAndSaveImpayes({
                 );
                 impaye.set("numero_dossier", pieceRow.numero || null);
 
-                // Gestion de la reference
-                if (isNewImpaye && pieceRow.reference) {
-                    let existingImpayeQuery = new Parse.Query(Impaye);
-                    existingImpayeQuery.equalTo(
-                        "reference",
-                        pieceRow.reference,
-                    );
-                    let existingImpaye = await existingImpayeQuery.first({
-                        useMasterKey: true,
-                    });
-                    if (existingImpaye) {
-                        impaye = existingImpaye;
-                        isNewImpaye = false;
-                    }
-                }
+                // Reference : toujours set, ne pas fusionner par reference (pour matcher n8n)
                 impaye.set("reference", pieceRow.reference || null);
                 impaye.set(
                     "reference_externe",
