@@ -335,13 +335,7 @@ async function processAndSaveImpayes({
 
                 if (!impaye) {
                     impaye = new Impaye();
-                    // Clé composite : nfacture + dossier
-                    impaye.set(
-                        "externe_id",
-                        dossierNum
-                            ? `${externeId}_${dossierNum}`
-                            : String(externeId),
-                    );
+                    impaye.set("externe_id", externeId);
                     impaye.set("source", "db_externe");
                 }
 
