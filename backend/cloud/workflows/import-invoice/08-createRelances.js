@@ -62,7 +62,6 @@ async function createRelances({ sansRelance, avecRelance, state }) {
             "import-invoice",
             "createRelances",
         );
-        // 1. Récupérer toutes les séquences publiées
         const Sequence = Parse.Object.extend("Sequence");
         const sequenceQuery = new Parse.Query(Sequence);
         sequenceQuery.equalTo("publiee", true);
@@ -75,7 +74,6 @@ async function createRelances({ sansRelance, avecRelance, state }) {
             { count: sequences.length },
         );
 
-        // Traiter seulement les impayés sans relance (ceux avec relance sont déjà traités)
         debug(
             "Étape 8.2: Traitement des impayés sans relance",
             "import-invoice",
@@ -83,7 +81,6 @@ async function createRelances({ sansRelance, avecRelance, state }) {
             { count: sansRelance.length },
         );
 
-        // Regrouper les impayés sans relance par séquence
         const impayesBySequence = {};
         for (const impaye of sansRelance) {
             const seq = impaye.get("sequence");
@@ -103,10 +100,10 @@ async function createRelances({ sansRelance, avecRelance, state }) {
             },
         );
 
-        // Traiter chaque séquence
         for (const sequence of sequences) {
             const sequenceId = sequence.id;
-            const emails = sequence.get("emails") || [];
+            const sequenceJson = sequence.toJSON();
+            const emails = sequenceJson.emails || [];
             const validationObligatoire =
                 sequence.get("validation_obligatoire") || false;
 
@@ -123,17 +120,11 @@ async function createRelances({ sansRelance, avecRelance, state }) {
             }
 
             debug(
-                `Traitement séquence: ${sequenceId} - ${sequence.get("nom")} (${sequenceImpayes.length} impayés)`,
+                `Traitement séquence: ${sequenceId} - ${sequenceJson.nom} (${sequenceImpayes.length} impayés, ${emails.length} emails)`,
                 "import-invoice",
                 "createRelances",
-                {
-                    sequenceId,
-                    nom: sequence.get("nom"),
-                    count: sequenceImpayes.length,
-                },
             );
 
-            // Filtrer les impayés : email existe, non vide, non blacklisté
             debug(
                 "Étape 8.3: Filtrage des impayés valides",
                 "import-invoice",
@@ -158,7 +149,6 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                 },
             );
 
-            // Regrouper les impayés par payeur
             debug(
                 "Étape 8.4: Regroupement des impayés par payeur",
                 "import-invoice",
@@ -190,25 +180,24 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                 },
             );
 
-            // ✅ NOUVEAU: Itérer sur TOUS les emails de la séquence pour créer 1 relance par email
+            // ✅ Itérer sur TOUS les emails de la séquence pour créer 1 relance par email
             debug(
-                "Étape 8.5: Traitement par email de la séquence",
+                `Étape 8.5: Traitement par email de la séquence (${emails.length} emails)`,
                 "import-invoice",
                 "createRelances",
-                { sequenceId, emailCount: emails.length },
             );
             for (const emailConfig of emails) {
-                if (!emailConfig.scenarios) continue;
+                const scenarios = emailConfig.scenarios || [];
+                if (scenarios.length === 0) continue;
 
-                // Filtrer les scénarios valides pour ce groupe
-                const validScenarios = emailConfig.scenarios.filter(
+                // Filtrer les scénarios valides
+                const validScenarios = scenarios.filter(
                     (s) => s.format === "single" || s.format === "multiple",
                 );
                 if (validScenarios.length === 0) continue;
 
-                // Traiter chaque format de scénario (single/multiple)
                 for (const scenario of validScenarios) {
-                    const scenarioFormat = scenario.format; // 'single' ou 'multiple'
+                    const scenarioFormat = scenario.format;
 
                     // Regrouper les payeurs par format pour ce scénario
                     const payeursForFormat = {};
@@ -218,26 +207,22 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                         const groupImpayes = group.impayes;
                         const actualFormat =
                             groupImpayes.length > 1 ? "multiple" : "single";
-
-                        // Ne traiter que les groupes correspondant au format du scénario
                         if (actualFormat !== scenarioFormat) continue;
-
                         payeursForFormat[payeurId] = group;
                     }
 
                     if (Object.keys(payeursForFormat).length === 0) {
                         info(
-                            `⏭️ Aucun payeur pour scénario format=${scenarioFormat}, skip email`,
+                            `⏭️ Aucun payeur pour scénario format=${scenarioFormat}, skip`,
                             "import-invoice",
                             "createRelances",
-                            { sequenceId, emailConfigId: emailConfig.id },
+                            { sequenceId, scenarioFormat },
                         );
                         continue;
                     }
 
-                    // Traiter chaque groupe payeur pour CE scénario
                     debug(
-                        `Traitement de ${Object.keys(payeursForFormat).length} payeurs pour email ${emailConfig.id}, scénario: ${scenarioFormat}`,
+                        `Traitement ${Object.keys(payeursForFormat).length} payeurs pour email (scenario: ${scenarioFormat}, delai: ${scenario.delai})`,
                         "import-invoice",
                         "createRelances",
                     );
@@ -249,24 +234,12 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                         const impayeIds = groupImpayes.map((i) => i.id);
 
                         debug(
-                            `Traitement groupe payeur ${payeurId}`,
+                            `Groupe payeur ${payeurId}: ${groupImpayes.length} impayés, email_index=${scenario.email_index}`,
                             "import-invoice",
                             "createRelances",
-                            {
-                                payeurId,
-                                impayesCount: groupImpayes.length,
-                                scenarioFormat,
-                                emailIndex: scenario.email_index,
-                            },
                         );
 
                         // Vérification des relances existantes pour ce payeur ET ce email_index
-                        debug(
-                            "Étape 8.6: Vérification des relances existantes pour ce payeur et email_index",
-                            "import-invoice",
-                            "createRelances",
-                            { payeurId, email_index: scenario.email_index },
-                        );
                         const Relance = Parse.Object.extend("Relance");
                         const existingRelanceQuery = new Parse.Query(Relance);
                         existingRelanceQuery.equalTo("contact", payeur);
@@ -280,14 +253,7 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                                 useMasterKey: true,
                             });
 
-                        // FIX: Vérifier les impayés existants pour CE email_index spécifiquement
-                        debug(
-                            "Vérification des impayés existants pour ce payeur et email_index",
-                            "import-invoice",
-                            "createRelances",
-                            { payeurId, email_index: scenario.email_index },
-                        );
-
+                        // FIX: vérifier seulement les impayés de la relance pour CE email_index
                         const existingImpayeIdsSet = new Set();
                         if (existingRelances.length > 0) {
                             (existingRelances[0].get("impayes") || []).forEach(
@@ -301,7 +267,7 @@ async function createRelances({ sansRelance, avecRelance, state }) {
 
                         if (impayesToAdd.length === 0) {
                             info(
-                                `⏭️ Tous les impayés existent déjà pour ce payeur et email_index ${scenario.email_index}, skip`,
+                                `⏭️ Tous les impayés existent déjà pour payeur ${payeurId} email_index=${scenario.email_index}, skip`,
                                 "import-invoice",
                                 "createRelances",
                                 { payeurId, email_index: scenario.email_index },
@@ -310,30 +276,12 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                             continue;
                         }
 
+                        const RelanceClass = Parse.Object.extend("Relance");
                         if (existingRelances.length > 0) {
-                            debug(
-                                `Relance existante trouvée pour payeur ${payeurId} et email_index ${scenario.email_index}`,
-                                "import-invoice",
-                                "createRelances",
-                                {
-                                    payeurId,
-                                    email_index: scenario.email_index,
-                                    existingRelanceId: existingRelances[0].id,
-                                },
-                            );
                             const existingRelance = existingRelances[0];
                             const currentImpayeIds =
                                 existingRelance.get("impayes") || [];
 
-                            debug(
-                                `Mise à jour de la relance ${existingRelance.id}`,
-                                "import-invoice",
-                                "createRelances",
-                                {
-                                    relanceId: existingRelance.id,
-                                    impayesToAdd: impayesToAdd.length,
-                                },
-                            );
                             existingRelance.set("impayes", [
                                 ...currentImpayeIds,
                                 ...impayesToAdd,
@@ -374,7 +322,7 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                                 useMasterKey: true,
                             });
                             info(
-                                `✅ Relance ${existingRelance.id} mise à jour pour email_index ${scenario.email_index}`,
+                                `✅ Relance ${existingRelance.id} mise à jour pour email_index=${scenario.email_index}`,
                                 "import-invoice",
                                 "createRelances",
                                 {
@@ -424,7 +372,7 @@ async function createRelances({ sansRelance, avecRelance, state }) {
 
                             await newRelance.save(null, { useMasterKey: true });
                             info(
-                                `✅ Nouvelle relance créée: ${newRelance.id} pour email_index ${scenario.email_index}`,
+                                `✅ Nouvelle relance créée: ${newRelance.id} pour email_index=${scenario.email_index}`,
                                 "import-invoice",
                                 "createRelances",
                                 {
