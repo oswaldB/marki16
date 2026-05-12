@@ -280,27 +280,18 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                                 useMasterKey: true,
                             });
 
-                        // Vérifier tous les impayés existants pour ce contact, tous email_index confondus
+                        // FIX: Vérifier les impayés existants pour CE email_index spécifiquement
                         debug(
-                            "Vérification de tous les impayés existants pour ce contact",
+                            "Vérification des impayés existants pour ce payeur et email_index",
                             "import-invoice",
                             "createRelances",
-                            { payeurId },
+                            { payeurId, email_index: scenario.email_index },
                         );
-                        const existingRelancesForContact = new Parse.Query(
-                            Relance,
-                        );
-                        existingRelancesForContact.equalTo("contact", payeur);
-                        existingRelancesForContact.doesNotExist("dateEnvoi");
-                        const allExisting =
-                            await existingRelancesForContact.find({
-                                useMasterKey: true,
-                            });
 
                         const existingImpayeIdsSet = new Set();
-                        for (const rel of allExisting) {
-                            (rel.get("impayes") || []).forEach((id) =>
-                                existingImpayeIdsSet.add(id),
+                        if (existingRelances.length > 0) {
+                            (existingRelances[0].get("impayes") || []).forEach(
+                                (id) => existingImpayeIdsSet.add(id),
                             );
                         }
 
@@ -310,7 +301,7 @@ async function createRelances({ sansRelance, avecRelance, state }) {
 
                         if (impayesToAdd.length === 0) {
                             info(
-                                `⏭️ Tous les impayés existent déjà pour ce payeur et tous email_index, skip`,
+                                `⏭️ Tous les impayés existent déjà pour ce payeur et email_index ${scenario.email_index}, skip`,
                                 "import-invoice",
                                 "createRelances",
                                 { payeurId, email_index: scenario.email_index },
