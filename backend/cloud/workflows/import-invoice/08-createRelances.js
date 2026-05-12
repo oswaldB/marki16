@@ -282,6 +282,19 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                         const RelanceClass = Parse.Object.extend("Relance");
                         if (existingRelances.length > 0) {
                             const existingRelance = existingRelances[0];
+                            
+                            // Skip si relance est manuelle ou déjà validée
+                            if (existingRelance.get('manuel') || existingRelance.get('valide')) {
+                                info(
+                                    `⏭️ Relance ${existingRelance.id} est manuelle ou validée, skip update`,
+                                    "import-invoice",
+                                    "createRelances",
+                                    { relanceId: existingRelance.id, manuel: existingRelance.get('manuel'), valide: existingRelance.get('valide') },
+                                );
+                                stats.skipped++;
+                                continue;
+                            }
+                            
                             const currentImpayeIds =
                                 existingRelance.get("impayes") || [];
 
