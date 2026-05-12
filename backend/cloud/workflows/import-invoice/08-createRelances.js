@@ -75,14 +75,16 @@ async function createRelances({ sansRelance, avecRelance, state }) {
         );
 
         debug(
-            "Étape 8.2: Traitement des impayés sans relance",
+            "Étape 8.2: Traitement de TOUS les impayés concernés",
             "import-invoice",
             "createRelances",
-            { count: sansRelance.length },
+            { count: sansRelance.length + avecRelance.length },
         );
 
+        // Combiner sansRelance et avecRelance pour traiter tous les impayés
+        const allImpayes = [...sansRelance, ...avecRelance];
         const impayesBySequence = {};
-        for (const impaye of sansRelance) {
+        for (const impaye of allImpayes) {
             const seq = impaye.get("sequence");
             if (!seq) continue;
             if (!impayesBySequence[seq.id]) {
@@ -92,11 +94,12 @@ async function createRelances({ sansRelance, avecRelance, state }) {
         }
 
         info(
-            `Impayés sans relance groupés par séquence: ${Object.keys(impayesBySequence).length} séquences`,
+            `Impayés groupés par séquence: ${Object.keys(impayesBySequence).length} séquences`,
             "import-invoice",
             "createRelances",
             {
                 sequenceCount: Object.keys(impayesBySequence).length,
+                totalImpayes: allImpayes.length,
             },
         );
 
