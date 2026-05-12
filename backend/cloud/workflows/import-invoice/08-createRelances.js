@@ -24,15 +24,20 @@ if (typeof Parse === "undefined") {
 const STATE_FILE = path.join(__dirname, "state", "sync-state.json");
 
 /**
+ * Helper pour accéder aux propriétés d'un scénario (Parse.Object ou JSON)
+ */
+function getScenarioValue(scenario, key) {
+    if (scenario && typeof scenario.get === "function") {
+        return scenario.get(key);
+    }
+    return scenario ? scenario[key] : undefined;
+}
+
+/**
  * Calcule la date d'envoi prévue à partir du délai du scénario
  */
 function getDateEnvoiPrevue(scenario) {
-    // scenario peut être un Parse.Object ou un objet JSON
-    const scenarioObj = scenario.toJSON ? scenario.toJSON() : scenario;
-    const delai =
-        (scenarioObj.delai !== undefined
-            ? scenarioObj.delai
-            : scenario.get("delai")) || 0;
+    const delai = getScenarioValue(scenario, "delai") || 0;
     const date = new Date();
     date.setDate(date.getDate() + delai);
     return date;
@@ -206,27 +211,17 @@ async function createRelances({ sansRelance, avecRelance, state }) {
 
                 // Filtrer les scénarios valides
                 const validScenarios = scenarios.filter((s) => {
-                    const sObj = s.toJSON ? s.toJSON() : s;
-                    return (
-                        (sObj.format || s.get("format")) === "single" ||
-                        (sObj.format || s.get("format")) === "multiple"
-                    );
+                    const format = getScenarioValue(s, "format");
+                    return format === "single" || format === "multiple";
                 });
                 if (validScenarios.length === 0) continue;
 
                 for (const scenario of validScenarios) {
-                    // Normaliser le scénario (peut être Parse.Object ou JSON)
-                    const sObj = scenario.toJSON ? scenario.toJSON() : scenario;
                     const scenarioFormat =
-                        sObj.format || scenario.get("format");
+                        getScenarioValue(scenario, "format") || "single";
                     const emailIndex =
-                        sObj.email_index !== undefined
-                            ? sObj.email_index
-                            : scenario.get("email_index");
-                    const delai =
-                        (sObj.delai !== undefined
-                            ? sObj.delai
-                            : scenario.get("delai")) || 0;
+                        getScenarioValue(scenario, "email_index") || 0;
+                    const delai = getScenarioValue(scenario, "delai") || 0;
 
                     // Regrouper les payeurs par format pour ce scénario
                     const payeursForFormat = {};
@@ -418,12 +413,13 @@ async function createRelances({ sansRelance, avecRelance, state }) {
                             );
                             newRelance.set("valide", !validationObligatoire);
 
-                            if (scenario.get && scenario.get("smtp")) {
+                            const smtpId = getScenarioValue(scenario, "smtp");
+                            if (smtpId) {
                                 const SmtpProfile =
                                     Parse.Object.extend("SmtpProfile");
                                 const smtpQuery = new Parse.Query(SmtpProfile);
                                 const smtpProfile = await smtpQuery.get(
-                                    scenario.get("smtp"),
+                                    smtpId,
                                     { useMasterKey: true },
                                 );
                                 newRelance.set("smtpProfil", smtpProfile);
