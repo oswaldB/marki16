@@ -1,15 +1,12 @@
 // backend/cloud/workflows/import-invoice/00-master.js
-// Orchestre le processus d'importation des factures et de création des relances
-// Nouvelle version avec gestion d'état centralisée via state/sync-state.json
-// Chaque étape est un script autonome qui reçoit et retourne l'état
+// Orchestre le processus d'importation des factures
+// Les étapes 8 et 9 (création et génération des relances) ont été extraites
+// dans un workflow autonome accessible via Cloud Function "generateRelances"
 
 // Charger les variables d'environnement depuis .env
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 
-const fs = require("fs");
-const path = require("path");
-
-const { info, warn, error, debug } = require("../../utils/logger");
+const { info, warn, error } = require("../../utils/logger");
 
 // Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
@@ -24,15 +21,6 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
-const STATE_FILE = path.join(__dirname, "state", "sync-state.json");
-
-// Créer le dossier state s'il n'existe pas
-const stateDir = path.dirname(STATE_FILE);
-if (!fs.existsSync(stateDir)) {
-    fs.mkdirSync(stateDir, { recursive: true });
-    info("Dossier state créé", "import-invoice", "importInvoicesMaster");
-}
-
 // Charger les scripts d'étape
 const fetchPiecesAndDossiers = require("./01-fetchPiecesAndDossiers");
 const fetchStatuts = require("./02-fetchStatuts");
@@ -41,45 +29,6 @@ const fetchInterlocuteurs = require("./04-fetchInterlocuteurs");
 const processAndSaveImpayes = require("./05-processAndSaveImpayes");
 const assignSequences = require("./06-assignSequences");
 const fetchImpayesWithSequence = require("./07-fetchImpayesWithSequence");
-const createRelances = require("./08-createRelances");
-const generateRelances = require("./09-generateRelances");
-
-/**
- * Crée l'état initial
- */
-function createInitialState(trigger) {
-    return {
-        workflow: "import-invoice",
-        currentStep: "01-fetchPiecesAndDossiers",
-        trigger: trigger || "cron",
-        startedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        steps: {},
-    };
-}
-
-/**
- * Supprime le fichier d'état
- */
-function cleanupState() {
-    try {
-        if (fs.existsSync(STATE_FILE)) {
-            fs.unlinkSync(STATE_FILE);
-            info(
-                "Fichier d'état supprimé",
-                "import-invoice",
-                "importInvoicesMaster",
-            );
-        }
-    } catch (err) {
-        error(
-            `Erreur lors de la suppression du fichier d\'état: ${err.message}`,
-            "import-invoice",
-            "importInvoicesMaster",
-            { error: err.message },
-        );
-    }
-}
 
 /**
  * Orchestrateur principal
@@ -93,10 +42,6 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
         { trigger },
     );
 
-    // Créer l'état initial
-    let state = createInitialState(trigger);
-    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
-
     const stats = {
         errors: [],
         total: {
@@ -109,13 +54,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
     try {
         // Étape 1: Récupération des pièces et dossiers depuis SQLite
         info(
-            "Étape 1/9: Récupération des pièces et dossiers...",
+            "Étape 1/7: Récupération des pièces et dossiers...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 1 },
         );
-        let result = await fetchPiecesAndDossiers({ state });
-        state = result.state;
+        let result = await fetchPiecesAndDossiers();
         const { pieces } = result;
         stats.etape1 = { piecesCount: pieces.length };
         info(
@@ -127,13 +71,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 2: Récupération des statuts
         info(
-            "Étape 2/9: Récupération des statuts...",
+            "Étape 2/7: Récupération des statuts...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 2 },
         );
-        result = await fetchStatuts({ state });
-        state = result.state;
+        result = await fetchStatuts();
         const { statutsMap } = result;
         stats.etape2 = { statutsCount: Object.keys(statutsMap).length };
         info(
@@ -145,13 +88,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 3: Récupération des employés
         info(
-            "Étape 3/9: Récupération des employés...",
+            "Étape 3/7: Récupération des employés...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 3 },
         );
-        result = await fetchEmployes({ state });
-        state = result.state;
+        result = await fetchEmployes();
         const { employesMap } = result;
         stats.etape3 = { employesCount: Object.keys(employesMap).length };
         info(
@@ -163,13 +105,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 4: Récupération des interlocuteurs
         info(
-            "Étape 4/9: Récupération des interlocuteurs...",
+            "Étape 4/7: Récupération des interlocuteurs...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 4 },
         );
-        result = await fetchInterlocuteurs({ pieces, state });
-        state = result.state;
+        result = await fetchInterlocuteurs({ pieces });
         const { interlocuteursByDossier } = result;
         stats.etape4 = {
             interlocuteursCount: Object.keys(interlocuteursByDossier).length,
@@ -183,7 +124,7 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 5: Traitement et sauvegarde des impayés dans Parse
         info(
-            "Étape 5/9: Traitement et sauvegarde des impayés...",
+            "Étape 5/7: Traitement et sauvegarde des impayés...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 5 },
@@ -193,9 +134,7 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
             statutsMap,
             employesMap,
             interlocuteursByDossier,
-            state,
         });
-        state = result.state;
         stats.etape5 = result.stats;
         info(
             `Étape 5 terminée: ${result.stats.impayes_created} créés, ${result.stats.impayes_updated} mis à jour`,
@@ -210,13 +149,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 6: Attribution automatique des séquences
         info(
-            "Étape 6/9: Attribution des séquences...",
+            "Étape 6/7: Attribution des séquences...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 6 },
         );
-        result = await assignSequences({ state });
-        state = result.state;
+        result = await assignSequences();
         stats.etape6 = result.stats;
         info(
             `Étape 6 terminée: ${result.stats.impayesTraites} traités, ${result.stats.sequencesAttribuees} séquences attribuées`,
@@ -231,13 +169,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 
         // Étape 7: Récupération des impayés avec séquence
         info(
-            "Étape 7/9: Récupération des impayés avec séquence...",
+            "Étape 7/7: Récupération des impayés avec séquence...",
             "import-invoice",
             "importInvoicesMaster",
             { step: 7 },
         );
-        result = await fetchImpayesWithSequence({ state });
-        state = result.state;
+        result = await fetchImpayesWithSequence();
         stats.etape7 = result.stats;
         const { sansRelance, avecRelance } = result;
         info(
@@ -251,46 +188,52 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
             },
         );
 
-        // Étape 8: Création des relances pour les impayés SANS relance
+        // Appel du workflow autonome pour les étapes 8 et 9 (création et génération des relances)
         info(
-            "Étape 8/9: Création des relances...",
-            "import-invoice",
-            "importInvoicesMaster",
-            { step: 8 },
-        );
-        result = await createRelances({ sansRelance, avecRelance, state });
-        state = result.state;
-        stats.etape8 = result.stats;
-        info(
-            `Étape 8 terminée: ${result.stats.relancesCreated} créées, ${result.stats.relancesUpdated} mises à jour`,
+            "Appel du workflow generate-relances pour les étapes 8 et 9...",
             "import-invoice",
             "importInvoicesMaster",
             {
-                step: 8,
-                created: result.stats.relancesCreated,
-                updated: result.stats.relancesUpdated,
+                step: "generate-relances",
+                sansRelanceCount: sansRelance.length,
+                avecRelanceCount: avecRelance.length,
             },
         );
+        try {
+            const generateResult = await Parse.Cloud.run(
+                "generateRelances",
+                {
+                    sansRelanceIds: sansRelance.map((i) => i.id),
+                    avecRelance: avecRelance.map((r) => ({
+                        impayeId: r.impaye?.id || r.impaye,
+                        relanceId: r.relance?.id,
+                    })),
+                },
+                { useMasterKey: true },
+            );
 
-        // Étape 9: Génération du contenu des relances en attente
-        info(
-            "Étape 9/9: Génération du contenu des relances...",
-            "import-invoice",
-            "importInvoicesMaster",
-            { step: 9 },
-        );
-        result = await generateRelances({ state });
-        state = result.state;
-        stats.etape9 = result.stats;
-        info(
-            `Étape 9 terminée: ${result.stats.processed} traitées`,
-            "import-invoice",
-            "importInvoicesMaster",
-            { step: 9, processed: result.stats.processed },
-        );
-
-        // Nettoyer le fichier d'état
-        cleanupState();
+            stats.generateRelances = generateResult.stats;
+            info(
+                `Workflow generate-relances terminé: ${generateResult.stats.etape1?.relancesCreated || 0} relances créées, ${generateResult.stats.etape2?.processed || 0} générées`,
+                "import-invoice",
+                "importInvoicesMaster",
+            );
+        } catch (cloudErr) {
+            error(
+                `Erreur lors de l'appel à generateRelances: ${cloudErr.message}`,
+                "import-invoice",
+                "importInvoicesMaster",
+                {
+                    error: cloudErr.message,
+                    stack: cloudErr.stack?.substring(0, 500),
+                },
+            );
+            stats.errors.push({
+                step: "generateRelances",
+                error: cloudErr.message,
+                stack: cloudErr.stack?.substring(0, 500),
+            });
+        }
 
         info(
             "Processus terminé avec succès",
@@ -306,13 +249,10 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
             { error: err.message, stack: err.stack?.substring(0, 500) },
         );
         stats.errors.push({
-            step: state.currentStep,
+            step: "importInvoicesMaster",
             error: err.message,
             stack: err.stack?.substring(0, 500),
         });
-
-        // Nettoyer le fichier d'état en cas d'erreur
-        cleanupState();
 
         warn(
             `Processus terminé avec erreur`,
@@ -336,11 +276,6 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
     // Persistance du log d'exécution global dans Parse
     try {
         if (process.env.NODE_ENV !== "test") {
-            debug(
-                "Écriture du log dans Parse (ImportInvoicesMasterLog)",
-                "import-invoice",
-                "importInvoicesMaster",
-            );
             const log = new Parse.Object("ImportInvoicesMasterLog");
             log.set("startedAt", startedAt);
             log.set("finishedAt", finishedAt);
@@ -368,7 +303,7 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
         );
     }
 
-    return { stats, state };
+    return { stats };
 }
 
 module.exports = importInvoicesMaster;
@@ -403,11 +338,6 @@ if (require.main === module) {
                     errors: result.stats.errors.length,
                     durationMs: result.stats.total.durationMs,
                 },
-            );
-            debug(
-                "Exit code: " + (result.stats.errors.length > 0 ? 1 : 0),
-                "import-invoice",
-                "importInvoicesMaster",
             );
             process.exit(result.stats.errors.length > 0 ? 1 : 0);
         })

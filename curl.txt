@@ -1,0 +1,17 @@
+# Trigger Import Invoices (workflow complet)
+curl -X POST https://adti.api.markidiags.com:8445/parse/functions/triggerImportInvoices \
+  -H "Content-Type: application/json" \
+  -H "X-Parse-Application-Id: adti-marki" \
+  -H "X-Parse-Javascript-Key: c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda" \
+  -H "X-Parse-Master-Key: e2f4e4e89056af61dd95a71226fa0e51917313e09b68aca8bf434e5eb9bd8aa9" \
+  -k \
+  -d '{}'
+
+# Trigger Generate Relances (workflow autonome - étapes 8 et 9 extraites)
+curl -X POST https://adti.api.markidiags.com:8445/parse/functions/generateRelances \
+  -H "Content-Type: application/json" \
+  -H "X-Parse-Application-Id: adti-marki" \
+  -H "X-Parse-Javascript-Key: c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda" \
+  -H "X-Parse-Master-Key: e2f4e4e89056af61dd95a71226fa0e51917313e09b68aca8bf434e5eb9bd8aa9" \
+  -k \
+  -d '{}'

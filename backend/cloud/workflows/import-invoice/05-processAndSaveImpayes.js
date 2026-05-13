@@ -1,12 +1,9 @@
 // backend/cloud/workflows/import-invoice/05-processAndSaveImpayes.js
 // Étape 5 : Traite et sauvegarde les impayés dans Parse
-// Input: { pieces, statutsMap, employesMap, interlocuteursByDossier, state }
-// Output: { stats, state }
+// Input: { pieces, statutsMap, employesMap, interlocuteursByDossier }
+// Output: { stats }
 
-const fs = require("fs");
-const path = require("path");
-
-const { info, warn, error, debug } = require("../../utils/logger");
+const { info, warn, error } = require("../../utils/logger");
 
 // Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
@@ -20,8 +17,6 @@ if (typeof Parse === "undefined") {
     Parse.Cloud.useMasterKey();
     global.Parse = Parse;
 }
-
-const STATE_FILE = path.join(__dirname, "state", "sync-state.json");
 
 // Month names in French for URL building
 let MOIS_FR = [
@@ -138,15 +133,14 @@ async function lierEmployeEntreprise(entreprise, personne) {
 
 /**
  * Étape 5 : Traite et sauvegarde les impayés dans Parse
- * @param {Object} param0 - { pieces, statutsMap, employesMap, interlocuteursByDossier, state }
- * @returns {Promise<Object>} { stats, state }
+ * @param {Object} param0 - { pieces, statutsMap, employesMap, interlocuteursByDossier }
+ * @returns {Promise<Object>} { stats }
  */
 async function processAndSaveImpayes({
     pieces,
     statutsMap,
     employesMap,
     interlocuteursByDossier,
-    state,
 }) {
     const stats = {
         impayes_created: 0,
@@ -1032,29 +1026,8 @@ async function processAndSaveImpayes({
             },
         );
 
-        const newState = {
-            ...state,
-            currentStep: "06-assignSequences",
-            steps: {
-                ...state.steps,
-                "05-processAndSaveImpayes": {
-                    status: "completed",
-                    impayes_created: stats.impayes_created,
-                    impayes_updated: stats.impayes_updated,
-                    contacts_created: stats.contacts_created,
-                    contacts_updated: stats.contacts_updated,
-                    errors: stats.errors.length,
-                    completedAt: new Date().toISOString(),
-                },
-            },
-            updatedAt: new Date().toISOString(),
-        };
-
-        fs.writeFileSync(STATE_FILE, JSON.stringify(newState, null, 2));
-
         return {
             stats,
-            state: newState,
         };
     } catch (err) {
         error(

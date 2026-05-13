@@ -1,24 +1,22 @@
 // backend/cloud/workflows/import-invoice/01-fetchPiecesAndDossiers.js
 // Étape 1 : Récupère les pièces et dossiers depuis la DB SQLite externe
-// Retourne : { pieces: [], state: {} }
+// Retourne : { pieces: [] }
 
-const fs = require('fs');
-const path = require('path');
-const Database = require('better-sqlite3');
+const Database = require("better-sqlite3");
 
-const { info, warn, error, debug } = require('../../utils/logger');
+const { info, warn, error } = require("../../utils/logger");
 
 // Initialiser Parse
-if (typeof Parse === 'undefined') {
-  const Parse = require('parse/node');
-  Parse.initialize(
-    process.env.PARSE_APP_ID,
-    process.env.PARSE_JAVASCRIPT_KEY,
-    process.env.PARSE_MASTER_KEY
-  );
-  Parse.serverURL = process.env.PARSE_SERVER_URL;
-  Parse.Cloud.useMasterKey();
-  global.Parse = Parse;
+if (typeof Parse === "undefined") {
+    const Parse = require("parse/node");
+    Parse.initialize(
+        process.env.PARSE_APP_ID,
+        process.env.PARSE_JAVASCRIPT_KEY,
+        process.env.PARSE_MASTER_KEY,
+    );
+    Parse.serverURL = process.env.PARSE_SERVER_URL;
+    Parse.Cloud.useMasterKey();
+    global.Parse = Parse;
 }
 
 // Requête : Pièces + Dossiers
@@ -60,79 +58,83 @@ const QUERY_PIECES = `
   LEFT JOIN _GCO__GcoPieceMetier pm ON p.idpiece = pm.idpiece
   LEFT JOIN _ADN_DIAG__Dossier d ON pm.idmetier = d.idDossier
   WHERE p.nfacture IS NOT NULL
-    AND p.nfacture > 44332
-    AND p.valide = 1
+  AND p.datemaj >= datetime('now', '-24 hours')
+  AND p.valide = 1
   ORDER BY p.datepiece DESC
 `;
 
 /**
  * Étape 1 : Récupère les pièces et dossiers
- * @param {Object} state - État courant du workflow
- * @returns {Promise<Object>} { pieces, state } - Données et état mis à jour
+ * @returns {Promise<Object>} { pieces }
  */
-async function fetchPiecesAndDossiers(state) {
-  const STATE_FILE = path.join(__dirname, 'state', 'sync-state.json');
-  
-  // Charger le chemin de la DB
-  const dbPath = process.env.NODE_ENV === 'test' && process.env.TEST_DB_PATH
-    ? process.env.TEST_DB_PATH
-    : '/home/arthur/adti/sync.db';
+async function fetchPiecesAndDossiers() {
+    // Charger le chemin de la DB
+    const dbPath =
+        process.env.NODE_ENV === "test" && process.env.TEST_DB_PATH
+            ? process.env.TEST_DB_PATH
+            : "/home/arthur/adti/sync.db";
 
-  // Fonction pour ouvrir la DB avec retry
-  async function openDatabaseWithRetry(path, maxRetries = 3, retryDelayMs = 60000) {
-    let retries = 0;
-    while (retries < maxRetries) {
-      try {
-        const db = new Database(path);
-        db.prepare('SELECT 1').get();
-        return db;
-      } catch (err) {
-        retries++;
-        if (err.message.includes('database disk image is malformed') && retries < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelayMs));
-        } else {
-          throw err;
+    // Fonction pour ouvrir la DB avec retry
+    async function openDatabaseWithRetry(
+        path,
+        maxRetries = 3,
+        retryDelayMs = 60000,
+    ) {
+        let retries = 0;
+        while (retries < maxRetries) {
+            try {
+                const db = new Database(path);
+                db.prepare("SELECT 1").get();
+                return db;
+            } catch (err) {
+                retries++;
+                if (
+                    err.message.includes("database disk image is malformed") &&
+                    retries < maxRetries
+                ) {
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, retryDelayMs),
+                    );
+                } else {
+                    throw err;
+                }
+            }
         }
-      }
+        throw new Error(
+            `Impossible d'ouvrir la DB après ${maxRetries} tentatives`,
+        );
     }
-    throw new Error(`Impossible d'ouvrir la DB après ${maxRetries} tentatives`);
-  }
 
-  const db = await openDatabaseWithRetry(dbPath);
+    const db = await openDatabaseWithRetry(dbPath);
 
-  try {
-    info('Étape 1: Récupération des pièces + dossiers', 'import-invoice', 'fetchPiecesAndDossiers');
-    const piecesRows = db.prepare(QUERY_PIECES).all();
-    info(`${piecesRows.length} pièces récupérées depuis la base externe`, 'import-invoice', 'fetchPiecesAndDossiers', { count: piecesRows.length });
+    try {
+        info(
+            "Étape 1: Récupération des pièces + dossiers",
+            "import-invoice",
+            "fetchPiecesAndDossiers",
+        );
+        const piecesRows = db.prepare(QUERY_PIECES).all();
+        info(
+            `${piecesRows.length} pièces récupérées depuis la base externe`,
+            "import-invoice",
+            "fetchPiecesAndDossiers",
+            { count: piecesRows.length },
+        );
 
-    // Mettre à jour le state
-    const newState = {
-      ...state,
-      currentStep: '02-fetchStatuts',
-      steps: {
-        ...state.steps,
-        '01-fetchPiecesAndDossiers': {
-          status: 'completed',
-          count: piecesRows.length,
-          lastNfacture: Math.max(...piecesRows.map(p => p.nfacture || 0)),
-          completedAt: new Date().toISOString()
-        }
-      },
-      updatedAt: new Date().toISOString()
-    };
-    
-    fs.writeFileSync(STATE_FILE, JSON.stringify(newState, null, 2));
-
-    return {
-      pieces: piecesRows,
-      state: newState
-    };
-  } catch (err) {
-    error(`Erreur Étape 1: ${err.message}`, 'import-invoice', 'fetchPiecesAndDossiers', { error: err.message });
-    throw err;
-  } finally {
-    db.close();
-  }
+        return {
+            pieces: piecesRows,
+        };
+    } catch (err) {
+        error(
+            `Erreur Étape 1: ${err.message}`,
+            "import-invoice",
+            "fetchPiecesAndDossiers",
+            { error: err.message },
+        );
+        throw err;
+    } finally {
+        db.close();
+    }
 }
 
 module.exports = fetchPiecesAndDossiers;
