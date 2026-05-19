@@ -144,6 +144,7 @@
                 :loading="blacklistStore.loading"
                 @click="() => toggleContactBlacklist(row.original)"
                 :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+                class="hover:scale-105 transition-transform duration-200"
               >
                 {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
               </UButton>
@@ -272,6 +273,7 @@
                 variant="ghost"
                 @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
                 title="Définir un email de relance"
+                class="hover:scale-105 transition-transform duration-200"
               >
                 Définir email
               </UButton>
@@ -283,6 +285,7 @@
                 :loading="blacklistStore.loading"
                 @click="() => toggleContactBlacklist(row.original)"
                 :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+                class="hover:scale-105 transition-transform duration-200"
               >
                 {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
               </UButton>
@@ -335,26 +338,32 @@ async function refresh() {
 
 // Toggle blacklist pour un contact
 async function toggleContactBlacklist(contact) {
-  try {
-    const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
-    await blacklistStore.toggleBlacklist(contact.id, !isCurrentlyBlacklisted)
+  const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
+  const newStatus = !isCurrentlyBlacklisted
 
-    // Recharger les données pour mettre à jour l'affichage
-    if (ongletActif.value === 'tous' || ongletActif.value === 'sans-email') {
-      await charger()
-    } else if (ongletActif.value === 'par-entite') {
-      await chargerEntitesGroupes()
-    } else if (ongletActif.value === 'par-groupe-particuliers') {
-      await chargerParticuliersGroupes()
-    }
+  // Optimistic update - mettre à jour localement immédiatement
+  if (contact.isBlacklisted !== undefined) {
+    contact.isBlacklisted = newStatus
+  } else if (typeof contact.set === 'function') {
+    contact.set('isBlacklisted', newStatus)
+  }
+
+  try {
+    await blacklistStore.toggleBlacklist(contact.id, newStatus)
 
     toast.add({
       title: 'Succès',
-      description: `Contact ${!isCurrentlyBlacklisted ? 'blacklisté' : 'retiré de la blacklist'}`,
+      description: `Contact ${newStatus ? 'blacklisté' : 'retiré de la blacklist'}`,
       color: 'green'
     })
   } catch (error) {
     console.error('Erreur toggle blacklist:', error)
+    // Revert l'optimistic update en cas d'erreur
+    if (contact.isBlacklisted !== undefined) {
+      contact.isBlacklisted = isCurrentlyBlacklisted
+    } else if (typeof contact.set === 'function') {
+      contact.set('isBlacklisted', isCurrentlyBlacklisted)
+    }
     toast.add({
       title: 'Erreur',
       description: 'Impossible de mettre à jour la blacklist',

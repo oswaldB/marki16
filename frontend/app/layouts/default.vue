@@ -9,8 +9,9 @@
 
       <!-- Navigation -->
       <nav class="flex-1 py-4 overflow-y-auto">
+        <!-- Main section -->
         <ul class="space-y-1 px-3">
-          <li v-for="item in navItems" :key="item.to">
+          <li v-for="item in mainItems" :key="item.to">
             <NuxtLink
               :to="item.to"
               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -24,6 +25,25 @@
           </li>
         </ul>
 
+        <!-- Contacts section -->
+        <div class="mt-6 px-3">
+          <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacts</p>
+          <ul class="space-y-1">
+            <li v-for="item in contactsItems" :key="item.to">
+              <NuxtLink
+                :to="item.to"
+                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4"
+                :class="isActive(item.to)
+                  ? 'bg-sky-50 text-sky-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                <UIcon :name="item.icon" class="size-5 shrink-0" />
+                {{ item.label }}
+              </NuxtLink>
+            </li>
+          </ul>
+        </div>
+
         <!-- Settings section -->
         <div class="mt-6 px-3">
           <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paramètres</p>
@@ -31,7 +51,7 @@
             <li v-for="item in settingsItems" :key="item.to">
               <NuxtLink
                 :to="item.to"
-                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4"
                 :class="isActive(item.to)
                   ? 'bg-sky-50 text-sky-700'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
@@ -75,7 +95,7 @@
         <div class="flex items-center h-20 overflow-x-auto scrollbar-hide">
           <div class="flex space-x-2 px-4">
             <!-- Main navigation items -->
-            <template v-for="item in navItems" :key="item.to">
+            <template v-for="item in mainItems" :key="item.to">
               <NuxtLink
                 :to="item.to"
                 class="flex flex-col items-center justify-center min-w-[80px] h-full transition-colors"
@@ -86,11 +106,19 @@
               </NuxtLink>
             </template>
 
-            <!-- More button for settings -->
+            <!-- Contacts dropdown -->
+            <UDropdown :items="contactsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+              <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
+                <UIcon name="i-heroicons-users" class="size-8" />
+                <span class="text-sm mt-2 font-medium">Contacts</span>
+              </button>
+            </UDropdown>
+
+            <!-- Settings dropdown -->
             <UDropdown :items="settingsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
-                <UIcon name="i-heroicons-ellipsis-horizontal" class="size-8" />
-                <span class="text-sm mt-2 font-medium">Plus</span>
+                <UIcon name="i-heroicons-cog-6-tooth" class="size-8" />
+                <span class="text-sm mt-2 font-medium">Param.</span>
               </button>
             </UDropdown>
 
@@ -122,25 +150,26 @@
 const route = useRoute()
 const authStore = useAuthStore()
 
-const navItems = [
+const mainItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
   { to: '/impayes', label: 'Impayés', icon: 'i-heroicons-banknotes' },
-  // { to: '/impayes2', label: 'Impayés (v2)', icon: 'i-heroicons-banknotes' },
+  { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
+]
+
+const contactsItems = [
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
   { to: '/blacklist', label: 'Blacklist', icon: 'i-heroicons-no-symbol' },
-  { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
-  { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
   { to: '/a-corriger', label: 'À corriger', icon: 'i-heroicons-wrench-screwdriver' },
   { to: '/recalcitrants', label: 'Récalcitrants', icon: 'i-heroicons-exclamation-triangle' },
-  { to: '/activites', label: 'Activités', icon: 'i-heroicons-clock' },
 ]
 
 const settingsItems = [
+  { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
   { to: '/settings/smtp', label: 'Profils SMTP', icon: 'i-heroicons-envelope' },
   { to: '/settings/users', label: 'Utilisateurs', icon: 'i-heroicons-user-group' },
 ]
 
-const allItems = [...navItems, ...settingsItems]
+const allItems = [...mainItems, ...contactsItems, ...settingsItems]
 
 const isActive = (path) => {
   if (path === '/') return route.path === '/'
@@ -152,7 +181,15 @@ const currentPageTitle = computed(() => {
   return found?.label ?? ''
 })
 
-// Mobile dock settings dropdown
+// Mobile dock dropdowns
+const contactsDropdownItems = computed(() => [
+  ...contactsItems.map(item => ([{
+    label: item.label,
+    icon: item.icon,
+    to: item.to
+  }]))
+])
+
 const settingsDropdownItems = computed(() => [
   ...settingsItems.map(item => ([{
     label: item.label,

@@ -94,6 +94,7 @@
           :loading="blacklistLoading"
           @click.stop="() => handleToggleBlacklist(row.original)"
           :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+          class="hover:scale-105 transition-transform duration-200"
         >
           {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
         </UButton>
@@ -128,13 +129,28 @@ const blacklistStore = useBlacklistStore()
 const blacklistLoading = ref(false)
 
 async function handleToggleBlacklist(contact) {
+  const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
+  const newStatus = !isCurrentlyBlacklisted
+
+  // Optimistic update
+  if (contact.isBlacklisted !== undefined) {
+    contact.isBlacklisted = newStatus
+  } else if (typeof contact.set === 'function') {
+    contact.set('isBlacklisted', newStatus)
+  }
+
   try {
     blacklistLoading.value = true
-    const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
-    await blacklistStore.toggleBlacklist(contact.id, !isCurrentlyBlacklisted)
+    await blacklistStore.toggleBlacklist(contact.id, newStatus)
     emit('blacklist-toggled')
   } catch (error) {
     console.error('Erreur toggle blacklist:', error)
+    // Revert
+    if (contact.isBlacklisted !== undefined) {
+      contact.isBlacklisted = isCurrentlyBlacklisted
+    } else if (typeof contact.set === 'function') {
+      contact.set('isBlacklisted', isCurrentlyBlacklisted)
+    }
   } finally {
     blacklistLoading.value = false
   }
