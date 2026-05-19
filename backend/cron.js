@@ -1,0 +1,134 @@
+// backend/cron.js
+// Configuration des tâches cron pour l'exécution automatique des workflows
+// Heure de Paris (CET/CEST) = UTC+1 ou UTC+2 selon l'heure d'été
+
+const cron = require("node-cron");
+const path = require("path");
+
+// Initialiser Parse si nécessaire
+if (typeof Parse === "undefined") {
+    const Parse = require("parse/node");
+    Parse.initialize(
+        process.env.PARSE_APP_ID || "marki15-app-id",
+        process.env.PARSE_JAVASCRIPT_KEY || "",
+        process.env.PARSE_MASTER_KEY || "marki15-master-key",
+    );
+    Parse.serverURL =
+        process.env.PARSE_SERVER_URL || "http://localhost:1555/parse";
+    Parse.Cloud.useMasterKey();
+    global.Parse = Parse;
+}
+
+// Charger les masters des workflows
+const importInvoicesMaster = require("./cloud/workflows/import-invoice/00-master");
+const sendEmailsMaster = require("./cloud/workflows/send-emails/00-master");
+const verifyPaidInvoicesMaster = require("./cloud/workflows/verify-paid-invoices/00-master");
+const generateSuivisMaster = require("./cloud/workflows/generate-suivi/00-master");
+
+console.log("📅 Configuration des tâches cron...");
+
+// ============================================================================
+// 1. IMPORT INVOICE : Tous les jours à minuit (00:00 heure de Paris)
+// ============================================================================
+cron.schedule(
+    "0 0 * * *", // 00:00 UTC (minuit heure de Paris en hiver)
+    () => {
+        console.log("⏰ [CRON] Déclenchement: import-invoice (minuit)");
+        importInvoicesMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log("✅ [CRON] import-invoice terminé avec succès");
+            })
+            .catch((error) => {
+                console.error(
+                    "❌ [CRON] Erreur import-invoice:",
+                    error.message,
+                );
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// 2. SEND EMAILS : Tous les jours à 18h heure de Paris
+// ============================================================================
+cron.schedule(
+    "0 18 * * *", // 18:00 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: send-emails (18h)");
+        sendEmailsMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log("✅ [CRON] send-emails terminé avec succès");
+            })
+            .catch((error) => {
+                console.error("❌ [CRON] Erreur send-emails:", error.message);
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// 3. VERIFY PAID INVOICES : Toutes les heures à hh:50 heure de Paris
+// ============================================================================
+cron.schedule(
+    "50 * * * *", // hh:50 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: verify-paid-invoices (hh:50)");
+        verifyPaidInvoicesMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log(
+                    "✅ [CRON] verify-paid-invoices terminé avec succès",
+                );
+            })
+            .catch((error) => {
+                console.error(
+                    "❌ [CRON] Erreur verify-paid-invoices:",
+                    error.message,
+                );
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
+// ============================================================================
+cron.schedule(
+    "0 1 * * *", // 01:00 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
+        generateSuivisMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log("✅ [CRON] generate-suivi terminé avec succès");
+            })
+            .catch((error) => {
+                console.error(
+                    "❌ [CRON] Erreur generate-suivi:",
+                    error.message,
+                );
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// Fonction pour initialiser manuellement les tâches cron (si besoin)
+// ============================================================================
+function setupCronJobs() {
+    console.log("✅ Tâches cron initialisées");
+}
+
+module.exports = { setupCronJobs };
+
+console.log("✅ Fichier cron.js chargé - tâches planifiées activées");
