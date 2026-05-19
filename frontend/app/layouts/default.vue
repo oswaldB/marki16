@@ -25,6 +25,44 @@
           </li>
         </ul>
 
+        <!-- Impayés section -->
+        <div class="mt-6 px-3">
+          <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Impayés</p>
+          <ul class="space-y-1">
+            <li v-for="item in impayesItems" :key="item.to">
+              <NuxtLink
+                :to="item.to"
+                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4"
+                :class="isActive(item.to)
+                  ? 'bg-sky-50 text-sky-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                <UIcon :name="item.icon" class="size-5 shrink-0" />
+                {{ item.label }}
+              </NuxtLink>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Relances section -->
+        <div class="mt-6 px-3">
+          <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Relances</p>
+          <ul class="space-y-1">
+            <li v-for="item in relancesItems" :key="item.to">
+              <NuxtLink
+                :to="item.to"
+                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4"
+                :class="isActive(item.to)
+                  ? 'bg-sky-50 text-sky-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                <UIcon :name="item.icon" class="size-5 shrink-0" />
+                {{ item.label }}
+              </NuxtLink>
+            </li>
+          </ul>
+        </div>
+
         <!-- Contacts section -->
         <div class="mt-6 px-3">
           <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacts</p>
@@ -106,6 +144,22 @@
               </NuxtLink>
             </template>
 
+            <!-- Impayés dropdown -->
+            <UDropdown :items="impayesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+              <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
+                <UIcon name="i-heroicons-banknotes" class="size-8" />
+                <span class="text-sm mt-2 font-medium">Impayés</span>
+              </button>
+            </UDropdown>
+
+            <!-- Relances dropdown -->
+            <UDropdown :items="relancesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+              <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
+                <UIcon name="i-heroicons-calendar-days" class="size-8" />
+                <span class="text-sm mt-2 font-medium">Relances</span>
+              </button>
+            </UDropdown>
+
             <!-- Contacts dropdown -->
             <UDropdown :items="contactsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
@@ -152,8 +206,19 @@ const authStore = useAuthStore()
 
 const mainItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
-  { to: '/impayes', label: 'Impayés', icon: 'i-heroicons-banknotes' },
-  { to: '/relances', label: 'Relances', icon: 'i-heroicons-calendar-days' },
+]
+
+const impayesItems = [
+  { to: '/impayes', label: 'Unitaire', icon: 'i-heroicons-table-cells' },
+  { to: '/impayes?vue=payeur', label: 'Par payeur', icon: 'i-heroicons-user-group' },
+  { to: '/impayes?vue=contact', label: 'Par contact', icon: 'i-heroicons-user' },
+  { to: '/impayes?vue=sans-sequence', label: 'Sans séquence', icon: 'i-heroicons-document-minus' },
+]
+
+const relancesItems = [
+  { to: '/relances', label: 'Tableau', icon: 'i-heroicons-table-cells' },
+  { to: '/relances?vue=calendrier', label: 'Calendrier', icon: 'i-heroicons-calendar-days' },
+  { to: '/relances?vue=validation', label: 'Validation', icon: 'i-heroicons-check-circle' },
 ]
 
 const contactsItems = [
@@ -169,11 +234,36 @@ const settingsItems = [
   { to: '/settings/users', label: 'Utilisateurs', icon: 'i-heroicons-user-group' },
 ]
 
-const allItems = [...mainItems, ...contactsItems, ...settingsItems]
+const allItems = [...mainItems, ...impayesItems, ...relancesItems, ...contactsItems, ...settingsItems]
 
 const isActive = (path) => {
   if (path === '/') return route.path === '/'
-  return route.path.startsWith(path)
+
+  // Normaliser le path en retirant les query params pour la comparaison
+  const pathWithoutQuery = path.split('?')[0]
+
+  // Vérifier si le chemin de base correspond
+  if (route.path === pathWithoutQuery) {
+    // Si le path a des query params, vérifier qu'ils correspondent
+    if (path.includes('?')) {
+      const pathQuery = path.split('?')[1]
+      const routeQuery = route.query
+
+      // Parser les query params du path
+      const pathParams = new URLSearchParams(pathQuery)
+
+      // Vérifier que tous les params du path sont présents dans la route
+      for (const [key, value] of pathParams.entries()) {
+        if (routeQuery[key] !== value) {
+          return false
+        }
+      }
+      return true
+    }
+    return true
+  }
+
+  return route.path.startsWith(pathWithoutQuery)
 }
 
 const currentPageTitle = computed(() => {
@@ -182,6 +272,22 @@ const currentPageTitle = computed(() => {
 })
 
 // Mobile dock dropdowns
+const impayesDropdownItems = computed(() => [
+  ...impayesItems.map(item => ([{
+    label: item.label,
+    icon: item.icon,
+    to: item.to
+  }]))
+])
+
+const relancesDropdownItems = computed(() => [
+  ...relancesItems.map(item => ([{
+    label: item.label,
+    icon: item.icon,
+    to: item.to
+  }]))
+])
+
 const contactsDropdownItems = computed(() => [
   ...contactsItems.map(item => ([{
     label: item.label,

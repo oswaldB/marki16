@@ -4,13 +4,17 @@ export function useImpayesStoreComposable() {
     const store = useImpayesStore();
     const { $parse } = useNuxtApp();
     const toast = useToast();
+    const route = useRoute();
+    const router = useRouter();
 
     // État local pour les filtres
     const search = ref("");
     const filtreSequence = ref("all");
     const sortColumn = ref("date_piece");
     const sortDirection = ref("desc");
-    const activeView = ref("unitaire");
+
+    // Synchroniser la vue active avec l'URL
+    const activeView = ref(route.query.vue || "unitaire");
 
     // Données réactives
     const impayes = computed(() => {
@@ -39,8 +43,27 @@ export function useImpayesStoreComposable() {
 
     // Gestion du changement de vue
     watch(activeView, async (newView) => {
+        // Mettre à jour l'URL avec le paramètre de query
+        await router.replace({
+            query: {
+                ...route.query,
+                vue: newView === "unitaire" ? undefined : newView,
+            },
+        });
         await charger();
     });
+
+    // Synchroniser avec les changements d'URL (ex: retour arrière/avant)
+    watch(
+        () => route.query.vue,
+        (newVue) => {
+            const targetView = newVue || "unitaire";
+            if (targetView !== activeView.value) {
+                activeView.value = targetView;
+            }
+        },
+        { immediate: true },
+    );
 
     // Recherche avec debounce
     let searchTimer = null;

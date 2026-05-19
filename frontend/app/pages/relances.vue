@@ -594,10 +594,35 @@ const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3').the
 
 const { $parse } = useNuxtApp()
 const toast = useToast()
+const route = useRoute()
+const router = useRouter()
 const blacklistStore = useBlacklistStore()
 
 // ── State ──────────────────────────────────────────────────────
-const vue = ref('tableau')
+const vue = ref(route.query.vue || 'tableau')
+
+// Synchroniser la vue avec l'URL
+watch(vue, async (newVue) => {
+  await router.replace({
+    query: {
+      ...route.query,
+      vue: newVue === 'tableau' ? undefined : newVue,
+    },
+  })
+})
+
+// Synchroniser avec les changements d'URL (retour arrière/avant)
+watch(
+  () => route.query.vue,
+  (newVue) => {
+    const targetView = newVue || 'tableau'
+    if (targetView !== vue.value) {
+      vue.value = targetView
+    }
+  },
+  { immediate: true },
+)
+
 const loading = ref(false)
 const relances = ref([])
 const sequences = ref([])

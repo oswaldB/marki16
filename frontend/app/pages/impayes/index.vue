@@ -331,7 +331,7 @@
     </div>
 
     <!-- ── Vue sans séquence ── -->
-    <div v-else class="space-y-3">
+    <div v-else-if="activeView === 'sans-sequence'" class="space-y-3">
       <div v-if="loading" class="text-center py-8 text-gray-400">Chargement...</div>
       <div v-else-if="impayes.length === 0" class="text-center py-8 text-gray-400">Aucun impayé sans séquence trouvé</div>
       <template v-else>
