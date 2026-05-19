@@ -386,7 +386,7 @@
         </div>
       </template>
     </UModal>
-    
+
     <!-- Slideover attribution email de relances -->
     <EmailSelectionSlideover
       v-model="modalRelanceContactOuvert"
@@ -654,7 +654,7 @@ async function chargerRelances() {
     objet:     r.get('objet') || '(sans objet)',
     corps:     r.get('corps') || '',
     statut:    r.get('statut') || 'pending',
-    manuelle:  r.get('manuelle') || false,
+    manuelle:  r.get('manuel') || false,
   }))
 }
 
@@ -686,13 +686,19 @@ async function assignerSequence() {
   if (!sequenceChoisie.value) return
   assignantSequence.value = true
   try {
-    const result = await $parse.Cloud.run('assignerSequence', {
-      impayelId: impayelId.value,
-      sequenceId: sequenceChoisie.value,
-    })
+    // Utiliser Parse SDK directement au lieu de Cloud Function
+    const Impaye = $parse.Object.extend('Impaye')
+    const Sequence = $parse.Object.extend('Sequence')
+
+    const impaye = await Impaye.createWithoutData(impayelId.value).fetch()
+    const sequence = Sequence.createWithoutData(sequenceChoisie.value)
+
+    impaye.set('sequence', sequence)
+    await impaye.save()
+
     const seqObj = sequences.value.find(s => s.id === sequenceChoisie.value)
     sequenceActive.value = seqObj || null
-    toast.add({ title: `Séquence assignée — ${result.created} relance(s) créée(s)`, color: 'green' })
+    toast.add({ title: 'Séquence assignée', color: 'green' })
     modalSequenceOuvert.value = false
     await chargerRelances()
   } catch (err) {
@@ -705,10 +711,13 @@ async function assignerSequence() {
 async function retirerSequence() {
   retirantSequence.value = true
   try {
-    await $parse.Cloud.run('assignerSequence', {
-      impayelId: impayelId.value,
-      sequenceId: null,
-    })
+    // Utiliser Parse SDK directement au lieu de Cloud Function
+    const Impaye = $parse.Object.extend('Impaye')
+    const impaye = await Impaye.createWithoutData(impayelId.value).fetch()
+
+    impaye.unset('sequence')
+    await impaye.save()
+
     sequenceActive.value = null
     toast.add({ title: 'Séquence retirée', color: 'green' })
     await chargerRelances()
@@ -753,36 +762,36 @@ function ouvrirModalRelanceContact() {
 async function retirerEmailRelance() {
   try {
     attribuantContact.value = true
-    
+
     // Supprimer le pointer email_relance de l'impayé
     const impayeToUpdate = $parse.Object.extend('Impaye').createWithoutData(impayelId.value)
     impayeToUpdate.unset('email_relance')
-    
+
     await impayeToUpdate.save()
-    
+
     console.log('Email de relance retiré de l\'impayé:', impayelId.value)
-    
+
     // Mettre à jour les relances en attente pour utiliser l'email du payeur par défaut
     const Relance = $parse.Object.extend('Relance')
     const qRelances = new $parse.Query(Relance)
     qRelances.equalTo('impaye', impayeToUpdate)
     qRelances.equalTo('statut', 'pending')
     const pendingRelances = await qRelances.find()
-    
+
     console.log('Relances en attente trouvées pour mise à jour:', pendingRelances.length)
-    
+
     // Recalculer le destinataire sans email_relance (utilisera payeur_email par défaut)
     const nouveauTo = await construireDestinataires( '[[payeur_email]]', impayeToUpdate)
     console.log('Nouveau destinataire calculé (sans email_relance):', nouveauTo)
-    
+
     for (const relance of pendingRelances) {
       relance.set('to', nouveauTo)
     }
     if (pendingRelances.length) {
       await $parse.Object.saveAll(pendingRelances)
     }
-    
-    toast.add({ 
+
+    toast.add({
       title: 'Email de relance retiré avec succès',
       description: 'Les futures relances utiliseront l\'email du payeur par défaut',
       color: 'green',
@@ -802,43 +811,43 @@ async function handleEmailSelected(email, contactId) {
   try {
     attribuantContact.value = true
     console.log('handleEmailSelected appelé avec:', { email, contactId })
-    
+
     if (!contactId) {
       throw new Error('ID de contact non fourni')
     }
-    
+
     // Créer un pointer vers le contact
     const Contact = $parse.Object.extend('Contact')
     const contactPointer = Contact.createWithoutData(contactId)
-    
+
     // Mettre à jour l'impayé avec un appel PUT direct
     const impayeToUpdate = $parse.Object.extend('Impaye').createWithoutData(impayelId.value)
     impayeToUpdate.set('email_relance', contactPointer)
-    
+
     await impayeToUpdate.save()
-    
+
     console.log('Impayé mis à jour avec email_relance:', impayelId.value)
-    
+
     // Mettre à jour les relances en attente avec le nouvel email
     const Relance = $parse.Object.extend('Relance')
     const qRelances = new $parse.Query(Relance)
     qRelances.equalTo('impaye', impayeToUpdate)
     qRelances.equalTo('statut', 'pending')
     const pendingRelances = await qRelances.find()
-    
+
     console.log('Relances en attente trouvées:', pendingRelances.length)
-    
+
     // Recalculer le destinataire avec le nouveau contact
     const nouveauTo = await construireDestinataires( '[[payeur_email]]', impayeToUpdate)
     console.log('Nouveau destinataire calculé:', nouveauTo)
-    
+
     for (const relance of pendingRelances) {
       relance.set('to', nouveauTo)
     }
     if (pendingRelances.length) {
       await $parse.Object.saveAll(pendingRelances)
     }
-    
+
     toast.add({ title: 'Email de relances attribué', color: 'green' })
     await charger()
   } catch (err) {

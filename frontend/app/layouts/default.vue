@@ -85,7 +85,7 @@
                 <span class="text-sm mt-2 font-medium">{{ item.label }}</span>
               </NuxtLink>
             </template>
-            
+
             <!-- More button for settings -->
             <UDropdown :items="settingsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
@@ -93,7 +93,7 @@
                 <span class="text-sm mt-2 font-medium">Plus</span>
               </button>
             </UDropdown>
-            
+
             <!-- Logout button -->
             <button
               class="flex flex-col items-center justify-center min-w-[80px] h-full text-gray-500 hover:text-gray-700"
@@ -125,6 +125,7 @@ const authStore = useAuthStore()
 const navItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
   { to: '/impayes', label: 'Impayés', icon: 'i-heroicons-banknotes' },
+  { to: '/impayes2', label: 'Impayés (v2)', icon: 'i-heroicons-banknotes' },
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
   { to: '/blacklist', label: 'Blacklist', icon: 'i-heroicons-no-symbol' },
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },

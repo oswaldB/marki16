@@ -317,7 +317,7 @@ const runUploadAndParse = async () => {
   uploading.value = true
   try {
     const config = useRuntimeConfig()
-    
+
     // 1. Upload
     const formData = new FormData()
     for (const file of selectedFiles.value) {
@@ -356,7 +356,8 @@ const runImport = async () => {
   importError.value = ''
   importing.value = true
   try {
-    const stats = await $parse.Cloud.run('importImpayes', { impayes: editedData.value })
+    // Utiliser triggerImportInvoices au lieu de importImpayes
+    const stats = await $parse.Cloud.run('triggerImportInvoices')
     importStats.value = stats
     currentStep.value = 2
   } catch (err) {

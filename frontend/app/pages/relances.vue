@@ -53,7 +53,7 @@
           placeholder="Rechercher..."
           class="w-52"
         />
-        
+
         <!-- Bouton pour créer des relances -->
         <UButton
           icon="i-heroicons-plus-circle"
@@ -447,7 +447,7 @@
     </template>
 
 
-    
+
     <!-- ══════════════════════════════════════
          SLIDEOVER — Modifier / Voir une relance
     ══════════════════════════════════════ -->
@@ -483,7 +483,7 @@
               <UInput v-model="drawerTo" :disabled="drawerReadonly" class="w-full" />
             </div>
           </div>
-          
+
           <!-- Case à cocher pour appliquer à tous les emails suivants -->
           <div v-if="!drawerReadonly" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
             <UCheckbox v-model="applyToAllFollowing.value" />
@@ -626,8 +626,8 @@ const relanceDrawer = computed(() => drawerRow.value)
 
 // Computed pour le workflow de validation
 const relancesAValider = computed(() => {
-  const relancesNonValidees = relances.value.filter(r => !r.valide)
-  
+  const relancesNonValidees = relances.value.filter(r => !r.valide && !r.manuelle)
+
   if (modeTriValidation.value === 'chronologique') {
     return relancesNonValidees.sort((a, b) => {
       return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
@@ -694,13 +694,13 @@ const colonnes = [
     header: sortableHeader('Facture'),
     cell: ({ row }) => {
       const r = row.original
-      
+
       // Si plusieurs factures, afficher toutes les numéros de facture
       if (r.impayes && r.impayes.length > 1) {
         const invoiceNumbers = r.impayes.map(imp => imp.nfacture).join(', ')
         return h('div', { class: 'text-sm font-mono' }, invoiceNumbers)
       }
-      
+
       if (r.impayelId) {
         return h(NuxtLink, {
           to: `/impayes/${r.impayelId}`,
@@ -801,7 +801,7 @@ const calendarOptions = computed(() => ({
     // Utiliser la date réelle de la relance sans heure spécifique
     const dateRelance = new Date(r.dateEnvoi)
     dateRelance.setHours(0, 0, 0, 0) // Réinitialiser l'heure à minuit
-    
+
     return {
       id: r.id,
       title: (r.to?.split('@')[0] || '?') + ' — ' + (r.objet?.slice(0, 20) || ''),
@@ -842,12 +842,12 @@ function toDateInput(val) {
 
 function parseImpaye(i) {
   if (!i) return null
-  
+
   // Handle both Parse Objects and plain JavaScript objects
   const getValue = (key) => {
     return i.get ? i.get(key) : i[key]
   }
-  
+
   return {
     id:           i.id,
     nfacture:     getValue('nfacture') || '—',
@@ -880,20 +880,20 @@ function parseRelance(r) {
   const getValue = (key) => {
     return r.get ? r.get(key) : r[key]
   }
-  
+
   const metadata = getValue('metadata') || {}
   const templateData = metadata.templateData || {}
-  
+
   // Get facture number from metadata if impayeliste is empty
   const nfactureFromMetadata = templateData.nfacture || templateData.nfactures_liste
-  const factureNumber = impayeliste.length > 0 
+  const factureNumber = impayeliste.length > 0
     ? impayeliste.map(imp => imp.nfacture).join(', ')
     : (nfactureFromMetadata ? String(nfactureFromMetadata) : '—')
-  
+
   // Also try to get email from contact if available
   const contact = r.get('contact')
   const contactEmail = contact ? (contact.get ? contact.get('email') : contact.email) : null
-  
+
   return {
     _parse:      r,
     id:          r.id,
@@ -903,8 +903,8 @@ function parseRelance(r) {
     cc:          getValue('cc') || '',
     corps:       getValue('contenu') || getValue('corps') || '',
     statut:      getValue('statut') || 'pending',
-    manuelle:    getValue('manuelle') || false,
-    valide:      getValue('valide') !== false, // par défaut true si non défini
+    manuelle:    getValue('manuel') || false,
+    valide:      getValue('valide') === true,
     nfacture:    factureNumber,
     impayelId:   impayeliste.length > 0 ? impayeliste.map(imp => imp.id) : null,
     email_index: getValue('email_index') ?? null,
@@ -929,11 +929,15 @@ async function charger() {
     if (filtreStatut.value !== 'tous' && filtreStatut.value !== 'non-validees') {
       q.equalTo('statut', filtreStatut.value)
     }
-    
+
     if (filtreStatut.value === 'non-validees') {
-      q.equalTo('valide', false)
+      q.or(
+        q.equalTo('valide', false),
+        q.doesNotExist('valide')
+      )
+      q.notEqualTo('manuel', true)
     }
-    
+
     if (filtreSequence.value && filtreSequence.value !== 'tous') {
       const ptr = $parse.Object.fromJSON({ __type: 'Pointer', className: 'Sequence', objectId: filtreSequence.value })
       q.equalTo('sequence', ptr)
@@ -963,9 +967,9 @@ async function createRelancesForAllActiveSequences() {
   try {
     console.log('Début de la création des relances...')
     const response = await $parse.Cloud.run('triggerImportInvoices')
-    
+
     console.log('Réponse de la fonction cloud:', response)
-    
+
     const relancesCrees = response.result?.createRelances?.created || response.result?.createRelances?.relancesCrees || 0
     const relancesMisesAJour = response.result?.createRelances?.updated || 0
 
@@ -1017,19 +1021,19 @@ async function annulerGroupe() {
         relancesParId[row.id] = row
       }
     })
-    
+
     const relancesAAnnuler = Object.values(relancesParId)
-    
+
     await $parse.Object.saveAll(relancesAAnnuler.map(r => {
       r._parse.set('statut', 'annulé')
       return r._parse
     }))
-    
+
     // Mettre à jour le statut localement
     relancesAAnnuler.forEach(r => {
       r.statut = 'annulé'
     })
-    
+
     toast.add({ title: `${relancesAAnnuler.length} relance(s) annulée(s)`, color: 'green' })
     selection.value = []
   } catch (err) {
@@ -1049,9 +1053,9 @@ async function validerGroupe() {
         relancesParId[row.id] = row
       }
     })
-    
+
     const relancesAValider = Object.values(relancesParId)
-    
+
     if (relancesAValider.length === 0) {
       toast.add({ title: 'Aucune relance à valider', color: 'yellow' })
       return
@@ -1061,12 +1065,12 @@ async function validerGroupe() {
       r._parse.set('valide', true)
       return r._parse
     }))
-    
+
     // Mettre à jour le statut localement
     relancesAValider.forEach(r => {
       r.valide = true
     })
-    
+
     toast.add({ title: `${relancesAValider.length} relance(s) validée(s)`, color: 'green' })
     selection.value = []
   } catch (err) {
@@ -1080,7 +1084,7 @@ async function validerGroupe() {
 function ouvrirDrawer(row, readonly) {
   // Gérer les deux cas: row.original (vue tableau) ou row direct (vue calendrier)
   const relance = row.original || row
-  
+
   drawerRow.value = relance
   drawerReadonly.value = readonly
   drawerDateEnvoi.value = toDateInput(relance.dateEnvoi)
@@ -1103,7 +1107,7 @@ async function enregistrerDrawer() {
   try {
     const row = drawerRow.value
     const r = row._parse
-    
+
     r.set('dateEnvoi', drawerDateEnvoi.value ? new Date(drawerDateEnvoi.value) : r.get('dateEnvoi'))
     r.set('to', drawerTo.value)
     r.set('cc', drawerCc.value)
@@ -1112,12 +1116,12 @@ async function enregistrerDrawer() {
       try { r.set('corps', editorDrawerRef.value.getInstance().getHTML()) } catch {}
     }
     await r.save()
-    
+
     // Si la case est cochée, appliquer le changement à tous les emails suivants
     if (applyToAllFollowing.value) {
       await appliquerToAuxRelancesSuivantes(row, drawerTo.value)
     }
-    
+
     showDrawer.value = false
     toast.add({ title: 'Relance enregistrée', color: 'green' })
     await charger()
@@ -1134,14 +1138,14 @@ async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
     // Trouver toutes les relances avec la même facture (impaye) qui ont une date postérieure
     const relancesAAppliquer = relances.value.filter(r => {
       // Vérifier si c'est une relance suivante (même facture, date postérieure)
-      const memeFacture = r.impayelId && relanceCourante.impayelId && 
+      const memeFacture = r.impayelId && relanceCourante.impayelId &&
                          r.impayelId.some(id => relanceCourante.impayelId.includes(id))
       const datePosterieure = new Date(r.dateEnvoi) > new Date(relanceCourante.dateEnvoi)
       const differentId = r.id !== relanceCourante.id
-      
+
       return memeFacture && datePosterieure && differentId
     })
-    
+
     if (relancesAAppliquer.length > 0) {
       // Mettre à jour toutes les relances suivantes
       const objetsAEnregistrer = relancesAAppliquer.map(r => {
@@ -1149,11 +1153,11 @@ async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
         r.to = nouveauTo // Mettre à jour localement
         return r._parse
       })
-      
+
       await $parse.Object.saveAll(objetsAEnregistrer)
-      
-      toast.add({ 
-        title: `Destinataire appliqué à ${relancesAAppliquer.length} relance(s) suivante(s)`, 
+
+      toast.add({
+        title: `Destinataire appliqué à ${relancesAAppliquer.length} relance(s) suivante(s)`,
         color: 'blue'
       })
     }
@@ -1167,10 +1171,10 @@ async function validerRelanceDrawer() {
   try {
     const row = drawerRow.value
     const r = row._parse
-    
+
     r.set('valide', true)
     row.valide = true
-    
+
     await r.save()
     showDrawer.value = false
     toast.add({ title: 'Relance validée', color: 'green' })
@@ -1189,19 +1193,19 @@ function selectionnerRelancePourValidation(relance) {
 
 async function validerRelanceWorkflow() {
   if (!relanceCourante.value) return
-  
+
   validantWorkflow.value = true
   try {
     const row = relanceCourante.value
     const r = row._parse
-    
+
     r.set('valide', true)
     row.valide = true
-    
+
     await r.save()
-    
+
     toast.add({ title: 'Relance validée !', color: 'green' })
-    
+
     // Passer à la relance suivante
     await charger()
     passerARelanceSuivante()
@@ -1224,7 +1228,7 @@ async function validateAllSelected() {
     // Filtrer les relances qui ne sont pas encore validées
     const relancesToValidate = relancesAValider.value
       .filter(r => selectedRelancesForBulk.value.includes(r.id) && !r.valide)
-    
+
     if (relancesToValidate.length === 0) {
       toast.add({ title: 'Toutes les relances sélectionnées sont déjà validées', color: 'yellow' })
       return
@@ -1241,13 +1245,13 @@ async function validateAllSelected() {
       title: `${relancesToValidate.length} relance(s) validée(s)`,
       color: 'green'
     })
-    
+
     // Réinitialiser la sélection
     selectedRelancesForBulk.value = []
-    
+
     // Recharger les données
     await charger()
-    
+
     // Si la relance courante a été validée, passer à la première non validée
     if (relanceCourante.value?.valide) {
       relanceCourante.value = relancesAValider.value[0] || null
@@ -1268,15 +1272,15 @@ function passerARelanceSuivante() {
     relanceCourante.value = null
     return
   }
-  
+
   // Trouver l'index courant
   const indexCourant = relancesAValider.value.findIndex(r => r.id === relanceCourante.value?.id)
-  
+
   // Si on est au dernier élément ou si aucune relance n'est sélectionnée, prendre la première
-  const indexSuivant = indexCourant === relancesAValider.value.length - 1 || indexCourant === -1 
-    ? 0 
+  const indexSuivant = indexCourant === relancesAValider.value.length - 1 || indexCourant === -1
+    ? 0
     : indexCourant + 1
-  
+
   relanceCourante.value = relancesAValider.value[indexSuivant]
 }
 

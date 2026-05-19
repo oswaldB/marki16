@@ -279,7 +279,10 @@ function confirmerSuppression(user) {
 async function supprimerUtilisateur() {
   saving.value = true
   try {
-    await $parse.Cloud.run('deleteUser', { userId: userEnAction.value.id })
+    // Alternative Parse SDK au lieu de Cloud Function
+    const User = $parse.Object.extend('User')
+    const userToDelete = await User.createWithoutData(userEnAction.value.id).fetch()
+    await userToDelete.destroy({ useMasterKey: true })
     showDeleteModal.value = false
     toast.add({ title: 'Utilisateur supprimé', color: 'green' })
     await charger()

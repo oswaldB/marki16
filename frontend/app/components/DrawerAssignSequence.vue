@@ -149,20 +149,29 @@ async function attribuer() {
       const sequenceObj = $parse.Object.extend('Sequence').createWithoutData(sequenceChoisie.value)
       impayeObj.set('sequence', sequenceObj)
       await impayeObj.save()
-      
+
       // Mettre à jour directement dans le store pour la réactivité
       const impayeIndex = useImpayesStore().allImpayes.findIndex(i => i.objectId === item.objectId)
       if (impayeIndex !== -1) {
         useImpayesStore().allImpayes[impayeIndex] = useImpayesStore().rowToPlain(impayeObj)
       }
-      
-      // Appeler la fonction cloud pour créer les relances
+
+      // Créer les relances en utilisant Parse SDK directement au lieu de Cloud Function
       try {
-        await $parse.Cloud.run('createOneRelanceWithTemplates', { impayeId: item.objectId })
-        console.log(`Relances créées pour l'impayé ${item.objectId}`)
+        const Relance = $parse.Object.extend('Relance')
+        const relance = new Relance()
+        const impayePtr = $parse.Object.extend('Impaye').createWithoutData(item.objectId)
+        const sequencePtr = $parse.Object.extend('Sequence').createWithoutData(sequenceChoisie.value)
+
+        relance.set('impaye', impayePtr)
+        relance.set('sequence', sequencePtr)
+        relance.set('statut', 'En attente de generation')
+
+        await relance.save()
+        console.log(`Relance créée pour l'impayé ${item.objectId}`)
       } catch (error) {
-        console.error(`Erreur création relances pour ${item.objectId}:`, error)
-        // Ne pas bloquer l'assignation même si la création des relances échoue
+        console.error(`Erreur création relance pour ${item.objectId}:`, error)
+        // Ne pas bloquer l'assignation même si la création de la relance échoue
       }
     }
 
@@ -173,7 +182,7 @@ async function attribuer() {
 
     emit('update:open', false)
     emit('assigned')
-    
+
   } catch (err) {
     toast.add({ title: 'Erreur lors de l\'attribution', description: err.message, color: 'red' })
   } finally {

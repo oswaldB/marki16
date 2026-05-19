@@ -101,7 +101,10 @@ async function checkParseCloud() {
   parseCloud.error = null
   const t0 = Date.now()
   try {
-    await ($parse as any).Cloud.run('ping')
+    // Test via appel HTTP au lieu de Cloud.run('ping') qui n'existe pas
+    const config = useRuntimeConfig()
+    const res = await fetch(`${config.public.apiBaseUrl}/api/healthy`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
     parseCloud.responseMs = Date.now() - t0
     parseCloud.status = 'ok'
   } catch (err: any) {

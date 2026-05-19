@@ -160,7 +160,7 @@ async function processAndSaveImpayes({
     try {
         for (const pieceRow of pieces) {
             try {
-                debug(
+                info(
                     `Traitement de l'impayé nfacture=${pieceRow.nfacture}`,
                     "import-invoice",
                     "processAndSaveImpayes",
@@ -807,7 +807,7 @@ async function processAndSaveImpayes({
                 impaye.set("payeur_type", payeurType);
 
                 // Sauvegarde
-                debug(
+                info(
                     `Sauvegarde de l'impayé nfacture=${pieceRow.nfacture}`,
                     "import-invoice",
                     "processAndSaveImpayes",

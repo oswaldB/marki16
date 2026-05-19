@@ -10,7 +10,7 @@
         </NuxtLink>
         <UInput v-model="nom" class="flex-1 text-xl font-semibold" placeholder="Nom de la séquence" />
       </div>
-      
+
       <div class="flex flex-wrap gap-2 justify-end">
         <UBadge :color="publiee ? 'success' : 'neutral'" variant="subtle" class="shrink-0 self-center">
           {{ publiee ? 'Publiée' : 'Brouillon' }}
@@ -358,7 +358,7 @@ onMounted(() => {
   console.log('Type de séquence initial:', type.value)
   console.log('Types disponibles:', sequenceTypes)
   console.log('Emails initiaux:', emails.value)
-  
+
   // Initialiser les emails selon le type initial seulement si la liste est vide
   // (le watcher gérera les changements de type ultérieurs)
 })
@@ -367,75 +367,37 @@ onMounted(() => {
 async function lancerAttributionAutomatique() {
   try {
     runningAutoAssign.value = true
-    
+
     // Sauvegarder d'abord la séquence pour s'assurer qu'elle est à jour
     await sauvegarder(editorRefs)
-    
-    // Vérifier si la fonction assignSpecificSequence existe
-    let result
-    try {
-      // Essayer d'appeler la fonction assignSpecificSequence
-      result = await $parse.Cloud.run('assignSpecificSequence', {
-        sequenceId: sequence.value.id,
-      })
-    } catch (functionError) {
-      // Si la fonction n'existe pas, essayer une approche alternative
-      if (functionError.message && functionError.message.includes('Invalid function')) {
-        console.log('La fonction assignSpecificSequence n\'existe pas, utilisation de l\'approche alternative')
-        
-        // Approche alternative: utiliser createRelancesWithTemplates directement
-        // (Cette partie doit être adaptée à votre logique métier)
-        result = {
-          assigned: 0,
-          assignedImpayeIds: []
-        }
-        
-        // Ici vous pourriez appeler une autre fonction ou afficher un message
-        toast.add({
-          title: 'Information',
-          description: 'La fonction d\'attribution automatique n\'est pas encore disponible',
-          color: 'blue'
-        })
-        
-        runningAutoAssign.value = false
-        return
-      } else {
-        // Si c'est une autre erreur, la relancer
-        throw functionError
-      }
-    }
-    
-    // Créer les relances pour les impayés nouvellement attribués
-    if (result.assignedImpayeIds && result.assignedImpayeIds.length > 0) {
-      console.log(`Création des relances pour ${result.assignedImpayeIds.length} impayés`);
-      
-      // Appeler la fonction pour créer les relances
-      const relancesResult = await $parse.Cloud.run('createRelancesWithTemplates', {
-        impayeIds: result.assignedImpayeIds,
-        sequenceId: sequence.value.id,
-      });
-      
-      toast.add({
-        title: 'Succès',
-        description: `${result.assigned} impayés ont reçu cette séquence et ${relancesResult.relancesCrees} relances ont été créées`,
-        color: 'green'
-      })
-    } else {
-      toast.add({
-        title: 'Succès',
-        description: `${result.assigned} impayés ont reçu cette séquence`,
-        color: 'green'
-      })
-    }
-    
+
+    // Utiliser generateRelances qui existe déjà au lieu de assignSpecificSequence + createRelancesWithTemplates
+    const toast = useToast()
+    toast.add({
+      title: 'Attribution en cours',
+      description: 'Lancement de la génération des relances...',
+      color: 'blue'
+    })
+
+    const result = await $parse.Cloud.run('generateRelances')
+
+    const created = result.stats?.etape1?.relancesCreated || 0
+    const updated = result.stats?.etape1?.relancesUpdated || 0
+
+    toast.add({
+      title: 'Succès',
+      description: `${created} relances créées, ${updated} mises à jour`,
+      color: 'green'
+    })
+
     // Recalculer l'aperçu
     await calculerApercu()
   } catch (error) {
     console.error('Erreur attribution automatique:', error)
-    
+
     const toast = useToast()
     const errorMessage = error.message || 'Échec de l\'attribution automatique'
-    
+
     // Afficher le toast d'erreur
     toast.add({
       id: 'error-toast-with-copy',
@@ -444,7 +406,7 @@ async function lancerAttributionAutomatique() {
       color: 'red',
       timeout: 0  // Ne pas fermer automatiquement
     })
-    
+
     // Copier automatiquement dans le presse-papier
     navigator.clipboard.writeText(errorMessage)
       .then(() => {
@@ -573,11 +535,11 @@ async function regenererRelances(options) {
     width: 100%;
     margin-bottom: 0.5rem;
   }
-  
+
   .responsive-badge {
     align-self: center;
   }
-  
+
   .button-group {
     flex-wrap: wrap;
     gap: 0.5rem;

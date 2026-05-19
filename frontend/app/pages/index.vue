@@ -15,7 +15,25 @@
 
     <template v-else>
       <!-- ── KPI Cards ── -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-purple-50">
+              <UIcon name="i-heroicons-document-duplicate" class="size-5 text-purple-500" />
+            </div>
+            <div>
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">Factures en attente</p>
+                <UTooltip text="Nombre de factures uniques (nfacture) avec un reste à payer > 0">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.factures_en_attente }}</p>
+              <p class="text-xs text-gray-400">reste à payer > 0</p>
+            </div>
+          </div>
+        </UCard>
 
         <UCard>
           <div class="flex items-start gap-3">
@@ -92,7 +110,7 @@
       </div>
 
       <!-- ── Ancienneté des impayés ── -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 
         <UCard>
           <div class="flex items-start gap-3">
@@ -144,6 +162,24 @@
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j60.count }}</p>
               <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j60.montant) }}</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-violet-50">
+              <UIcon name="i-heroicons-clock" class="size-5 text-violet-500" />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">60 à 120 jours</p>
+                <UTooltip text="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 60 à 120 jours">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ aging.j60_120.count }}</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(aging.j60_120.montant) }}</p>
             </div>
           </div>
         </UCard>
@@ -314,6 +350,7 @@ const { $parse } = useNuxtApp()
 const loading = ref(true)
 
 const kpi = ref({
+  factures_en_attente: 0,
   impayes_actifs:    0,
   montant_total:     0,
   relances_jour:     0,
@@ -330,6 +367,7 @@ const aging = ref({
   j30:  { count: 0, montant: 0 },
   j60:  { count: 0, montant: 0 },
   j120: { count: 0, montant: 0 },
+  j60_120: { count: 0, montant: 0 },
 })
 const relancesJour = ref([])
 const impayes_recents = ref([])
@@ -369,6 +407,14 @@ async function chargerKpi() {
     .equalTo('reste_a_payer', 0)
     .select('nfacture')
     .limit(10000)
+
+  // Compter nfacture uniques avec reste_a_payer > 0 (toutes factures en attente)
+  const qEnAttente = new $parse.Query('Impaye')
+    .greaterThan('reste_a_payer', 0)
+    .select('nfacture')
+    .limit(10000)
+  const enAttenteResult = await qEnAttente.find()
+  const en_attente = [...new Set(enAttenteResult.map(i => i.get('nfacture')))].length
 
   // Compter nfacture uniques avec reste_a_payer > 0 et échéance dépassée
   const qEchusActifs = new $parse.Query('Impaye')
@@ -410,6 +456,7 @@ async function chargerKpi() {
   const montant = [...nfactureMap.values()].reduce((s, v) => s + v, 0)
 
   kpi.value = {
+    factures_en_attente: en_attente,
     impayes_actifs:    actifs,
     montant_total:     montant,
     relances_jour:     relances,
@@ -438,6 +485,7 @@ async function chargerAging() {
   const j7Map = new Map()
   const j30Map = new Map()
   const j60Map = new Map()
+  const j60_120Map = new Map()
   const j120Map = new Map()
 
   for (const item of items) {
@@ -452,7 +500,9 @@ async function chargerAging() {
       if (!j30Map.has(nfact)) j30Map.set(nfact, rap)
     } else if (de >= cutoff60) {
       if (!j60Map.has(nfact)) j60Map.set(nfact, rap)
-    } else if (de < cutoff120) {
+    } else if (de >= cutoff120) {
+      if (!j60_120Map.has(nfact)) j60_120Map.set(nfact, rap)
+    } else {
       if (!j120Map.has(nfact)) j120Map.set(nfact, rap)
     }
   }
@@ -461,6 +511,7 @@ async function chargerAging() {
     j7:   { count: j7Map.size,   montant: [...j7Map.values()].reduce((s, v) => s + v, 0) },
     j30:  { count: j30Map.size,  montant: [...j30Map.values()].reduce((s, v) => s + v, 0) },
     j60:  { count: j60Map.size,  montant: [...j60Map.values()].reduce((s, v) => s + v, 0) },
+    j60_120: { count: j60_120Map.size, montant: [...j60_120Map.values()].reduce((s, v) => s + v, 0) },
     j120: { count: j120Map.size, montant: [...j120Map.values()].reduce((s, v) => s + v, 0) },
   }
 }
@@ -470,7 +521,7 @@ async function chargerMontantsMois() {
   const montantsPaye  = []
   const montantsReste = []
   const montantsCount = []
-  
+
   // Calcul pour 12 mois + colonne "avant" + mois courant
   // i=13 → "Avant" (toutes les factures avant les 12 derniers mois)
   // i=12 → mois-12, ..., i=0 → mois courant
@@ -579,7 +630,7 @@ async function chargerImpayes() {
   const q = new $parse.Query('Impaye')
   q.descending('createdAt')
   q.equalTo('facture_soldee', false)
-  q.doesNotExist('payeur_nom')
+  q.greaterThan('reste_a_payer', 0)
   q.limit(5)
   const results = await q.find()
   impayes_recents.value = results.map(r => ({
@@ -594,26 +645,39 @@ async function chargerRelancesAValider() {
   if (!$parse.User.current()) return
   const q = new $parse.Query('Relance')
   q.equalTo('valide', false)
-  q.equalTo('statut', 'pending')
-  q.include('impaye')
+  q.notEqualTo('manuel', true)
+  q.include('contact')
   q.include('sequence')
   q.ascending('dateEnvoi')
   q.limit(5)
   const results = await q.find()
-  relancesAValider.value = results.map(r => {
-    const imp = r.get('impaye')
-    const seq = r.get('sequence')
-    const d = r.get('dateEnvoi')
-    return {
-      id:           r.id,
-      payeur_nom:   imp ? imp.get('payeur_nom') || '—' : '—',
-      nfacture:     imp ? imp.get('nfacture') || '—' : '—',
-      sequence_nom: seq ? seq.get('nom') || '—' : '—',
-      heure:        d ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—',
-      date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
-      numero:       r.get('numero') || '—',
-    }
-  })
+
+  relancesAValider.value = await Promise.all(
+    results.map(async (r) => {
+      const impayesIds = r.get('impayes') || []
+      const impayes = []
+
+      if (impayesIds.length > 0) {
+        const impayeQuery = new $parse.Query('Impaye')
+        impayeQuery.containedIn('objectId', impayesIds)
+        const impayeResults = await impayeQuery.find()
+        impayes.push(...impayeResults)
+      }
+
+      const seq = r.get('sequence')
+      const contact = r.get('contact')
+      const d = r.get('dateEnvoi') || r.get('date_envoi_prevue')
+      return {
+        id:           r.id,
+        payeur_nom:   impayes[0] ? impayes[0].get('payeur_nom') || '—' : '—',
+        nfacture:     impayes[0] ? impayes[0].get('nfacture') || '—' : '—',
+        sequence_nom: seq ? seq.get('nom') || '—' : '—',
+        heure:        d ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—',
+        date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
+        numero:       r.get('numero') || '—',
+      }
+    })
+  )
 }
 
 async function chargerContactsSansEmail() {
@@ -701,7 +765,7 @@ const barData = computed(() => {
       },
     ],
   }
-  
+
   console.log('Données du graphique:', data)
   return data
 })

@@ -181,14 +181,14 @@ async function soumettre() {
       r.set('corps',     corps)
       r.set('to',        form.value.to)
       r.set('statut',    'pending')
-      r.set('manuelle',  true)
+      r.set('manuel',  true)
       await r.save()
     } else {
       props.relance.set('dateEnvoi', dateEnvoi)
       props.relance.set('objet',     form.value.objet)
       props.relance.set('corps',     corps)
       props.relance.set('to',        form.value.to)
-      props.relance.set('manuelle',  true)
+      props.relance.set('manuel',  true)
       await props.relance.save()
     }
 

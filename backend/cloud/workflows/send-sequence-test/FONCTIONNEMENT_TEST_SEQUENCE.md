@@ -216,9 +216,9 @@ Pour chaque email dans emails[]:
     3. Préparer les données de l'impayé
        - Utiliser prepareImpayeData() ou prepareMultipleImpayeData()
     ↓
-    4. Générer l'email via Ollama
-       - Appel à generator.generateFromTemplate()
-       - Remplacement des variables dans le template
+    4. Générer l'email via Ollama (appel direct à l'API)
+       - Appel à buildPrompt() et generateEmailContent()
+       - Appel direct à l'API Ollama (identique à 02-generateRelances.js)
     ↓
     5. Envoyer l'email
        - Via sendEmailViaSmtp() si smtpId existe
@@ -227,46 +227,60 @@ Pour chaque email dans emails[]:
     6. Attendre 1 seconde (délai anti-spam)
 ```
 
-### Génération via Ollama
+### Génération via Ollama (appel direct à l'API)
 
-**Service** : `backend/cloud/relances/services/relanceGenerator.js`
+**Fonctions** : `buildPrompt()` et `generateEmailContent()` dans `01-sendSequenceTest.js`
 
-La fonction `generateFromTemplate()` :
+Identique à `02-generateRelances.js` :
 
-1. **Construire le prompt** (`buildTemplateReplacementPrompt`)
+1. **Construire le prompt** (`buildPrompt`)
    ```
-   Tu es un redacteur de relances d'impayés.
-   Ta mission: remplacer les variables dans le template.
+   Tu es un redacteur de relances d'impayés par email.
+   Ta mission consiste à générer l'objet et le corps de l'email
+   à partir d'un template, des informations des impayés et de l'historique.
    
-   Template:
-   - objet: "Rappel - Facture <%= nfacture %> en attente"
-   - corps: "Bonjour <%= payeur_nom %>, votre facture..."
+   Tu ne fais que remplacer les variables.
+   Tu ne changes pas les textes.
    
-   Données:
-   - nfacture: "FACT-2024-001"
-   - payeur_nom: "SNEXI"
-   - montant_total: 2144.94
-   ...
+   Règles:
+   + Si tu vois du markdown tu le convertis en html surtout pour les liens.
+   + Pour le payeur_nom si celui-ci n'est pas une personne alors tu mets vide.
+   + Pas de virgule avec un espace avant
+   + Si tu mets un tableau alors il faut un border sur tous les td.
+   + Si la date d'échéance est arrivée avant alors il faut accorder les temps.
+   + Si l'email dit que l'on applique les taux de pénalités alors rajouter 40€ au montant TTC.
+   
+   Informations:
+   + objet: "{{scenario.objet}}"
+   + corps: "{{scenario.corps}}"
+   + impayés: [JSON des impayés]
+   + historique: [JSON de l'historique]
+   + email_index: {{emailIndex}}
    ```
 
-2. **Appeler Ollama Cloud** via `ollamaClient.generateRelance()`
+2. **Appeler l'API Ollama** (`generateEmailContent`)
+   - URL: `${OLLAMA_API_URL}/generate`
+   - Méthode: POST
+   - Headers: Authorization Bearer token
+   - Body: { model, prompt, stream: false, format: "json", options }
 
-3. **Recevoir le résultat** :
+3. **Parser la réponse JSON** :
    ```javascript
    {
-     object: "Rappel - Facture FACT-2024-001 en attente",
-     body: "<p>Bonjour SNEXI, votre facture...</p>",
-     destinataire: "test@example.com"
+     objet: "Rappel - Facture FACT-2024-001 en attente",
+     corps: "<p>Bonjour SNEXI, votre facture...</p>"
    }
    ```
 
+> **Note** : Le workflow utilise un appel **direct à l'API Ollama**, identique à `02-generateRelances.js`.
+
 ### Envoi de l'email
 
-Deux méthodes disponibles :
+L'envoi est géré par **02-sendEmails.js** (intégré au workflow) :
 
 **1. Via SMTP personnalisé** (`sendEmailViaSmtp`) :
 ```javascript
-await Parse.Cloud.run("sendEmailViaSmtp", {
+await sendEmailViaSmtp({
   smtpId: "YPsNANpWhC",
   to: testEmail,
   subject: objet,
@@ -277,7 +291,7 @@ await Parse.Cloud.run("sendEmailViaSmtp", {
 
 **2. Via méthode par défaut** (`sendEmail`) :
 ```javascript
-await Parse.Cloud.run("sendEmail", {
+await sendEmail({
   to: testEmail,
   subject: objet,
   html: corps,
@@ -376,17 +390,15 @@ Format :
 | Fichier | Rôle |
 |--------|------|
 | `00-master.js` | Point d'entrée - Registration Parse Cloud Function |
-| `01-sendSequenceTest.js` | Logique principale |
-| `../../relances/services/relanceGenerator.js` | Génération via Ollama |
-| `../../relances/services/ollamaClient.js` | Client API Ollama Cloud |
-| `../send-email/01-sendEmail.js` | Fonctions d'envoi email |
+| `01-sendSequenceTest.js` | Étape 1 - Génération du contenu via Ollama |
+| `02-sendEmails.js` | Étape 2 - Fonctions d'envoi email (intégrées) |
 
 ### Cloud Functions appelées
 
 | Fonction | Description |
 |----------|-------------|
-| `sendEmail` | Envoi email via méthode par défaut |
-| `sendEmailViaSmtp` | Envoi email via serveur SMTP configuré |
+| `sendEmail` | Envoi email via méthode par défaut (02-sendEmails.js) |
+| `sendEmailViaSmtp` | Envoi email via serveur SMTP configuré (02-sendEmails.js) |
 
 ### Classes Parse Server
 
@@ -400,46 +412,63 @@ Format :
 
 | Service | Rôle |
 |---------|------|
-| **Ollama Cloud** | Génération de contenu par IA (remplacement de variables dans les templates) |
+| **Ollama API** | Génération de contenu par IA (remplacement de variables dans les templates) |
 | **SMTP** | Serveurs d'envoi d'emails configurés |
+
+### Variables d'environnement
+
+| Variable | Valeur par défaut | Description |
+|----------|------------------|-------------|
+| `OLLAMA_API_URL` | `https://ollama.com/api` | URL de l'API Ollama |
+| `OLLAMA_API_KEY` | - | Clé API Ollama (requise) |
+| `OLLAMA_MODEL` | `mistral` | Modèle à utiliser |
+| `USE_OLLAMA` | `true` | Activer/désactiver Ollama |
 
 ---
 
 ## Variables de template supportées
 
-Les templates d'email peuvent contenir des variables au format `<%= variable %>` ou `[[variable]]` :
+Les templates d'email dans la séquence utilisent des variables qui seront remplacées par Ollama.
+Les données des impayés sont passées en JSON dans le prompt.
 
-### Variables principales
+### Données disponibles pour Ollama
 
 ```javascript
-// Payeur
-<%= payeur_nom %>         // Nom du payeur
-<%= payeur_email %>       // Email du payeur
-<%= payeur_telephone %>   // Téléphone
-<%= payeur_prenom %>      // Prénom (si disponible)
-<%= societe %>            // Société
+// Informations sur les impayés (JSON)
+{
+  "payeur_nom": "SNEXI",
+  "payeur_email": "contact@snexi.fr",
+  "payeur_telephone": "0123456789",
+  "societe": "SNEXI",
+  "nfacture": "FACT-2024-001",
+  "ref_piece": "REF-001",
+  "date_piece": "2024-01-15T00:00:00.000Z",
+  "date_echeance": "2024-02-15T00:00:00.000Z",
+  "reste_a_payer": 2144.94,
+  "montant_total": 2144.94,
+  "adresse_bien": "123 Rue de Paris, 75000 Paris",
+  "code_postal": "75000",
+  "ville": "Paris",
+  "numero_dossier": "DOSS-2024-001"
+}
 
-// Facture
-<%= nfacture %>           // Numéro de facture
-<%= ref_piece %>          // Référence pièce
-<%= date_echeance %>      // Date d'échéance
-<%= montant_total %>     // Montant total
-<%= reste_a_payer %>      // Reste à payer
+// Pour les impayés multiples
+{
+  "multiple": true,
+  "count_impayes": 3,
+  "nfacture": "FACT-001, FACT-002, FACT-003",
+  "reste_a_payer": 6434.82,
+  "nfactures_liste": [...]
+}
 
-// Adresse
-<%= adresse_bien %>       // Adresse du bien
-<%= code_postal %>        // Code postal
-<%= ville %>              // Ville
+// Informations supplémentaires
+{
+  "email_index": 0,
+  "contact": { "nom": "...", "email": "..." }
+}
+```
 
-// Dossier
-<%= numero_dossier %>     // Numéro de dossier
-
-// Apporteur (si applicable)
-<%= apporteur_nom %>      // Nom de l'apporteur
-<%= apporteur_societe %>  // Société de l'apporteur
-
-// Propriétaire (si applicable)
-<%= proprietaire_email %> // Email du propriétaire
+> **Note** : Ollama reçoit toutes ces données en JSON et doit générer un objet JSON avec `{ "objet": "...", "corps": "..." }`.
 <%= proprietaire_telephone %> // Téléphone
 ```
 

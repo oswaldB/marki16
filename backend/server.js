@@ -466,12 +466,10 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
 app.post("/api/smtp/test", express.json(), async (req, res) => {
     const { host, port, username, password } = req.body;
     if (!host || !username || !password) {
-        return res
-            .status(400)
-            .json({
-                ok: false,
-                error: "Champs manquants (host, username, password requis)",
-            });
+        return res.status(400).json({
+            ok: false,
+            error: "Champs manquants (host, username, password requis)",
+        });
     }
     try {
         const nodemailer = require("nodemailer");
@@ -505,8 +503,7 @@ app.post("/api/smtp/test", express.json(), async (req, res) => {
         );
 
         // Configuration des tâches cron
-        // TODO: Uncomment when cron.js is available
-        // const { setupCronJobs } = require('./cron');
-        // setupCronJobs();
+        const { setupCronJobs } = require("./cron");
+        setupCronJobs();
     });
 })();

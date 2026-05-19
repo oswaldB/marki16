@@ -59,7 +59,7 @@ export function useBlacklist() {
         queries.push(telQuery)
         
         // Requête OR sur TOUS les contacts
-        const orQuery = $parse.Query.or(...queries)
+        const orQuery = $parse.Query.or.apply($parse.Query, queries)
         orQuery.include('entreprise')
         orQuery.include('email_relance')
         orQuery.descending('blacklistedAt')

@@ -67,7 +67,7 @@
       <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[60vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
         <UTable
           ref="tableUnitaire"
-          :data="impayes"
+          :data="impayesUnitaireGroupes"
           :columns="colonnesUnitaire"
           :loading="loading"
           v-model:sorting="sorting"
@@ -143,7 +143,7 @@
       </UCard>
 
       <div class="flex justify-end text-sm text-gray-500">
-        {{ impayes.length }} impayés chargés
+        {{ impayesUnitaireGroupes.length }} impayés chargés
       </div>
     </div>
 
@@ -465,7 +465,7 @@
             </template>
           </UAlert>
         </div>
-        
+
         <!-- Affichage des séquences sous forme de cards -->
         <div v-if="sequences.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
           <UCard
@@ -493,7 +493,7 @@
             </div>
           </UCard>
         </div>
-        
+
         <UAlert
           v-if="sequences.length === 0"
           icon="i-heroicons-information-circle"
@@ -601,6 +601,39 @@ const impayesCibles = ref([])
 // ── TanStack Table : état partagé entre les vues ──
 const globalFilter = ref('')
 const sorting = ref([])
+
+// ── Données regroupées par nfacture pour la vue unitaire ──
+const impayesUnitaireGroupes = computed(() => {
+  if (activeView.value !== 'unitaire') return impayes.value
+
+  const grouped = new Map()
+
+  for (const impaye of impayes.value) {
+    const key = impaye.nfacture
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        ...impaye,
+        numero_dossier_list: [impaye.numero_dossier],
+        _groupedOriginals: [impaye]
+      })
+    } else {
+      const existing = grouped.get(key)
+      if (!existing.numero_dossier_list.includes(impaye.numero_dossier)) {
+        existing.numero_dossier_list.push(impaye.numero_dossier)
+      }
+      existing._groupedOriginals.push(impaye)
+    }
+  }
+
+  return [...grouped.values()].map(item => ({
+    ...item,
+    numero_dossier: item.numero_dossier_list.filter(d => d && d !== '—').length > 0
+      ? item.numero_dossier_list.filter(d => d && d !== '—').join(', ')
+      : '—',
+    objectId: item._groupedOriginals[0].objectId,
+    _parse: item._groupedOriginals[0]._parse
+  }))
+})
 
 // Ref sur le tableau unitaire (pour l'API de visibilité des colonnes)
 const tableUnitaire = useTemplateRef('tableUnitaire')
@@ -718,12 +751,37 @@ const impayesContactFlat = computed(() => {
 
 // ── Sélection manuelle ──
 function isSelected(item) {
+  // Pour les éléments groupés, vérifier si au moins un des originaux est sélectionné
+  if (item._groupedOriginals) {
+    return item._groupedOriginals.some(orig => selection.value.some(s => s.objectId === orig.objectId))
+  }
   return selection.value.some(s => s.objectId === item.objectId)
 }
 function toggleSelection(item) {
-  const idx = selection.value.findIndex(s => s.objectId === item.objectId)
-  if (idx === -1) selection.value.push(item)
-  else selection.value.splice(idx, 1)
+  // Pour les éléments groupés, sélectionner/désélectionner tous les originaux
+  if (item._groupedOriginals) {
+    const allOriginals = item._groupedOriginals
+    const firstOriginalId = allOriginals[0].objectId
+    const isFirstSelected = selection.value.some(s => s.objectId === firstOriginalId)
+
+    if (isFirstSelected) {
+      // Désélectionner tous les originaux
+      selection.value = selection.value.filter(s =>
+        !allOriginals.some(orig => orig.objectId === s.objectId)
+      )
+    } else {
+      // Sélectionner tous les originaux
+      for (const orig of allOriginals) {
+        if (!selection.value.some(s => s.objectId === orig.objectId)) {
+          selection.value.push(orig)
+        }
+      }
+    }
+  } else {
+    const idx = selection.value.findIndex(s => s.objectId === item.objectId)
+    if (idx === -1) selection.value.push(item)
+    else selection.value.splice(idx, 1)
+  }
 }
 
 // Options pour le modal

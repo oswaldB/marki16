@@ -263,7 +263,6 @@ interlocuteursRows.forEach(i => {
    ↓
 4. Finalisation
    ├─ Fermeture de la base SQLite
-   ├─ Sauvegarde du SyncLog dans Parse
    └─ Retour des statistiques
 ```
 
@@ -565,34 +564,6 @@ activite.set('trigger', trigger);
 activite.set('timestamp', new Date());
 ```
 
-### 4. SyncLog global
-
-À la fin de l'exécution, un `SyncLog` est créé dans Parse :
-
-```javascript
-const finishedAt = new Date();
-const total = stats.impayes_created + stats.impayes_updated;
-const log = new Parse.Object('SyncLog');
-log.set('startedAt', startedAt);
-log.set('finishedAt', finishedAt);
-log.set('durationMs', finishedAt - startedAt);
-log.set('trigger', trigger);
-log.set('status', stats.errors.length === 0 
-  ? 'success' 
-  : (total > 0 ? 'partial' : 'error'));
-log.set('impayes_created', stats.impayes_created);
-log.set('impayes_updated', stats.impayes_updated);
-log.set('contacts_created', stats.contacts_created);
-log.set('contacts_updated', stats.contacts_updated);
-log.set('errors', stats.errors.map(e => JSON.stringify(e)));
-await log.save(null, { useMasterKey: true });
-```
-
-**Statuts possibles** :
-- `success` : Aucun erreur
-- `partial` : Erreurs mais des impayés traités
-- `error` : Aucune donnée traitée à cause des erreurs
-
 ---
 
 ## Résultat
@@ -697,12 +668,6 @@ await log.save(null, { useMasterKey: true });
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  ÉTAPE 4: FINALISATION                                                      │
 │  ├─ Fermeture DB SQLite: db.close()                                         │
-│  ├─ Création SyncLog dans Parse                                             │
-│  │  ├─ startedAt, finishedAt, durationMs                                    │
-│  │  ├─ trigger, status (success/partial/error)                            │
-│  │  ├─ impayes_created, impayes_updated                                    │
-│  │  ├─ contacts_created, contacts_updated                                  │
-│  │  └─ errors[]                                                            │
 │  └─ Retour: { impayes_created, impayes_updated, contacts_created, ... }     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -885,7 +850,6 @@ idInterlocuteur | typePersonne | nom | prenom | email | telephoneMobile
    - `payeur_email: "jbarthe@snexi.fr"`
 4. **Création des logs** :
    - `Activite` avec `operation: 'created'`
-   - `SyncLog` avec `impayes_created: 1, contacts_created: 1`
 
 ### Résultat
 
