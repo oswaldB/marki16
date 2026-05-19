@@ -1,42 +1,46 @@
 // ── Constants ──────────────────────────────────────────────────
-export const SCENARIO_FORMATS = ['single', 'multiple', 'both', 'broker']
+export const SCENARIO_FORMATS = ["single", "multiple", "both", "broker"];
 
 export const DOCUMENTATION = {
-  variables: {
-    title: 'Variables Disponibles (Syntaxe EJS)',
-    description: 'Utilisez ces variables dans vos templates d\'emails avec la syntaxe EJS. Toutes les variables sont accessibles directement.',
-    categories: [
-      {
-        name: 'Variables Simples',
-        description: 'Variables de base pour tous les scénarios',
-        example: '[[nfacture]], [[montant_total]], [[payeur_nom]]'
-      },
-      {
-        name: 'Formatage des dates',
-        description: 'Utilisez la syntaxe [[var, date("format")]] pour formater les dates. Ex: [[date_echeance, date("DD/MM/YYYY")]]',
-        example: '[[date_piece, date("DD/MM/YYYY")]] affiche 15/01/2026'
-      },
-      {
-        name: 'Boucles (pour plusieurs impayés)',
-        description: 'Utilisez [[loop var]] ... [[endloop]] pour parcourir une collection',
-        example: '[[loop impayes]] [[impaye.nfacture]] [[endloop]]'
-      }
-    ]
-  },
-  promptsAI: {
-    title: 'Exemples de Templates EJS',
-    examples: [
-      {
-        name: 'Email Simple avec Variable',
-        prompt: 'Bonjour [[payeur_nom]], votre facture [[nfacture]] de [[montant_total]] est en retard.'
-      },
-       {
-         name: 'Email avec Date Formatée',
-         prompt: 'Facture [[nfacture]] émise le [[date_piece, date("DD/MM/YYYY")]]. Échéance: [[date_echeance, date("DD/MM/YYYY")]].'
-       },
-      {
-        name: 'Email avec Boucle pour Plusieurs Impayés',
-        prompt: `<table>
+    variables: {
+        title: "Variables Disponibles (Syntaxe EJS)",
+        description:
+            "Utilisez ces variables dans vos templates d'emails avec la syntaxe EJS. Toutes les variables sont accessibles directement.",
+        categories: [
+            {
+                name: "Variables Simples",
+                description: "Variables de base pour tous les scénarios",
+                example: "[[nfacture]], [[montant_total]], [[payeur_nom]]",
+            },
+            {
+                name: "Formatage des dates",
+                description:
+                    'Utilisez la syntaxe [[var, date("format")]] pour formater les dates. Ex: [[date_echeance, date("DD/MM/YYYY")]]',
+                example:
+                    '[[date_piece, date("DD/MM/YYYY")]] affiche 15/01/2026',
+            },
+            {
+                name: "Boucles (pour plusieurs impayés)",
+                description:
+                    "Utilisez [[loop var]] ... [[endloop]] pour parcourir une collection",
+                example: "[[loop impayes]] [[impaye.nfacture]] [[endloop]]",
+            },
+        ],
+    },
+    promptsAI: {
+        title: "Exemples de Templates EJS",
+        examples: [
+            {
+                name: "Email Simple avec Variable",
+                prompt: "Bonjour [[payeur_nom]], votre facture [[nfacture]] de [[montant_total]] est en retard.",
+            },
+            {
+                name: "Email avec Date Formatée",
+                prompt: 'Facture [[nfacture]] émise le [[date_piece, date("DD/MM/YYYY")]]. Échéance: [[date_echeance, date("DD/MM/YYYY")]].',
+            },
+            {
+                name: "Email avec Boucle pour Plusieurs Impayés",
+                prompt: `<table>
   <tr>
     <th>Facture</th>
     <th>Montant</th>
@@ -50,414 +54,645 @@ export const DOCUMENTATION = {
   </tr>
   [[endloop]]
 </table>
-Total: [[total_impayes]]`
-      },
-      {
-        name: 'Condition avec Montant Élevé',
-        prompt: '[[ if (total_impayes > 1000) { +]]⚠️ Votre solde de [[total_impayes]] dépasse 1000€.[[ } else { +]]Votre solde est de [[total_impayes]].[[ } +]]'
-      }
-    ]
-  }
-}
+Total: [[total_impayes]]`,
+            },
+            {
+                name: "Condition avec Montant Élevé",
+                prompt: "[[ if (total_impayes > 1000) { +]]⚠️ Votre solde de [[total_impayes]] dépasse 1000€.[[ } else { +]]Votre solde est de [[total_impayes]].[[ } +]]",
+            },
+        ],
+    },
+};
 
 export const SEQUENCE_TYPES = [
-  { value: 'relances', label: 'Relances' },
-  { value: 'suivi', label: 'Suivi' }
-]
+    { value: "relances", label: "Relances" },
+    { value: "suivi", label: "Suivi" },
+];
 
 export const VARIABLES = [
-  { groupe: 'PAYEUR',   vars: ['payeur_nom', 'payeur_prenom', 'payeur_email', 'payeur_telephone', 'payeur_type'] },
-  { groupe: 'FACTURE',  vars: ['nfacture', 'ref_piece', 'date_piece', 'reste_a_payer', 'montant_total', 'date_echeance'] },
-  { groupe: 'BIEN',     vars: ['adresse_bien', 'code_postal', 'ville', 'numero_lot', 'etage', 'porte', 'escalier', 'entree'] },
-  { groupe: 'PROPRIETAIRE', vars: ['proprietaire_nom', 'proprietaire_prenom', 'proprietaire_email', 'proprietaire_telephone'] },
-  { groupe: 'APPORTEUR',   vars: ['apporteur_nom', 'apporteur_prenom', 'apporteur_email', 'apporteur_telephone', 'apporteur_societe'] },
-  { groupe: 'CONTACTS PAYEUR', vars: ['payeur_contact_nom', 'payeur_contact_prenom', 'payeur_contact_email'] },
-  { groupe: 'CONTACTS PROPRIETAIRE', vars: ['proprietaire_contact_nom', 'proprietaire_contact_prenom', 'proprietaire_contact_email'] },
-  { groupe: 'CONTACTS APPORTEUR', vars: ['apporteur_contact_nom', 'apporteur_contact_prenom', 'apporteur_contact_email'] },
-  { groupe: 'AUTRES', vars: ['acquereur_nom', 'acquereur_prenom', 'acquereur_email', 'donneur_ordre_nom', 'donneur_ordre_prenom', 'donneur_ordre_email', 'locataire_entrant_nom', 'locataire_entrant_prenom', 'locataire_sortant_nom', 'locataire_sortant_prenom', 'notaire_nom', 'notaire_prenom', 'notaire_email', 'syndic_nom', 'syndic_prenom', 'syndic_email', 'syndic_telephone'] },
-  { groupe: 'DOSSIER',  vars: ['numero_dossier', 'employe_intervention', 'date_debut_mission'] },
-  { groupe: 'MULTIPLE', vars: ['total_impayes', 'nfactures_liste', 'ndossier_liste'] },
-  { groupe: 'FORMATAGE', vars: ['Pour formater une date : [[date_echeance, date("DD/MM/YYYY")]] - Remplacez le format par celui souhaité (ex: "YYYY-MM-DD", "MM/DD/YYYY", etc.)'] },
-]
+    {
+        groupe: "PAYEUR",
+        vars: [
+            "payeur_nom",
+            "payeur_prenom",
+            "payeur_email",
+            "payeur_telephone",
+            "payeur_type",
+        ],
+    },
+    {
+        groupe: "FACTURE",
+        vars: [
+            "nfacture",
+            "ref_piece",
+            "date_piece",
+            "reste_a_payer",
+            "montant_total",
+            "date_echeance",
+        ],
+    },
+    {
+        groupe: "BIEN",
+        vars: [
+            "adresse_bien",
+            "code_postal",
+            "ville",
+            "numero_lot",
+            "etage",
+            "porte",
+            "escalier",
+            "entree",
+        ],
+    },
+    {
+        groupe: "PROPRIETAIRE",
+        vars: [
+            "proprietaire_nom",
+            "proprietaire_prenom",
+            "proprietaire_email",
+            "proprietaire_telephone",
+        ],
+    },
+    {
+        groupe: "APPORTEUR",
+        vars: [
+            "apporteur_nom",
+            "apporteur_prenom",
+            "apporteur_email",
+            "apporteur_telephone",
+            "apporteur_societe",
+        ],
+    },
+    {
+        groupe: "CONTACTS PAYEUR",
+        vars: [
+            "payeur_contact_nom",
+            "payeur_contact_prenom",
+            "payeur_contact_email",
+        ],
+    },
+    {
+        groupe: "CONTACTS PROPRIETAIRE",
+        vars: [
+            "proprietaire_contact_nom",
+            "proprietaire_contact_prenom",
+            "proprietaire_contact_email",
+        ],
+    },
+    {
+        groupe: "CONTACTS APPORTEUR",
+        vars: [
+            "apporteur_contact_nom",
+            "apporteur_contact_prenom",
+            "apporteur_contact_email",
+        ],
+    },
+    {
+        groupe: "AUTRES",
+        vars: [
+            "acquereur_nom",
+            "acquereur_prenom",
+            "acquereur_email",
+            "donneur_ordre_nom",
+            "donneur_ordre_prenom",
+            "donneur_ordre_email",
+            "locataire_entrant_nom",
+            "locataire_entrant_prenom",
+            "locataire_sortant_nom",
+            "locataire_sortant_prenom",
+            "notaire_nom",
+            "notaire_prenom",
+            "notaire_email",
+            "syndic_nom",
+            "syndic_prenom",
+            "syndic_email",
+            "syndic_telephone",
+        ],
+    },
+    {
+        groupe: "DOSSIER",
+        vars: ["numero_dossier", "employe_intervention", "date_debut_mission"],
+    },
+    {
+        groupe: "MULTIPLE",
+        vars: ["total_impayes", "nfactures_liste", "ndossier_liste"],
+    },
+    {
+        groupe: "FORMATAGE",
+        vars: [
+            'Pour formater une date : [[date_echeance, date("DD/MM/YYYY")]] - Remplacez le format par celui souhaité (ex: "YYYY-MM-DD", "MM/DD/YYYY", etc.)',
+        ],
+    },
+];
 
 export const EXEMPLE_VARS = {
-  nfacture: 'FA-2024-01', ref_piece: 'REF-001', date_piece: '01/01/2024',
-  reste_a_payer: '1200', montant_total: '1500', date_echeance: '31/01/2024',
-  payeur_nom: 'Dupont', payeur_prenom: 'Jean', payeur_email: 'jean@example.com',
-  payeur_telephone: '0612345678', payeur_type: 'Propriétaire',
-  payeur_contact_nom: 'Martin', payeur_contact_prenom: 'Pierre', payeur_contact_email: 'pierre@example.com',
-  adresse_bien: '123 rue de la Paix', code_postal: '75001', ville: 'Paris',
-  numero_lot: 'A12', etage: '2ème', porte: '12', escalier: 'A', entree: 'B',
-  numero_dossier: 'DOS-001',
-  employe_intervention: 'Marie Martin', date_debut_mission: '01/01/2024',
-  proprietaire_nom: 'Dupont', proprietaire_prenom: 'Paul', proprietaire_email: 'contact@dupont.com',
-  proprietaire_telephone: '0123456789',
-  proprietaire_contact_nom: 'Durand', proprietaire_contact_prenom: 'Sophie', proprietaire_contact_email: 'sophie@dupont.com',
-  apporteur_nom: 'Martin', apporteur_prenom: 'Pierre', apporteur_email: 'pierre@agence.com',
-  apporteur_telephone: '0600000000', apporteur_societe: 'Agence Immobilière',
-  apporteur_contact_nom: 'Bernard', apporteur_contact_prenom: 'Luc', apporteur_contact_email: 'luc@agence.com',
-  // Variables pour le format multiple (liste de tous les impayés)
-  total_impayes: '5000',
-  nfactures_liste: 'FA-001, FA-002, FA-003',
-  ndossier_liste: 'DOS-001, DOS-002'
-}
+    nfacture: "FA-2024-01",
+    ref_piece: "REF-001",
+    date_piece: "01/01/2024",
+    reste_a_payer: "1200",
+    montant_total: "1500",
+    date_echeance: "31/01/2024",
+    payeur_nom: "Dupont",
+    payeur_prenom: "Jean",
+    payeur_email: "jean@example.com",
+    payeur_telephone: "0612345678",
+    payeur_type: "Propriétaire",
+    payeur_contact_nom: "Martin",
+    payeur_contact_prenom: "Pierre",
+    payeur_contact_email: "pierre@example.com",
+    adresse_bien: "123 rue de la Paix",
+    code_postal: "75001",
+    ville: "Paris",
+    numero_lot: "A12",
+    etage: "2ème",
+    porte: "12",
+    escalier: "A",
+    entree: "B",
+    numero_dossier: "DOS-001",
+    employe_intervention: "Marie Martin",
+    date_debut_mission: "01/01/2024",
+    proprietaire_nom: "Dupont",
+    proprietaire_prenom: "Paul",
+    proprietaire_email: "contact@dupont.com",
+    proprietaire_telephone: "0123456789",
+    proprietaire_contact_nom: "Durand",
+    proprietaire_contact_prenom: "Sophie",
+    proprietaire_contact_email: "sophie@dupont.com",
+    apporteur_nom: "Martin",
+    apporteur_prenom: "Pierre",
+    apporteur_email: "pierre@agence.com",
+    apporteur_telephone: "0600000000",
+    apporteur_societe: "Agence Immobilière",
+    apporteur_contact_nom: "Bernard",
+    apporteur_contact_prenom: "Luc",
+    apporteur_contact_email: "luc@agence.com",
+    // Variables pour le format multiple (liste de tous les impayés)
+    total_impayes: "5000",
+    nfactures_liste: "FA-001, FA-002, FA-003",
+    ndossier_liste: "DOS-001, DOS-002",
+};
 
 export const champOptions = [
-  { label: 'Type payeur', value: 'payeur_type' },
-  { label: 'Nom payeur', value: 'payeur_nom' },
-  { label: 'Prénom payeur', value: 'payeur_prenom' },
-  { label: 'Email payeur', value: 'payeur_email' },
-  { label: 'Téléphone payeur', value: 'payeur_telephone' },
-  { label: 'Reste à payer', value: 'reste_a_payer' },
-  { label: 'Statut', value: 'statut' },
-  { label: 'Statut dossier', value: 'statut_dossier' },
-  { label: 'Nom apporteur', value: 'apporteur_nom' },
-  { label: 'Prénom apporteur', value: 'apporteur_prenom' },
-  { label: 'Email apporteur', value: 'apporteur_email' },
-  { label: 'Téléphone apporteur', value: 'apporteur_telephone' },
-  { label: 'Société apporteur', value: 'apporteur_societe' },
-  { label: 'Nom propriétaire', value: 'proprietaire_nom' },
-  { label: 'Prénom propriétaire', value: 'proprietaire_prenom' },
-  { label: 'Email propriétaire', value: 'proprietaire_email' },
-  { label: 'Téléphone propriétaire', value: 'proprietaire_telephone' },
-  { label: 'Adresse bien', value: 'adresse_bien' },
-  { label: 'Code postal', value: 'code_postal' },
-  { label: 'Ville', value: 'ville' },
-  { label: 'Numéro lot', value: 'numero_lot' },
-]
+    { label: "Type payeur", value: "payeur_type" },
+    { label: "Nom payeur", value: "payeur_nom" },
+    { label: "Prénom payeur", value: "payeur_prenom" },
+    { label: "Email payeur", value: "payeur_email" },
+    { label: "Téléphone payeur", value: "payeur_telephone" },
+    { label: "Reste à payer", value: "reste_a_payer" },
+    { label: "Statut", value: "statut" },
+    { label: "Statut dossier", value: "statut_dossier" },
+    { label: "Nom apporteur", value: "apporteur_nom" },
+    { label: "Prénom apporteur", value: "apporteur_prenom" },
+    { label: "Email apporteur", value: "apporteur_email" },
+    { label: "Téléphone apporteur", value: "apporteur_telephone" },
+    { label: "Société apporteur", value: "apporteur_societe" },
+    { label: "Nom propriétaire", value: "proprietaire_nom" },
+    { label: "Prénom propriétaire", value: "proprietaire_prenom" },
+    { label: "Email propriétaire", value: "proprietaire_email" },
+    { label: "Téléphone propriétaire", value: "proprietaire_telephone" },
+    { label: "Adresse bien", value: "adresse_bien" },
+    { label: "Code postal", value: "code_postal" },
+    { label: "Ville", value: "ville" },
+    { label: "Numéro lot", value: "numero_lot" },
+];
 
 export const operateurOptions = [
-  { label: 'est égal à', value: 'egal' },
-  { label: "n'est pas égal à", value: 'different' },
-  { label: 'supérieur à', value: 'superieur' },
-  { label: 'inférieur à', value: 'inferieur' },
-  { label: 'contient', value: 'contient' },
-  { label: 'ne contient pas', value: 'ne_contient_pas' },
-  { label: 'commence par', value: 'commence_par' },
-  { label: 'ne commence pas par', value: 'ne_commence_pas_par' },
-  { label: 'se termine par', value: 'se_termine_par' },
-  { label: 'ne se termine pas par', value: 'ne_se_termine_pas_par' },
-]
+    { label: "est égal à", value: "egal" },
+    { label: "n'est pas égal à", value: "different" },
+    { label: "supérieur à", value: "superieur" },
+    { label: "inférieur à", value: "inferieur" },
+    { label: "contient", value: "contient" },
+    { label: "ne contient pas", value: "ne_contient_pas" },
+    { label: "commence par", value: "commence_par" },
+    { label: "ne commence pas par", value: "ne_commence_pas_par" },
+    { label: "se termine par", value: "se_termine_par" },
+    { label: "ne se termine pas par", value: "ne_se_termine_pas_par" },
+];
 
 export const groupeLogiqueOptions = [
-  { label: 'ET', value: 'ET' },
-  { label: 'OU', value: 'OU' },
-]
+    { label: "ET", value: "ET" },
+    { label: "OU", value: "OU" },
+];
 
 export const scenarioTabs = [
-  { label: '1 impayé', value: 'single' },
-  { label: 'Plusieurs impayés', value: 'multiple' },
-  { label: 'Impayés + apporteur', value: 'both' },
-  { label: 'Apporteur seul', value: 'broker' },
-]
+    { label: "1 impayé", value: "single" },
+    { label: "Plusieurs impayés", value: "multiple" },
+    { label: "Impayés + apporteur", value: "both" },
+    { label: "Apporteur seul", value: "broker" },
+];
 
 export const editorOptions = {
-  minHeight: '200px',
-  language: 'fr',
-  usageStatistics: false,
-  hideModeSwitch: true,
-}
+    minHeight: "200px",
+    language: "fr",
+    usageStatistics: false,
+    hideModeSwitch: true,
+};
 
 // ── Helpers email (exportés pour réutilisation dans composants) ──
 export function getScenario(email, format) {
-  const f = format || 'single'
-  if (!Array.isArray(email.scenarios)) {
-    email.scenarios = SCENARIO_FORMATS.map(fmt => ({ format: fmt, active: true, smtp: '', cc: '', objet: '', corps: '' }))
-  }
-  let s = email.scenarios.find(s => s.format === f)
-  if (!s) {
-    s = { format: f, active: true, smtp: '', cc: '', objet: '', corps: '' }
-    email.scenarios.push(s)
-  }
-  if (s.active === undefined) s.active = true
-  if (s.smtp === undefined) s.smtp = ''
-  if (s.cc === undefined) s.cc = ''
-  return s
+    const f = format || "single";
+    if (!Array.isArray(email.scenarios)) {
+        email.scenarios = SCENARIO_FORMATS.map((fmt) => ({
+            format: fmt,
+            active: true,
+            smtp: "",
+            cc: "",
+            objet: "",
+            corps: "",
+        }));
+    }
+    let s = email.scenarios.find((s) => s.format === f);
+    if (!s) {
+        s = { format: f, active: true, smtp: "", cc: "", objet: "", corps: "" };
+        email.scenarios.push(s);
+    }
+    if (s.active === undefined) s.active = true;
+    if (s.smtp === undefined) s.smtp = "";
+    if (s.cc === undefined) s.cc = "";
+    return s;
 }
 
 export function getCurrentCorps(email) {
-  return getScenario(email, email.activeScenario || 'single').corps || ''
+    return getScenario(email, email.activeScenario || "single").corps || "";
 }
 
 export function updateCorps(email, html) {
-  getScenario(email, email.activeScenario || 'single').corps = html
+    getScenario(email, email.activeScenario || "single").corps = html;
 }
 
 export function switchScenario(email, newScenario, editorRefs) {
-  const editor = editorRefs[email._key]
-  if (editor) {
-    try {
-      const instance = editor.getInstance()
-      if (instance) {
-        getScenario(email, email.activeScenario || 'single').corps = instance.getHTML()
-        email.activeScenario = newScenario
-        instance.setHTML(getScenario(email, newScenario).corps || '')
-        return
-      }
-    } catch (err) {
-      console.error('Erreur switch scénario:', err)
+    const editor = editorRefs[email._key];
+    if (editor) {
+        try {
+            const instance = editor.getInstance();
+            if (instance) {
+                getScenario(email, email.activeScenario || "single").corps =
+                    instance.getHTML();
+                email.activeScenario = newScenario;
+                instance.setHTML(getScenario(email, newScenario).corps || "");
+                return;
+            }
+        } catch (err) {
+            console.error("Erreur switch scénario:", err);
+        }
     }
-  }
-  email.activeScenario = newScenario
+    email.activeScenario = newScenario;
 }
 
 // ── Composable principal ───────────────────────────────────────
-export function useSequenceEditor(parse, groupesRegles, calculerApercu, chargerLiensPaiement, loadAllOptions, attributionAutomatique, validationObligatoire) {
-  const toast = useToast()
-  const route = useRoute()
+export function useSequenceEditor(
+    parse,
+    groupesRegles,
+    calculerApercu,
+    chargerLiensPaiement,
+    loadAllOptions,
+    attributionAutomatique,
+    validationObligatoire,
+) {
+    const toast = useToast();
+    const route = useRoute();
 
-  // ── State ────────────────────────────────────────────────────
-  const loading = ref(true)
-  const saving = ref(false)
-  const publishing = ref(false)
+    // ── State ────────────────────────────────────────────────────
+    const loading = ref(true);
+    const saving = ref(false);
+    const publishing = ref(false);
 
-  const sequence = ref(null)
-  const nom = ref('')
-  const publiee = ref(false)
-  const type = ref('relances') // Nouveau: type de séquence (relances/suivi)
-  const emails = ref([])
-  const smtpProfiles = ref([])
+    const sequence = ref(null);
+    const nom = ref("");
+    const publiee = ref(false);
+    const type = ref("relances"); // Nouveau: type de séquence (relances/suivi)
+    const emails = ref([]);
+    const smtpProfiles = ref([]);
 
-  const collapsedEmails = ref({})
-  const smtpCreateForEmailKey = ref(null)
-  const smtpCreateForEmailFormat = ref(null)
-  const showSmtpModal = ref(false)
+    const collapsedEmails = ref({});
+    const smtpCreateForEmailKey = ref(null);
+    const smtpCreateForEmailFormat = ref(null);
+    const showSmtpModal = ref(false);
 
-  const varsSearch = ref('')
+    const varsSearch = ref("");
 
-  // ── Computed ─────────────────────────────────────────────────
-  const emailsSorted = computed(() =>
-    [...emails.value].sort((a, b) => a.delai - b.delai)
-  )
+    // ── Computed ─────────────────────────────────────────────────
+    const emailsSorted = computed(() =>
+        [...emails.value].sort((a, b) => a.delai - b.delai),
+    );
 
-  const smtpOptions = computed(() =>
-    smtpProfiles.value.map(p => ({
-      value: p.id,
-      label: p.get('nom_affiche') || p.get('nom'),
-    }))
-  )
+    const smtpOptions = computed(() =>
+        smtpProfiles.value.map((p) => ({
+            value: p.id,
+            label: p.get("nom_affiche") || p.get("nom"),
+        })),
+    );
 
-  // ── Chargement ───────────────────────────────────────────────
-  async function charger() {
-    loading.value = true
-    try {
-      const q = new parse.Query('Sequence')
-      const seq = await q.get(route.params.id)
-      sequence.value = seq
-      nom.value = seq.get('nom') || ''
-      publiee.value = seq.get('publiee') || false
-      type.value = seq.get('type') || 'relances' // Charger le type de séquence
-      attributionAutomatique.value = seq.get('attribution_automatique') || false
-      validationObligatoire.value = seq.get('validation_obligatoire') || false
+    // ── Chargement ───────────────────────────────────────────────
+    async function charger() {
+        loading.value = true;
+        try {
+            const q = new parse.Query("Sequence");
+            const seq = await q.get(route.params.id);
+            sequence.value = seq;
+            nom.value = seq.get("nom") || "";
+            publiee.value = seq.get("publiee") || false;
+            type.value = seq.get("type") || "relances"; // Charger le type de séquence
+            attributionAutomatique.value =
+                seq.get("attribution_automatique") || false;
+            validationObligatoire.value =
+                seq.get("validation_obligatoire") || false;
 
-      // Charger règles dans groupesRegles (passé depuis useSequenceRules)
-      const anciennesRegles = seq.get('regles') || []
-      const nouveauxGroupes = seq.get('groupes_regles') || []
+            // Charger règles dans groupesRegles (passé depuis useSequenceRules)
+            const anciennesRegles = seq.get("regles") || [];
+            const nouveauxGroupes = seq.get("groupes_regles") || [];
 
-      if (nouveauxGroupes.length > 0) {
-        groupesRegles.value = nouveauxGroupes.map(g => ({
-          logique: g.logique || 'ET',
-          regles: g.regles.map(r => ({
-            champ: r.champ || 'payeur_type',
-            operateur: r.operateur || 'egal',
-            valeur: (r.operateur === 'egal' || r.operateur === 'different') && !Array.isArray(r.valeur)
-                     ? (r.valeur ? [r.valeur] : [])
-                     : (Array.isArray(r.valeur) ? r.valeur : (r.valeur || '')),
-            options: []
-          }))
-        }))
-      } else if (anciennesRegles.length > 0) {
-        groupesRegles.value = [{
-          logique: 'ET',
-          regles: anciennesRegles.map(r => ({
-            champ: r.champ || 'payeur_type',
-            operateur: r.operateur || 'egal',
-            valeur: (r.operateur === 'egal' || r.operateur === 'different')
-                     ? (r.valeur ? [r.valeur] : [])
-                     : (r.valeur || ''),
-            options: []
-          }))
-        }]
-      } else {
-        groupesRegles.value = [{
-          logique: 'ET',
-          regles: [{ champ: 'payeur_type', operateur: 'egal', valeur: [], options: [] }]
-        }]
-      }
-
-      // Charger emails
-      const rawEmails = seq.get('emails') || []
-      emails.value = rawEmails.map((e, i) => {
-        let scenarios
-        if (Array.isArray(e.scenarios)) {
-          scenarios = SCENARIO_FORMATS.map(fmt => {
-            const existing = e.scenarios.find(s => s.format === fmt) || {}
-            return {
-              format: fmt,
-              active: existing.active !== false,
-              smtp:   existing.smtp  ?? e.smtp ?? '',
-              cc:     existing.cc    ?? e.cc   ?? '',
-              objet:  existing.objet ?? '',
-              corps:  existing.corps ?? ''
+            if (nouveauxGroupes.length > 0) {
+                groupesRegles.value = nouveauxGroupes.map((g) => ({
+                    logique: g.logique || "ET",
+                    regles: g.regles.map((r) => ({
+                        champ: r.champ || "payeur_type",
+                        operateur: r.operateur || "egal",
+                        valeur:
+                            (r.operateur === "egal" ||
+                                r.operateur === "different") &&
+                            !Array.isArray(r.valeur)
+                                ? r.valeur
+                                    ? [r.valeur]
+                                    : []
+                                : Array.isArray(r.valeur)
+                                  ? r.valeur
+                                  : r.valeur || "",
+                        options: [],
+                    })),
+                }));
+            } else if (anciennesRegles.length > 0) {
+                groupesRegles.value = [
+                    {
+                        logique: "ET",
+                        regles: anciennesRegles.map((r) => ({
+                            champ: r.champ || "payeur_type",
+                            operateur: r.operateur || "egal",
+                            valeur:
+                                r.operateur === "egal" ||
+                                r.operateur === "different"
+                                    ? r.valeur
+                                        ? [r.valeur]
+                                        : []
+                                    : r.valeur || "",
+                            options: [],
+                        })),
+                    },
+                ];
+            } else {
+                groupesRegles.value = [
+                    {
+                        logique: "ET",
+                        regles: [
+                            {
+                                champ: "payeur_type",
+                                operateur: "egal",
+                                valeur: [],
+                                options: [],
+                            },
+                        ],
+                    },
+                ];
             }
-          })
-        } else if (e.corps && typeof e.corps === 'object') {
-          scenarios = SCENARIO_FORMATS.map(fmt => ({
-            format: fmt, active: true,
-            smtp: e.smtp || '', cc: e.cc || '',
-            objet: e.objet || '', corps: e.corps[fmt] || ''
-          }))
+
+            // Charger emails
+            const rawEmails = seq.get("emails") || [];
+            emails.value = rawEmails.map((e, i) => {
+                let scenarios;
+                if (Array.isArray(e.scenarios)) {
+                    scenarios = SCENARIO_FORMATS.map((fmt) => {
+                        const existing =
+                            e.scenarios.find((s) => s.format === fmt) || {};
+                        return {
+                            format: fmt,
+                            active: existing.active !== false,
+                            smtp: existing.smtp ?? e.smtp ?? "",
+                            cc: existing.cc ?? e.cc ?? "",
+                            objet: existing.objet ?? "",
+                            corps: existing.corps ?? "",
+                        };
+                    });
+                } else if (e.corps && typeof e.corps === "object") {
+                    scenarios = SCENARIO_FORMATS.map((fmt) => ({
+                        format: fmt,
+                        active: true,
+                        smtp: e.smtp || "",
+                        cc: e.cc || "",
+                        objet: e.objet || "",
+                        corps: e.corps[fmt] || "",
+                    }));
+                } else {
+                    scenarios = SCENARIO_FORMATS.map((fmt) => ({
+                        format: fmt,
+                        active: true,
+                        smtp: e.smtp || "",
+                        cc: e.cc || "",
+                        objet: e.objet || "",
+                        corps: fmt === "single" ? e.corps || "" : "",
+                    }));
+                }
+                return {
+                    _key: `email_${i}_${seq.id}`,
+                    email_index: i + 1,
+                    delai: e.delai || 0,
+                    smtp: e.smtp || "",
+                    to: e.to || "[[payeur_email]]",
+                    cc: e.cc || "",
+                    frequence: e.frequence || "hebdomadaire",
+                    activeScenario: e.activeScenario || "single",
+                    scenarios,
+                };
+            });
+
+            const sq = new parse.Query("SmtpProfile");
+            sq.ascending("nom");
+            sq.limit(50);
+            smtpProfiles.value = await sq.find();
+
+            await chargerLiensPaiement();
+            await loadAllOptions();
+            await calculerApercu();
+        } catch (err) {
+            toast.add({
+                title: "Erreur de chargement",
+                description: err.message,
+                color: "red",
+            });
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    // ── Sauvegarde ───────────────────────────────────────────────
+    async function sauvegarder(editorRefs) {
+        saving.value = true;
+        try {
+            for (const email of emails.value) {
+                const editor = editorRefs[email._key];
+                if (editor) {
+                    try {
+                        getScenario(
+                            email,
+                            email.activeScenario || "single",
+                        ).corps = editor.getInstance().getHTML();
+                    } catch {}
+                }
+            }
+            sequence.value.set("nom", nom.value);
+            sequence.value.set("type", type.value); // Sauvegarder le type de séquence
+            // Sauvegarder emails en excluant les champs internes
+            sequence.value.set(
+                "emails",
+                emails.value.map((email) => {
+                    const { _key, activeScenario, ...rest } = email;
+                    // Pour les séquences de suivi, exclure delai qui n'est pas utilisé
+                    if (type.value === "suivi") {
+                        const { delai, ...emailData } = rest;
+                        return emailData;
+                    }
+                    return rest;
+                }),
+            );
+            sequence.value.set("groupes_regles", groupesRegles.value);
+            sequence.value.set(
+                "attribution_automatique",
+                attributionAutomatique.value,
+            );
+            sequence.value.set(
+                "validation_obligatoire",
+                validationObligatoire.value,
+            );
+
+            // Supprimer les anciennes colonnes pour uniformiser
+            sequence.value.unset("regles");
+            sequence.value.unset("regles_type");
+
+            await sequence.value.save();
+            toast.add({ title: "Séquence enregistrée", color: "green" });
+        } catch (err) {
+            toast.add({
+                title: "Erreur",
+                description: err.message,
+                color: "red",
+            });
+        } finally {
+            saving.value = false;
+        }
+    }
+
+    // ── Publication ──────────────────────────────────────────────
+    async function togglePublication() {
+        publishing.value = true;
+        const precedent = publiee.value;
+        try {
+            publiee.value = !precedent;
+            sequence.value.set("publiee", publiee.value);
+            await sequence.value.save();
+            toast.add({
+                title: publiee.value
+                    ? "Séquence publiée"
+                    : "Séquence dépubliée",
+                color: "green",
+            });
+        } catch (err) {
+            publiee.value = precedent;
+            toast.add({
+                title: "Erreur",
+                description: err.message,
+                color: "red",
+            });
+        } finally {
+            publishing.value = false;
+        }
+    }
+
+    // ── Emails ───────────────────────────────────────────────────
+    function ajouterEmail() {
+        emails.value.push({
+            _key: `email_new_${Date.now()}`,
+            email_index: emails.value.length + 1,
+            delai: 0,
+            smtp: "",
+            to: "[[payeur_email]]",
+            cc: "",
+            activeScenario: "single",
+            scenarios: SCENARIO_FORMATS.map((format) => ({
+                format,
+                active: true,
+                smtp: "",
+                cc: "",
+                objet: "",
+                corps: "",
+            })),
+        });
+    }
+
+    function supprimerEmail(key) {
+        const idx = emails.value.findIndex((e) => e._key === key);
+        if (idx !== -1) emails.value.splice(idx, 1);
+    }
+
+    function toggleEmailVisibility(key) {
+        if (collapsedEmails.value[key]) {
+            delete collapsedEmails.value[key];
         } else {
-          scenarios = SCENARIO_FORMATS.map(fmt => ({
-            format: fmt, active: true,
-            smtp: e.smtp || '', cc: e.cc || '',
-            objet: e.objet || '',
-            corps: fmt === 'single' ? (e.corps || '') : ''
-          }))
+            collapsedEmails.value[key] = true;
         }
-        return {
-          _key: `email_${i}_${seq.id}`,
-          email_index: i + 1,
-          delai: e.delai || 0,
-          smtp: e.smtp || '',
-          to: e.to || '[[payeur_email]]',
-          cc: e.cc || '',
-          activeScenario: 'single',
-          scenarios
+    }
+
+    function onSmtpChange(email, scenario, val) {
+        if (val === "__create__") {
+            smtpCreateForEmailKey.value = email._key;
+            smtpCreateForEmailFormat.value = scenario.format;
+            scenario.smtp = "";
+            showSmtpModal.value = true;
         }
-      })
-
-      const sq = new parse.Query('SmtpProfile')
-      sq.ascending('nom')
-      sq.limit(50)
-      smtpProfiles.value = await sq.find()
-
-      await chargerLiensPaiement()
-      await loadAllOptions()
-      await calculerApercu()
-    } catch (err) {
-      toast.add({ title: 'Erreur de chargement', description: err.message, color: 'red' })
-    } finally {
-      loading.value = false
     }
-  }
 
-  // ── Sauvegarde ───────────────────────────────────────────────
-  async function sauvegarder(editorRefs) {
-    saving.value = true
-    try {
-      for (const email of emails.value) {
-        const editor = editorRefs[email._key]
-        if (editor) {
-          try {
-            getScenario(email, email.activeScenario || 'single').corps = editor.getInstance().getHTML()
-          } catch {}
+    function onSmtpSaved(profile) {
+        smtpProfiles.value.push(profile);
+        if (smtpCreateForEmailKey.value) {
+            const email = emails.value.find(
+                (e) => e._key === smtpCreateForEmailKey.value,
+            );
+            if (email)
+                getScenario(
+                    email,
+                    smtpCreateForEmailFormat.value || "single",
+                ).smtp = profile.id;
         }
-      }
-      sequence.value.set('nom', nom.value)
-      sequence.value.set('type', type.value) // Sauvegarder le type de séquence
-      sequence.value.set('emails', emails.value.map(({ _key, activeScenario, ...rest }) => rest))
-      sequence.value.set('groupes_regles', groupesRegles.value)
-      sequence.value.set('attribution_automatique', attributionAutomatique.value)
-      sequence.value.set('validation_obligatoire', validationObligatoire.value)
-
-      // Supprimer les anciennes colonnes pour uniformiser
-      sequence.value.unset('regles')
-      sequence.value.unset('regles_type')
-
-      await sequence.value.save()
-      toast.add({ title: 'Séquence enregistrée', color: 'green' })
-    } catch (err) {
-      toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-    } finally {
-      saving.value = false
+        smtpCreateForEmailKey.value = null;
+        smtpCreateForEmailFormat.value = null;
     }
-  }
 
-  // ── Publication ──────────────────────────────────────────────
-  async function togglePublication() {
-    publishing.value = true
-    const precedent = publiee.value
-    try {
-      publiee.value = !precedent
-      sequence.value.set('publiee', publiee.value)
-      await sequence.value.save()
-      toast.add({ title: publiee.value ? 'Séquence publiée' : 'Séquence dépubliée', color: 'green' })
-    } catch (err) {
-      publiee.value = precedent
-      toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-    } finally {
-      publishing.value = false
+    // Fonction pour changer le type de séquence
+    function setType(newType) {
+        type.value = newType;
     }
-  }
 
-  // ── Emails ───────────────────────────────────────────────────
-  function ajouterEmail() {
-    emails.value.push({
-      _key: `email_new_${Date.now()}`,
-      email_index: emails.value.length + 1,
-      delai: 0,
-      smtp: '',
-      to: '[[payeur_email]]',
-      cc: '',
-      activeScenario: 'single',
-      scenarios: SCENARIO_FORMATS.map(format => ({ format, active: true, smtp: '', cc: '', objet: '', corps: '' }))
-    })
-  }
-
-  function supprimerEmail(key) {
-    const idx = emails.value.findIndex(e => e._key === key)
-    if (idx !== -1) emails.value.splice(idx, 1)
-  }
-
-  function toggleEmailVisibility(key) {
-    if (collapsedEmails.value[key]) {
-      delete collapsedEmails.value[key]
-    } else {
-      collapsedEmails.value[key] = true
-    }
-  }
-
-  function onSmtpChange(email, scenario, val) {
-    if (val === '__create__') {
-      smtpCreateForEmailKey.value = email._key
-      smtpCreateForEmailFormat.value = scenario.format
-      scenario.smtp = ''
-      showSmtpModal.value = true
-    }
-  }
-
-  function onSmtpSaved(profile) {
-    smtpProfiles.value.push(profile)
-    if (smtpCreateForEmailKey.value) {
-      const email = emails.value.find(e => e._key === smtpCreateForEmailKey.value)
-      if (email) getScenario(email, smtpCreateForEmailFormat.value || 'single').smtp = profile.id
-    }
-    smtpCreateForEmailKey.value = null
-    smtpCreateForEmailFormat.value = null
-  }
-
-  // Fonction pour changer le type de séquence
-  function setType(newType) {
-    type.value = newType
-  }
-
-  return {
-    loading, saving, publishing,
-    sequence, nom, publiee, type,
-    emails, emailsSorted,
-    smtpProfiles, smtpOptions,
-    collapsedEmails,
-    showSmtpModal,
-    varsSearch,
-    charger,
-    sauvegarder,
-    togglePublication,
-    ajouterEmail,
-    supprimerEmail,
-    toggleEmailVisibility,
-    onSmtpChange,
-    onSmtpSaved,
-    setType,
-  }
+    return {
+        loading,
+        saving,
+        publishing,
+        sequence,
+        nom,
+        publiee,
+        type,
+        emails,
+        emailsSorted,
+        smtpProfiles,
+        smtpOptions,
+        collapsedEmails,
+        showSmtpModal,
+        varsSearch,
+        charger,
+        sauvegarder,
+        togglePublication,
+        ajouterEmail,
+        supprimerEmail,
+        toggleEmailVisibility,
+        onSmtpChange,
+        onSmtpSaved,
+        setType,
+    };
 }

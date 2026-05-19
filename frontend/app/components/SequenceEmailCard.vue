@@ -72,7 +72,7 @@
                     v-model="currentScenario.smtp"
                     :items="smtpOptions"
                     class="w-full"
-                    @change="$emit('smtpChange', email, currentScenario, $event)"
+                    @update:modelValue="$emit('smtpChange', email, currentScenario, $event)"
                   />
                 </div>
                 <UAlert v-else icon="i-heroicons-exclamation-triangle" color="amber" variant="soft" title="Aucun profil expéditeur configuré" class="text-xs">

@@ -237,11 +237,18 @@
       <div v-else-if="vue === 'validation'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Colonne de gauche - Liste des relances à valider -->
         <div class="lg:col-span-1 space-y-4">
-          <UCard>
+          <UCard class="max-w-full">
             <template #header>
               <div class="flex items-center justify-between">
                 <span class="font-semibold">Relances à valider</span>
                 <div class="flex items-center gap-2">
+                  <UInput
+                    v-model="validationSearch"
+                    icon="i-heroicons-magnifying-glass"
+                    placeholder="Rechercher..."
+                    size="xs"
+                    class="w-40"
+                  />
                   <USelect
                     v-model="modeTriValidation"
                     :items="[
@@ -290,12 +297,11 @@
                     <p class="text-xs text-gray-500 truncate">{{ relance.to }}</p>
                     <p class="text-xs text-gray-400">{{ formatDate(relance.dateEnvoi) }}</p>
                   </div>
-                  <span class="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-medium shrink-0">{{ index + 1 }}</span>
                 </div>
                 <div class="mt-2 flex justify-end">
                   <UCheckbox
-                    v-model="selectedRelancesForBulk"
-                    :value="relance.id"
+                    :model-value="isSelectedBulk(relance.id)"
+                    @update:model-value="(checked) => toggleBulkSelection(relance.id, checked)"
                     @click.stop
                   />
                 </div>
@@ -310,7 +316,7 @@
 
         <!-- Colonne du milieu et droite - Détails de la relance (équivalent du drawer) -->
         <div class="lg:col-span-2" v-if="relanceCourante">
-          <UCard>
+          <UCard class="max-w-full">
             <template #header>
               <div class="flex items-center justify-between">
                 <span class="font-semibold">Validation de la relance</span>
@@ -616,17 +622,39 @@ const originalToValue = ref('') // Valeur originale du champ To pour détecter l
 const relanceCourante = ref(null)
 const validantWorkflow = ref(false)
 const modeTriValidation = ref('chronologique') // 'chronologique' ou 'destinataire'
+const validationSearch = ref('')
 
 // Validation en masse
 const selectedRelancesForBulk = ref([])
 const bulkValidating = ref(false)
+
+function isSelectedBulk(relanceId) {
+  return selectedRelancesForBulk.value?.includes(relanceId) ?? false
+}
+
+function toggleBulkSelection(relanceId, checked) {
+  if (checked) {
+    selectedRelancesForBulk.value = [...(selectedRelancesForBulk.value || []), relanceId]
+  } else {
+    selectedRelancesForBulk.value = (selectedRelancesForBulk.value || []).filter(id => id !== relanceId)
+  }
+}
 
 // Computed ref pour le drawer
 const relanceDrawer = computed(() => drawerRow.value)
 
 // Computed pour le workflow de validation
 const relancesAValider = computed(() => {
-  const relancesNonValidees = relances.value.filter(r => !r.valide && !r.manuelle)
+  let relancesNonValidees = relances.value.filter(r => !r.valide && !r.manuelle)
+
+  // Filtre de recherche
+  if (validationSearch.value) {
+    const s = validationSearch.value.toLowerCase()
+    relancesNonValidees = relancesNonValidees.filter(r =>
+      (r.objet?.toLowerCase() || '').includes(s) ||
+      (r.to?.toLowerCase() || '').includes(s)
+    )
+  }
 
   if (modeTriValidation.value === 'chronologique') {
     return relancesNonValidees.sort((a, b) => {

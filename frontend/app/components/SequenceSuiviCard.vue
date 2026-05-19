@@ -150,7 +150,7 @@
                     v-model="currentScenario.smtp"
                     :items="smtpOptions"
                     class="w-full"
-                    @change="updateSmtp(props.email?.activeScenario, $event)"
+                    @update:modelValue="updateSmtp(props.email?.activeScenario, $event)"
                   />
                 </div>
                 <UAlert v-else icon="i-heroicons-exclamation-triangle" color="amber" variant="soft" title="Aucun profil expéditeur configuré" class="text-xs">
@@ -220,7 +220,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:to', 'update:cc', 'update:smtp', 'update:objet', 'delete', 'toggle', 'create'])
+const emit = defineEmits(['update:to', 'update:cc', 'update:smtp', 'update:objet', 'update:scenario', 'delete', 'toggle', 'create'])
 
 // Fréquence options
 const frequenceOptions = [
@@ -302,7 +302,7 @@ function updateObjet(val) {
 
 function updateScenario(newScenario) {
   if (props.email) {
-    props.email.activeScenario = newScenario
+    emit('update:scenario', newScenario)
   }
 }
 

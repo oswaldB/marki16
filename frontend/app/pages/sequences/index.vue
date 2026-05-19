@@ -2,15 +2,49 @@
   <div class="p-6 space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold text-gray-900">Séquences</h1>
-      <UButton icon="i-heroicons-plus" :loading="creating" @click="nouvelleSequence">
-        Nouvelle séquence
-      </UButton>
+      <div class="flex gap-2">
+        <UButton icon="i-heroicons-plus" :loading="creating" @click="() => nouvelleSequence('relances')">
+          Nouvelle séquence (Relances)
+        </UButton>
+        <UButton icon="i-heroicons-plus" :loading="creating" @click="() => nouvelleSequence('suivi')">
+          Nouvelle séquence (Suivi)
+        </UButton>
+      </div>
     </div>
+
+    <UAlert
+      color="info"
+      variant="subtle"
+      class="mb-4"
+    >
+      <template #title>
+        <div class="flex items-center gap-4">
+          <span class="flex items-center gap-1">
+            <UBadge color="blue" variant="subtle" size="sm" />
+            <strong>Relances</strong>
+          </span>
+          : Envoi de plusieurs emails espacés dans le temps (ex: rappel à J+7, J+14, J+30)
+        </div>
+        <div class="flex items-center gap-4 mt-2">
+          <span class="flex items-center gap-1">
+            <UBadge color="green" variant="subtle" size="sm" />
+            <strong>Suivi</strong>
+          </span>
+          : Points d'information réguliers sur le niveau de règlement (ex: état des paiements, suivi mensuel)
+        </div>
+      </template>
+    </UAlert>
 
     <UCard :ui="{ body: { padding: 'p-0' } }">
       <UTable :data="rows" :columns="columns" :loading="loading">
+        <template #type-cell="{ row }">
+          <UBadge :color="row.original.type === 'relances' ? 'blue' : 'green'" variant="subtle" size="sm">
+            {{ row.original.type === 'relances' ? 'Relances' : 'Suivi' }}
+          </UBadge>
+        </template>
+
         <template #nom-cell="{ row }">
-          <NuxtLink :to="`/sequences/${row.original.id}`" class="text-sky-700 hover:underline font-medium">
+          <NuxtLink :to="`/sequences/${row.original.type}/${row.original.id}`" class="text-sky-700 hover:underline font-medium">
             {{ row.original.nom }}
           </NuxtLink>
         </template>
@@ -36,7 +70,7 @@
               color="neutral"
               variant="ghost"
               size="xs"
-              :to="`/sequences/${row.original.id}`"
+              :to="`/sequences/${row.original.type}/${row.original.id}`"
             />
             <UButton
               icon="i-heroicons-trash"
@@ -54,7 +88,7 @@
     <UModal v-model:open="showDeleteModal" title="Supprimer la séquence">
       <template #body>
         <div class="space-y-3">
-          <p>Supprimer <strong>{{ seqASupprimer?.nom }}</strong> ?</p>
+          <p>Supprimer <strong>{{ seqASupprimer?.nom }}</strong> ({{ seqASupprimer?.type === 'relances' ? 'Relances' : 'Suivi' }}) ?</p>
           <UAlert
             v-if="seqASupprimer?.impayes_count > 0"
             color="orange"
@@ -85,6 +119,7 @@ const showDeleteModal = ref(false)
 const seqASupprimer = ref(null)
 
 const columns = [
+  { accessorKey: 'type',          header: 'Type' },
   { accessorKey: 'nom',          header: 'Nom' },
   { accessorKey: 'publiee',      header: 'Statut' },
   { accessorKey: 'emails_count', header: 'Emails' },
@@ -95,6 +130,7 @@ const columns = [
 const rows = computed(() =>
   sequences.value.map(s => ({
     id: s.id,
+    type: s.get('type') || 'relances',
     nom: s.get('nom'),
     publiee: s.get('publiee') || false,
     emails_count: (s.get('emails') || []).length,
@@ -126,17 +162,18 @@ async function charger() {
   }
 }
 
-async function nouvelleSequence() {
+async function nouvelleSequence(type = 'relances') {
   creating.value = true
   try {
     const seq = new $parse.Object('Sequence')
-    seq.set('nom', 'Nouvelle séquence')
+    seq.set('nom', `Nouvelle ${type === 'relances' ? 'Relance' : 'Suivi'}`)
+    seq.set('type', type)
     seq.set('emails', [])
     seq.set('regles', [])
     seq.set('regles_type', 'incluant')
     seq.set('lien_paiement', '')
     await seq.save()
-    router.push('/sequences/' + seq.id)
+    router.push(`/sequences/${type}/${seq.id}`)
   } catch (err) {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
     creating.value = false

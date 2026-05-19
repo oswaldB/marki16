@@ -1,33 +1,134 @@
-import yaml from 'js-yaml'
-import { SCENARIO_FORMATS, getScenario, scenarioTabs } from '~/composables/useSequenceEditor'
+import yaml from "js-yaml";
+import {
+    SCENARIO_FORMATS,
+    getScenario,
+    scenarioTabs,
+} from "~/composables/useSequenceEditor";
 
-export function useIaSequence(emails, allVariables, editorRefs) {
-  const toast = useToast()
+export function useIaSequence(
+    emails,
+    allVariables,
+    editorRefs,
+    sequenceType = "relances",
+) {
+    const toast = useToast();
 
-  // ── State ─────────────────────────────────────────────────────
-  const showIaModal = ref(false)
-  const iaResponse = ref('')
+    // ── State ─────────────────────────────────────────────────────
+    const showIaModal = ref(false);
+    const iaResponse = ref("");
 
-  const showChatGptModal = ref(false)
-  const chatGptEmailIdx = ref(0)
-  const chatGptResponse = ref('')
-  const chatGptTargetFormat = ref('single')
+    const showChatGptModal = ref(false);
+    const chatGptEmailIdx = ref(0);
+    const chatGptResponse = ref("");
+    const chatGptTargetFormat = ref("single");
 
-  // ── Helpers ───────────────────────────────────────────────────
-  async function copyToClipboard(text) {
-    await navigator.clipboard.writeText(text)
-    toast.add({ title: 'Copié', color: 'green', timeout: 2000 })
-  }
+    // ── Helpers ───────────────────────────────────────────────────
+    async function copyToClipboard(text) {
+        await navigator.clipboard.writeText(text);
+        toast.add({ title: "Copié", color: "green", timeout: 2000 });
+    }
 
-  const emailsSorted = computed(() =>
-    [...emails.value].sort((a, b) => a.delai - b.delai)
-  )
+    const emailsSorted = computed(() =>
+        sequenceType === "suivi"
+            ? [...emails.value]
+            : [...emails.value].sort((a, b) => a.delai - b.delai),
+    );
 
-  // ── IA globale ────────────────────────────────────────────────
-  async function copyPromptIA() {
-    const allVars = allVariables.value.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
-    const prompt = `Tu es un expert en relance de factures impayées pour le secteur immobilier.
-Génère une séquence de ${emails.value.length || 3} emails de relance progressivement fermes.
+    // ── IA globale ────────────────────────────────────────────────
+    async function copyPromptIA() {
+        const allVars = allVariables.value
+            .flatMap((g) => g.vars.map((v) => `[[${v}]]`))
+            .join(", ");
+
+        if (sequenceType === "suivi") {
+            // Prompt pour séquence de SUIVI
+            const prompt = `Tu es un expert en suivi de paiements pour le secteur immobilier.
+Génère UN email de suivi sur le niveau de règlement.
+
+L'email a 4 formats selon le contexte du payeur :
+- single   : 1 seul impayé, sans apporteur d'affaire
+- multiple : plusieurs impayés, sans apporteur d'affaire
+- both     : plusieurs impayés ET un apporteur d'affaire
+- broker   : 1 seul impayé ET un apporteur d'affaire
+
+IMPORTANT: Retourne UNIQUEMENT un tableau YAML valide avec UN seul email. Structure attendue :
+---
+- frequence: hebdomadaire|mensuelle|trimestrielle
+  scenarios:
+    - format: single
+      objet: "[Objet pour 1 impayé]"
+      corps: |
+        [Corps Markdown pour 1 impayé sans apporteur]
+    - format: multiple
+      objet: "[Objet pour plusieurs impayés]"
+      corps: |
+        [Corps Markdown pour plusieurs impayés sans apporteur]
+    - format: both
+      objet: "[Objet pour plusieurs impayés + apporteur]"
+      corps: |
+        [Corps Markdown pour plusieurs impayés avec apporteur]
+    - format: broker
+      objet: "[Objet pour 1 impayé + apporteur]"
+      corps: |
+        [Corps Markdown pour 1 impayé avec apporteur]
+
+Variables disponibles : ${allVars}
+
+Exemple complet :
+---
+- frequence: mensuelle
+  scenarios:
+    - format: single
+      objet: "Suivi de votre règlement - Facture [[nfacture]]"
+      corps: |
+        Bonjour [[payeur_nom]],
+
+        Voici l'état de votre règlement pour la facture [[nfacture]] :
+        Montant : [[montant_total]] €
+        Reste à payer : [[reste_a_payer]] €
+        Statut : [[statut]]
+
+        [Voir le détail](MET ICI LE LIEN DE PAIEMENT)
+
+        | Facture | Montant | Statut |
+        |---------|---------|--------|
+        | [[nfacture]] | [[montant_total]] € | [[statut]] |
+    - format: multiple
+      objet: "Suivi de vos règlements"
+      corps: |
+        Bonjour [[payeur_nom]],
+
+        Voici l'état de vos règlements :
+[[loop impayes]]
+        - Facture [[nfacture]] : [[reste_a_payer]] € restants
+[[endloop]]
+        Total restant : [[total_impayes]] €
+
+        [Voir le détail](MET ICI LE LIEN DE PAIEMENT)
+    - format: both
+      objet: "Suivi de vos règlements - avec [[apporteur_nom]]"
+      corps: |
+        Bonjour [[payeur_nom]],
+
+        Voici l'état de vos règlements, en copie à votre apporteur [[apporteur_nom]] :
+[[loop impayes]]
+        - Facture [[nfacture]] : [[reste_a_payer]] € restants
+[[endloop]]
+    - format: broker
+      objet: "Suivi de règlement - Facture [[nfacture]]"
+      corps: |
+        Bonjour [[payeur_nom]],
+
+        Votre apporteur [[apporteur_nom]] suit avec nous l'état de votre règlement.
+        Facture [[nfacture]] : [[reste_a_payer]] € restants.
+`;
+            await copyToClipboard(prompt);
+        } else {
+            // Prompt pour séquence de RELANCES (par défaut)
+            const prompt = `Tu es un expert en relance de factures impayées pour le secteur immobilier.
+Génère une séquence de ${
+                emails.value.length || 3
+            } emails de relance progressivement fermes.
 
 Chaque email a 4 formats selon le contexte du payeur :
 - single   : 1 seul impayé, sans apporteur d'affaire
@@ -88,20 +189,13 @@ Exemple complet :
 [[loop impayes]]
          | [[nfacture]]      | [[montant]] |
 [[endloop]]
-         Sans règlement global sous 8 jours, nous engagerons une procédure de recouvrement.
+    - format: both
+      objet: "Rappel avec apporteur : Factures impayées"
+      corps: |
+        Bonjour [[payeur_nom]],
 
-         | Numéro de facture | Montant |
-         |-------------------|---------|
-[[loop impayes]]
-         | [[nfacture]]      | [[montant]] |
-[[endloop]]
-         Votre apporteur [[apporteur_nom]] est informé de cette procédure.
-
-         | Numéro de facture | Montant |
-         |-------------------|---------|
-[[loop impayes]]
-         | [[nfacture]]      | [[montant]] |
-[[endloop]]
+        Plusieurs de vos factures sont en attente de règlement.
+        Votre apporteur [[apporteur_nom]] est informé.
     - format: broker
       objet: "Mise en demeure – Facture [[nfacture]]"
       corps: |
@@ -109,93 +203,172 @@ Exemple complet :
 
         Malgré notre rappel, votre facture [[nfacture]] ([[reste_a_payer]] €) reste impayée.
         Votre apporteur [[apporteur_nom]] est informé de cette procédure.
-`
-    await copyToClipboard(prompt)
-  }
-
-  function validerIA() {
-    try {
-      const parsed = yaml.load(iaResponse.value)
-      if (!Array.isArray(parsed)) throw new Error('Attendu un tableau YAML')
-
-      const newEmails = parsed.map((e, i) => {
-        if (!Array.isArray(e.scenarios) || e.scenarios.length === 0)
-          throw new Error(`Email ${i + 1} : propriété "scenarios" manquante ou vide`)
-
-        const scenarios = SCENARIO_FORMATS.map(fmt => {
-          const s = e.scenarios.find(s => s.format === fmt) || {}
-          return { format: fmt, objet: s.objet || '', corps: s.corps || '' }
-        })
-
-        return {
-          _key: `email_ia_${i}_${Date.now()}`,
-          delai: e.delai ?? 0,
-          smtp: '',
-          to: '[[payeur_email]]',
-          cc: '',
-          activeScenario: 'single',
-          scenarios
+`;
+            await copyToClipboard(prompt);
         }
-      })
-
-      emails.value = newEmails
-
-      nextTick(() => {
-        newEmails.forEach(email => {
-          const editor = editorRefs[email._key]
-          if (!editor) return
-          const instance = editor.getInstance()
-          if (!instance) return
-          try {
-            for (const scenario of email.scenarios) {
-              if (!scenario.corps) continue
-              email.activeScenario = scenario.format
-              instance.setMarkdown(scenario.corps)
-              scenario.corps = instance.getHTML()
-            }
-          } catch (err) {
-            console.error('Erreur conversion markdown:', err)
-          }
-          email.activeScenario = 'single'
-          instance.setHTML(getScenario(email, 'single').corps || '')
-        })
-      })
-
-      showIaModal.value = false
-      iaResponse.value = ''
-      toast.add({ title: `${newEmails.length} email(s) générés`, color: 'green' })
-    } catch (err) {
-      toast.add({ title: 'YAML invalide', description: err.message, color: 'red' })
     }
-  }
 
-  // ── ChatGPT par email ─────────────────────────────────────────
-  function openChatGptModal(idx) {
-    chatGptEmailIdx.value = idx
-    chatGptResponse.value = ''
-    chatGptTargetFormat.value = emailsSorted.value[idx]?.activeScenario || 'single'
-    showChatGptModal.value = true
-  }
+    function validerIA() {
+        try {
+            const parsed = yaml.load(iaResponse.value);
+            if (!Array.isArray(parsed))
+                throw new Error("Attendu un tableau YAML");
 
-  async function copyChatGptPrompt(fmt) {
-    const idx = chatGptEmailIdx.value
-    const email = emailsSorted.value[idx]
-    chatGptTargetFormat.value = fmt
-    const scenarioLabels = {
-      single:   "1 seul impayé, sans apporteur d'affaire",
-      multiple: "plusieurs impayés, sans apporteur d'affaire",
-      both:     "plusieurs impayés avec un apporteur d'affaire",
-      broker:   "1 seul impayé avec un apporteur d'affaire",
+            const newEmails = parsed.map((e, i) => {
+                if (!Array.isArray(e.scenarios) || e.scenarios.length === 0)
+                    throw new Error(
+                        `Email ${i + 1} : propriété "scenarios" manquante ou vide`,
+                    );
+
+                const scenarios = SCENARIO_FORMATS.map((fmt) => {
+                    const s = e.scenarios.find((s) => s.format === fmt) || {};
+                    return {
+                        format: fmt,
+                        active: true,
+                        smtp: s.smtp || "",
+                        cc: s.cc || "",
+                        objet: s.objet || "",
+                        corps: s.corps || "",
+                    };
+                });
+
+                // Pour suivi : pas de delai, mais avec frequence
+                // Pour relances : avec delai
+                if (sequenceType === "suivi") {
+                    return {
+                        _key: `email_ia_${i}_${Date.now()}`,
+                        email_index: i + 1,
+                        delai: 0,
+                        smtp: "",
+                        to: "[[payeur_email]]",
+                        cc: "",
+                        frequence: e.frequence || "hebdomadaire",
+                        activeScenario: "single",
+                        scenarios,
+                    };
+                } else {
+                    return {
+                        _key: `email_ia_${i}_${Date.now()}`,
+                        email_index: i + 1,
+                        delai: e.delai ?? 0,
+                        smtp: "",
+                        to: "[[payeur_email]]",
+                        cc: "",
+                        activeScenario: "single",
+                        scenarios,
+                    };
+                }
+            });
+
+            emails.value = newEmails;
+
+            nextTick(() => {
+                newEmails.forEach((email) => {
+                    const editor = editorRefs[email._key];
+                    if (!editor) return;
+                    const instance = editor.getInstance();
+                    if (!instance) return;
+                    try {
+                        for (const scenario of email.scenarios) {
+                            if (!scenario.corps) continue;
+                            email.activeScenario = scenario.format;
+                            instance.setMarkdown(scenario.corps);
+                            scenario.corps = instance.getHTML();
+                        }
+                    } catch (err) {
+                        console.error("Erreur conversion markdown:", err);
+                    }
+                    email.activeScenario = "single";
+                    instance.setHTML(getScenario(email, "single").corps || "");
+                });
+            });
+
+            showIaModal.value = false;
+            iaResponse.value = "";
+            toast.add({
+                title: `${newEmails.length} email(s) générés`,
+                color: "green",
+            });
+        } catch (err) {
+            toast.add({
+                title: "YAML invalide",
+                description: err.message,
+                color: "red",
+            });
+        }
     }
-    const currentScenario = email ? getScenario(email, fmt) : null
-    const emailsPrecedents = emailsSorted.value
-      .slice(0, idx)
-      .map((e, i) => `Email ${i + 1} (J+${e.delai}) : ${getScenario(e, fmt).objet || '(sans objet)'}`)
-      .join('\n')
-    const vars = allVariables.value.flatMap(g => g.vars.map(v => `[[${v}]]`)).join(', ')
-    const prompt = `Rédige un email de relance de facture impayée pour le secteur immobilier.
-Contexte du payeur : ${scenarioLabels[fmt]}.${emailsPrecedents ? `\nEmails précédents :\n${emailsPrecedents}\n` : ''}
-Email ${idx + 1} (J+${email?.delai ?? 0}) - Objet prévu : ${currentScenario?.objet || '...'}
+
+    // ── ChatGPT par email ─────────────────────────────────────────
+    function openChatGptModal(idx) {
+        chatGptEmailIdx.value = idx;
+        chatGptResponse.value = "";
+        chatGptTargetFormat.value =
+            emailsSorted.value[idx]?.activeScenario || "single";
+        showChatGptModal.value = true;
+    }
+
+    async function copyChatGptPrompt(fmt) {
+        const idx = chatGptEmailIdx.value;
+        const email = emailsSorted.value[idx];
+        chatGptTargetFormat.value = fmt;
+        const scenarioLabels = {
+            single: "1 seul impayé, sans apporteur d'affaire",
+            multiple: "plusieurs impayés, sans apporteur d'affaire",
+            both: "plusieurs impayés avec un apporteur d'affaire",
+            broker: "1 seul impayé avec un apporteur d'affaire",
+        };
+        const currentScenario = email ? getScenario(email, fmt) : null;
+
+        if (sequenceType === "suivi") {
+            // Prompt ChatGPT pour SUIVI
+            const vars = allVariables.value
+                .flatMap((g) => g.vars.map((v) => `[[${v}]]`))
+                .join(", ");
+            const prompt = `Rédige un email de suivi de règlement pour le secteur immobilier.
+Contexte du payeur : ${scenarioLabels[fmt]}.
+Variables disponibles : ${vars}
+
+IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet) :
+
+Bonjour [[payeur_nom]],
+
+Voici l'état actuel de vos règlements :
+| Facture | Montant | Statut |
+|---------|---------|--------|
+| [[nfacture]] | [[montant_total]] € | [[statut]] |
+
+[Voir le détail](MET ICI LE LIEN DE PAIEMENT)
+
+Pour plusieurs impayés, utilisez des boucles :
+| Numéro de facture | Montant | Statut |
+|-------------------|---------|--------|
+[[loop impayes]]
+| [[nfacture]] | [[montant]] | [[statut]] |
+[[endloop]]
+`;
+            await copyToClipboard(prompt);
+        } else {
+            // Prompt ChatGPT pour RELANCES (par défaut)
+            const emailsPrecedents = emailsSorted.value
+                .slice(0, idx)
+                .map(
+                    (e, i) =>
+                        `Email ${i + 1} (J+${e.delai}) : ${
+                            getScenario(e, fmt).objet || "(sans objet)"
+                        }`,
+                )
+                .join("\n");
+            const vars = allVariables.value
+                .flatMap((g) => g.vars.map((v) => `[[${v}]]`))
+                .join(", ");
+            const prompt = `Rédige un email de relance de facture impayée pour le secteur immobilier.
+Contexte du payeur : ${scenarioLabels[fmt]}.${
+                emailsPrecedents
+                    ? `\nEmails précédents :\n${emailsPrecedents}\n`
+                    : ""
+            }Email ${idx + 1} (J+${
+                email?.delai ?? 0
+            }) - Objet prévu : ${currentScenario?.objet || "..."}
 Variables disponibles : ${vars}
 
 IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet) :
@@ -210,55 +383,71 @@ Votre facture [[nfacture]] est en retard.
 |---------|-----------------|-------------|---------------|
 | [[nfacture]] | [[date_echeance]] | [[montant_total]] € | [[reste_a_payer]] € |
 
- Pour plusieurs impayés, utilisez des boucles :
-         | Numéro de facture | Montant |
-         |-------------------|---------|
+Pour plusieurs impayés, utilisez des boucles :
+| Numéro de facture | Montant |
+|-------------------|---------|
 [[loop impayes]]
-         | [[nfacture]]      | [[montant]] |
+| [[nfacture]] | [[montant]] |
 [[endloop]]
-`
-    await copyToClipboard(prompt)
-  }
-
-  function insererReponseChatGpt() {
-    const idx = chatGptEmailIdx.value
-    const email = emailsSorted.value[idx]
-    if (email) {
-      const fmt = chatGptTargetFormat.value || 'single'
-      const scenario = getScenario(email, fmt)
-      const editor = editorRefs[email._key]
-      if (editor && email.activeScenario === fmt) {
-        try {
-          editor.getInstance().setMarkdown(chatGptResponse.value)
-          scenario.corps = editor.getInstance().getHTML()
-        } catch (err) {
-          scenario.corps = chatGptResponse.value
+`;
+            await copyToClipboard(prompt);
         }
-      } else if (editor) {
-        try {
-          const instance = editor.getInstance()
-          const prevFormat = email.activeScenario
-          email.activeScenario = fmt
-          instance.setMarkdown(chatGptResponse.value)
-          scenario.corps = instance.getHTML()
-          email.activeScenario = prevFormat
-          instance.setHTML(getScenario(email, prevFormat).corps || '')
-        } catch (err) {
-          scenario.corps = chatGptResponse.value
-        }
-      } else {
-        scenario.corps = chatGptResponse.value
-      }
-      toast.add({ title: `Corps "${scenarioTabs.find(t => t.value === fmt)?.label}" mis à jour`, color: 'green', timeout: 2000 })
     }
-    showChatGptModal.value = false
-    chatGptResponse.value = ''
-  }
 
-  return {
-    showIaModal, iaResponse,
-    showChatGptModal, chatGptEmailIdx, chatGptResponse, chatGptTargetFormat,
-    copyPromptIA, validerIA,
-    openChatGptModal, copyChatGptPrompt, insererReponseChatGpt,
-  }
+    function insererReponseChatGpt() {
+        const idx = chatGptEmailIdx.value;
+        const email = emailsSorted.value[idx];
+        if (email) {
+            const fmt = chatGptTargetFormat.value || "single";
+            const scenario = getScenario(email, fmt);
+            const editor = editorRefs[email._key];
+            if (editor && email.activeScenario === fmt) {
+                try {
+                    editor.getInstance().setMarkdown(chatGptResponse.value);
+                    scenario.corps = editor.getInstance().getHTML();
+                } catch (err) {
+                    scenario.corps = chatGptResponse.value;
+                }
+            } else if (editor) {
+                try {
+                    const instance = editor.getInstance();
+                    const prevFormat = email.activeScenario;
+                    email.activeScenario = fmt;
+                    instance.setMarkdown(chatGptResponse.value);
+                    scenario.corps = instance.getHTML();
+                    email.activeScenario = prevFormat;
+                    instance.setHTML(
+                        getScenario(email, prevFormat).corps || "",
+                    );
+                } catch (err) {
+                    scenario.corps = chatGptResponse.value;
+                }
+            } else {
+                scenario.corps = chatGptResponse.value;
+            }
+            toast.add({
+                title: `Corps "${
+                    scenarioTabs.find((t) => t.value === fmt)?.label
+                }" mis à jour`,
+                color: "green",
+                timeout: 2000,
+            });
+        }
+        showChatGptModal.value = false;
+        chatGptResponse.value = "";
+    }
+
+    return {
+        showIaModal,
+        iaResponse,
+        showChatGptModal,
+        chatGptEmailIdx,
+        chatGptResponse,
+        chatGptTargetFormat,
+        copyPromptIA,
+        validerIA,
+        openChatGptModal,
+        copyChatGptPrompt,
+        insererReponseChatGpt,
+    };
 }
