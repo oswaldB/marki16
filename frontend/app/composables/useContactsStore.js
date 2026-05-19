@@ -8,14 +8,27 @@ export function useContactsStoreComposable() {
     const filtreSource = ref("all");
     const filtreSansEmail = ref(false);
 
+    // État de pagination
+    const currentPage = ref(1);
+    const pageSize = ref(50);
+
     // Données calculées
     const total = computed(() => contactsStore.allContacts.length);
+    const totalCount = computed(() => contactsStore.totalCount);
     const sansEmailCount = computed(
         () =>
             contactsStore.allContacts.filter(
                 (c) => !c.get("email") || c.get("email") === "",
             ).length,
     );
+    const sansEmailTotalCount = computed(
+        () => contactsStore.sansEmailTotalCount,
+    );
+
+    // Calcul du nombre total de pages
+    const totalPages = computed(() => {
+        return Math.ceil(totalCount.value / pageSize.value);
+    });
 
     // Options de filtre
     const sourceOptions = [
@@ -24,9 +37,35 @@ export function useContactsStoreComposable() {
         { label: "Upload", value: "upload" },
     ];
 
-    // Charger les données
-    async function charger(force = false) {
-        await contactsStore.fetchAllContacts(force);
+    // Options pour le sélecteur de taille de page
+    const pageSizeOptions = [
+        { label: "10 par page", value: 10 },
+        { label: "25 par page", value: 25 },
+        { label: "50 par page", value: 50 },
+        { label: "100 par page", value: 100 },
+    ];
+
+    // Charger les données avec pagination
+    async function charger(force = false, page = null, size = null) {
+        const pageToLoad = page !== null ? page : currentPage.value;
+        const sizeToLoad = size !== null ? size : pageSize.value;
+
+        await contactsStore.fetchAllContacts(force, pageToLoad, sizeToLoad);
+        currentPage.value = contactsStore.currentPage;
+        pageSize.value = contactsStore.pageSize;
+    }
+
+    // Charger une page spécifique
+    async function chargerPage(page) {
+        currentPage.value = page;
+        await charger(true, page, pageSize.value);
+    }
+
+    // Changer la taille de page
+    async function changerTaillePage(size) {
+        pageSize.value = size;
+        currentPage.value = 1;
+        await charger(true, 1, size);
     }
 
     // Rafraîchir le compteur sans email
@@ -39,7 +78,8 @@ export function useContactsStoreComposable() {
     // Réinitialiser et recharger
     function resetEtCharger() {
         filtreSource.value = "all";
-        return charger(true);
+        currentPage.value = 1;
+        return charger(true, 1, pageSize.value);
     }
 
     // Données filtrées pour la vue courante (recherche texte déléguée au global-filter de UTable)
@@ -91,13 +131,21 @@ export function useContactsStoreComposable() {
     return {
         loading: contactsStore.loading,
         total,
+        totalCount,
+        totalPages,
+        currentPage,
+        pageSize,
+        pageSizeOptions,
         sansEmailCount,
+        sansEmailTotalCount,
         filtreSource,
         filtreSansEmail,
         rows,
         colonnes,
         sourceOptions,
         charger,
+        chargerPage,
+        changerTaillePage,
         chargerSansEmailCount,
         resetEtCharger,
         invalidateCache,

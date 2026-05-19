@@ -137,10 +137,35 @@
             </UButton>
           </template>
         </UTable>
+
+        <!-- Pagination -->
+        <div v-if="totalCount > 0" class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <USelect
+              v-model="pageSize"
+              :items="pageSizeOptions"
+              size="sm"
+              class="w-32"
+              @change="(value) => changerTaillePage(value)"
+            />
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+              Affichage {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalCount) }} sur {{ totalCount }}
+            </span>
+            <UPagination
+              v-model="currentPage"
+              :page-count="totalPages"
+              :total="totalCount"
+              :max="5"
+              size="sm"
+            />
+          </div>
+        </div>
       </UCard>
     </div>
 
-    <!-- ── Vue par entité ── -->
+    <!-- ━━━ Vue par entité ━━━ -->
     <div v-if="ongletActif === 'par-entite'">
       <div class="flex items-center gap-3 flex-wrap mb-4">
         <UInput
@@ -275,36 +300,37 @@ function sortHeader(label) {
 }
 
 async function refresh() {
-  await Promise.all([charger(), chargerSansEmailCount()])
+  await Promise.all([charger(true, 1, pageSize.value), chargerSansEmailCount()])
 }
 
 // Helper function to get email from pointer or string
 function getEmailFromPointer(emailRelance) {
   if (!emailRelance) return null
-  
+
   // If it's a Parse Object/Pointer, get the email from it
   if (emailRelance.id && typeof emailRelance.get === 'function') {
     return emailRelance.get('email')
   }
-  
+
   // If it's already a string (backward compatibility)
   if (typeof emailRelance === 'string') {
     return emailRelance
   }
-  
+
   // If it's an object with email property
   if (emailRelance.email) {
     return emailRelance.email
   }
-  
+
   return null
 }
 
 const {
-  loading, total, sansEmailCount,
+  loading, total, totalCount, totalPages, currentPage, pageSize, pageSizeOptions,
+  sansEmailCount, sansEmailTotalCount,
   filtreSource, filtreSansEmail,
   rows, sourceOptions,
-  charger, chargerSansEmailCount, resetEtCharger,
+  charger, chargerPage, changerTaillePage, chargerSansEmailCount, resetEtCharger,
 } = useContactsStoreComposable()
 
 // Colonnes avec sort défini ici (contexte setup garanti)
@@ -315,14 +341,14 @@ const colonnes = [
   { accessorKey: 'telephone',  header: 'Téléphone' },
   { accessorKey: 'source',     header: 'Source' },
   { accessorKey: 'nb_impayes', header: sortHeader('Impayés') },
-  { 
-    id: 'email_relance', 
+  {
+    id: 'email_relance',
     header: 'Email de relance',
     cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
     enableSorting: false,
   },
-  { 
-    id: 'actions', 
+  {
+    id: 'actions',
     header: 'Actions',
     cell: ({ row }) => 'actions-cell',
     enableSorting: false,
@@ -338,14 +364,14 @@ const {
 // Ajouter les colonnes email_relance et actions aux colonnes des entités
 const colonnesEntites = computed(() => [
   ...colonnesEntitesBase.value,
-  { 
-    id: 'email_relance', 
+  {
+    id: 'email_relance',
     header: 'Email de relance',
     cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
     enableSorting: false,
   },
-  { 
-    id: 'actions', 
+  {
+    id: 'actions',
     header: 'Actions',
     cell: ({ row }) => 'actions-cell',
     enableSorting: false,
@@ -361,14 +387,14 @@ const {
 // Ajouter les colonnes email_relance et actions aux colonnes des particuliers
 const colonnesParticuliers = computed(() => [
   ...colonnesParticuliersBase.value,
-  { 
-    id: 'email_relance', 
+  {
+    id: 'email_relance',
     header: 'Email de relance',
     cell: ({ row }) => row.original.email_relance ? 'email-relance-cell' : '',
     enableSorting: false,
   },
-  { 
-    id: 'actions', 
+  {
+    id: 'actions',
     header: 'Actions',
     cell: ({ row }) => 'actions-cell',
     enableSorting: false,
@@ -384,8 +410,8 @@ const showEmailSlideover = ref(false)
 const selectedContactId = ref(null)
 
 const onglets = computed(() => [
-  { label: 'Tous les contacts', value: 'tous',       _badge: ongletActif.value === 'tous' && total.value > 0 ? total.value : undefined },
-  { label: 'Sans email',        value: 'sans-email', _badge: sansEmailCount.value > 0 ? sansEmailCount.value : undefined },
+  { label: 'Tous les contacts', value: 'tous',       _badge: totalCount.value > 0 ? totalCount.value : undefined },
+  { label: 'Sans email',        value: 'sans-email', _badge: sansEmailTotalCount.value > 0 ? sansEmailTotalCount.value : undefined },
   { label: 'Par entité',        value: 'par-entite' },
   { label: 'Par groupe de particuliers', value: 'par-groupe-particuliers' },
 ])
@@ -393,6 +419,8 @@ const onglets = computed(() => [
 watch(ongletActif, (val) => {
   globalFilter.value = ''
   sorting.value = []
+  currentPage.value = 1
+
   if (val === 'sans-email') {
     filtreSansEmail.value = true
     resetEtCharger()
@@ -405,6 +433,13 @@ watch(ongletActif, (val) => {
     } else {
       resetEtCharger()
     }
+  }
+})
+
+// Watcher pour la pagination
+watch(currentPage, async (newPage) => {
+  if (ongletActif.value === 'tous' || ongletActif.value === 'sans-email') {
+    await chargerPage(newPage)
   }
 })
 
@@ -426,7 +461,7 @@ async function handleEmailSelected(email, emailRelanceId) {
     try {
       const Contact = $parse.Object.extend('Contact')
       const contact = Contact.createWithoutData(selectedContactId.value)
-      
+
       // Stocker un pointeur vers le contact de relance au lieu de l'email string
       if (emailRelanceId) {
         const contactRelancePtr = Contact.createWithoutData(emailRelanceId)
@@ -439,13 +474,13 @@ async function handleEmailSelected(email, emailRelanceId) {
         newContactRelance.set('estActif', true)
         newContactRelance.set('nombreUtilisations', 1)
         await newContactRelance.save()
-        
+
         const contactRelancePtr = Contact.createWithoutData(newContactRelance.id)
         contact.set('email_relance', contactRelancePtr)
       }
-      
+
       await contact.save()
-      
+
       // Recharger les données pour mettre à jour l'affichage
       if (ongletActif.value === 'tous' || ongletActif.value === 'sans-email') {
         await charger()
@@ -457,33 +492,33 @@ async function handleEmailSelected(email, emailRelanceId) {
     } catch (error) {
       console.error('Erreur lors de la mise à jour du contact:', error)
       const toast = useToast()
-      toast.add({ 
-        title: 'Erreur', 
-        description: 'Impossible de mettre à jour l\'email de relance', 
-        color: 'red' 
+      toast.add({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour l\'email de relance',
+        color: 'red'
       })
       return
     }
   }
-  
+
   // 2. Afficher une notification de succès
   const toast = useToast()
-  toast.add({ 
-    title: 'Email de relance défini', 
-    description: `L\'email de relance a été défini: ${email}`, 
-    color: 'green' 
+  toast.add({
+    title: 'Email de relance défini',
+    description: `L\'email de relance a été défini: ${email}`,
+    color: 'green'
   })
-  
+
   // 3. Si un emailRelanceId est fourni, mettre à jour les relances existantes
   if (emailRelanceId) {
     try {
       await mettreAJourRelancesAvecEmailRelance(emailRelanceId, email)
     } catch (error) {
       console.error('Erreur lors de la mise à jour des relances:', error)
-      toast.add({ 
-        title: 'Attention', 
-        description: 'L\'email a été enregistré mais certaines relances n\'ont pas pu être mises à jour', 
-        color: 'yellow' 
+      toast.add({
+        title: 'Attention',
+        description: 'L\'email a été enregistré mais certaines relances n\'ont pas pu être mises à jour',
+        color: 'yellow'
       })
     }
   }
@@ -495,7 +530,7 @@ async function mettreAJourRelancesAvecEmailRelance(contactRelanceId, email) {
     const Contact = $parse.Object.extend('Contact')
     const contactRelanceQuery = new $parse.Query(Contact)
     const contactRelance = await contactRelanceQuery.get(contactRelanceId)
-    
+
     // 2. Trouver les relances en attente qui pourraient être concernées
     // Note: Dans une implémentation complète, il faudrait avoir une logique
     // pour déterminer quelles relances doivent être mises à jour
@@ -503,17 +538,17 @@ async function mettreAJourRelancesAvecEmailRelance(contactRelanceId, email) {
     const relanceQuery = new $parse.Query(Relance)
     relanceQuery.equalTo('statut', 'pending')
     // relanceQuery.equalTo('contact', contactPtr) // À décommenter quand on a le contact
-    
+
     const relances = await relanceQuery.find()
-    
+
     // 3. Mettre à jour les relances avec le nouvel email
     const relancesAMettreAJour = []
     const activites = []
-    
+
     for (const relance of relances) {
       // Sauvegarder l'ancien email pour l'activité
       const ancienEmail = relance.get('to')
-      
+
       if (ancienEmail && ancienEmail !== email) {
         // Créer une activité pour tracer le changement
         const Activite = $parse.Object.extend('Activite')
@@ -523,35 +558,35 @@ async function mettreAJourRelancesAvecEmailRelance(contactRelanceId, email) {
         activite.set('contactRelance', contactRelance)
         activite.set('relance', relance)
         activites.push(activite)
-        
+
         // Mettre à jour l'email de la relance
         relance.set('to', email)
         relance.set('contactRelance', contactRelance)
         relancesAMettreAJour.push(relance)
       }
     }
-    
+
     if (relancesAMettreAJour.length > 0) {
       // Sauvegarder les activités
       if (activites.length > 0) {
         await $parse.Object.saveAll(activites)
       }
-      
+
       // Sauvegarder les relances
       await $parse.Object.saveAll(relancesAMettreAJour)
-      
+
       // Mettre à jour les statistiques du contact de relance
       contactRelance.set('nombreUtilisations', (contactRelance.get('nombreUtilisations') || 0) + relancesAMettreAJour.length)
       contactRelance.set('dateDerniereUtilisation', new Date())
       await contactRelance.save()
-      
-      toast.add({ 
-        title: 'Relances mises à jour', 
-        description: `${relancesAMettreAJour.length} relance(s) mise(s) à jour avec le nouvel email`, 
-        color: 'blue' 
+
+      toast.add({
+        title: 'Relances mises à jour',
+        description: `${relancesAMettreAJour.length} relance(s) mise(s) à jour avec le nouvel email`,
+        color: 'blue'
       })
     }
-    
+
   } catch (error) {
     console.error('Erreur dans mettreAJourRelancesAvecEmailRelance:', error)
     throw error
