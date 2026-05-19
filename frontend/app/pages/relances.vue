@@ -825,6 +825,7 @@ const calendarOptions = computed(() => ({
   locale: 'fr',
   headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
   displayEventTime: false, // Masquer l'affichage de l'heure
+  dayMaxEvents: false, // Désactiver la limite pour permettre l'overflow
   events: relancesFiltrees.value.map(r => {
     // Utiliser la date réelle de la relance sans heure spécifique
     const dateRelance = new Date(r.dateEnvoi)
@@ -841,7 +842,7 @@ const calendarOptions = computed(() => ({
   }),
   eventClick(info) {
     const row = info.event.extendedProps.row
-    jourSelectionne.value = info.event.startStr
+    ouvrirDrawer(row, true)
   },
   dateClick(info) {
     jourSelectionne.value = info.dateStr
@@ -1369,3 +1370,14 @@ onMounted(() => {
   chargerSequences()
 })
 </script>
+
+<style scoped>
+/* Overflow pour les cases du calendrier quand il y a beaucoup de relances */
+:deep(.fc-daygrid-day-events) {
+  overflow-y: auto;
+  max-height: 150px;
+}
+:deep(.fc-daygrid-day-cell) {
+  overflow: hidden;
+}
+</style>
