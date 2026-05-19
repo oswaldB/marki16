@@ -125,7 +125,7 @@
             <!-- Statut -->
             <template #statut-cell="{ row }">
               <div class="flex items-center gap-2">
-                <UBadge :color="STATUT_CONFIG[row.original.statut]?.color ?? 'neutral'" variant="subtle" size="xs">
+                <UBadge :color="!row.original.valide ? 'orange' : (STATUT_CONFIG[row.original.statut]?.color ?? 'neutral')" variant="subtle" size="xs">
                   {{ STATUT_CONFIG[row.original.statut]?.label ?? row.original.statut }}
                 </UBadge>
                 <UButton
@@ -164,6 +164,17 @@
       ══════════════════════════════════════ -->
       <div v-else-if="vue === 'calendrier'" class="flex gap-4">
         <UCard class="flex-1">
+          <!-- Légende des couleurs -->
+          <div class="flex flex-wrap gap-3 mb-4 px-4 pt-4">
+            <div v-for="(stat, key) in STATUT_CONFIG" :key="key" class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: statutCalColor(key) }" />
+              <span class="text-xs text-gray-600">{{ stat.label }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full" style="background-color: #f97316;" />
+              <span class="text-xs text-gray-600">Non validée</span>
+            </div>
+          </div>
           <ClientOnly>
             <FullCalendar :options="calendarOptions" />
             <template #fallback>
@@ -188,7 +199,7 @@
                 class="border border-gray-100 rounded-lg p-2 space-y-1"
               >
                 <div class="flex items-center justify-between gap-2">
-                  <UBadge :color="STATUT_CONFIG[row.statut]?.color ?? 'neutral'" variant="subtle" size="xs">
+                  <UBadge :color="!row.valide ? 'orange' : (STATUT_CONFIG[row.statut]?.color ?? 'neutral')" variant="subtle" size="xs">
                     {{ STATUT_CONFIG[row.statut]?.label ?? row.statut }}
                   </UBadge>
                   <div class="flex items-center gap-1">
@@ -325,12 +336,30 @@
                     {{ positionRelanceCourante }} / {{ relancesAValider.length }}
                   </span>
                   <UButton
+                    color="neutral"
+                    variant="outline"
+                    @click="passerRelanceWorkflow"
+                    :disabled="!peutPasser"
+                  >
+                    Passer
+                  </UButton>
+                  <UButton
                     color="primary"
                     :loading="validantWorkflow"
                     @click="validerRelanceWorkflow"
                     :disabled="!relanceCourante"
                   >
                     Valider
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    class="border-gray-300 hover:bg-gray-50"
+                    :loading="blacklistStore.loading"
+                    @click="blacklistEtSupprimerRelances"
+                    :disabled="!relanceCourante"
+                  >
+                    Blacklister et supprimer relances
                   </UButton>
                 </div>
               </div>
@@ -421,23 +450,7 @@
                 </div>
               </div>
 
-              <!-- Actions -->
-              <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                <UButton color="neutral" variant="ghost" @click="passerRelanceWorkflow" :disabled="!peutPasser">
-                  Passer
-                </UButton>
-                <UButton color="primary" :loading="validantWorkflow" @click="validerRelanceWorkflow" :disabled="!relanceCourante">
-                  Valider cette relance
-                </UButton>
-                <UButton
-                  color="red"
-                  :loading="blacklistStore.loading"
-                  @click="blacklistEtSupprimerRelances"
-                  :disabled="!relanceCourante"
-                >
-                  Blacklister et supprimer relances
-                </UButton>
-              </div>
+
             </div>
           </UCard>
         </div>
@@ -831,12 +844,15 @@ const calendarOptions = computed(() => ({
     const dateRelance = new Date(r.dateEnvoi)
     dateRelance.setHours(0, 0, 0, 0) // Réinitialiser l'heure à minuit
 
+    // Couleur orange si la relance n'est pas validée
+    const color = !r.valide ? '#f97316' : statutCalColor(r.statut)
+
     return {
       id: r.id,
       title: (r.to?.split('@')[0] || '?') + ' — ' + (r.objet?.slice(0, 20) || ''),
       start: dateRelance.toISOString(),
-      backgroundColor: statutCalColor(r.statut),
-      borderColor:     statutCalColor(r.statut),
+      backgroundColor: color,
+      borderColor:     color,
       extendedProps: { row: r },
     }
   }),

@@ -461,6 +461,75 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
 
 // ─── Fin proxy PDF ────────────────────────────────────────────────────────────
 
+// ─── Téléchargement public des invoices (pour les gros fichiers) ────────────
+const TEMP_DIR = "/tmp/adti-invoices";
+
+app.get("/download/invoices/:token", async (req, res) => {
+    const { token } = req.params;
+
+    // Sécurité: vérifier que le token est valide (format hex 64 chars)
+    if (!token || !/^[a-f0-9]{64}$/.test(token)) {
+        return res.status(400).json({ error: "Token invalide" });
+    }
+
+    const filePath = path.join(TEMP_DIR, token);
+    const zipPath = path.join(TEMP_DIR, token + ".zip");
+    const pdfPath = path.join(TEMP_DIR, token + ".pdf");
+
+    // Essayer les différentes extensions
+    let finalPath = null;
+    if (fs.existsSync(zipPath)) {
+        finalPath = zipPath;
+    } else if (fs.existsSync(pdfPath)) {
+        finalPath = pdfPath;
+    } else if (fs.existsSync(filePath)) {
+        finalPath = filePath;
+    }
+
+    if (!finalPath || !fs.existsSync(finalPath)) {
+        return res.status(404).json({ error: "Fichier introuvable ou expiré" });
+    }
+
+    try {
+        // Vérifier la taille du fichier (limite à 100Mo pour éviter les abus)
+        const stats = fs.statSync(finalPath);
+        if (stats.size > 100 * 1024 * 1024) {
+            return res.status(400).json({ error: "Fichier trop volumineux" });
+        }
+
+        const filename = path.basename(finalPath);
+        res.setHeader(
+            "Content-Type",
+            filename.endsWith(".pdf") ? "application/pdf" : "application/zip",
+        );
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="${encodeURIComponent(filename)}"`,
+        );
+
+        // Stream le fichier pour éviter de tout charger en mémoire
+        const fileStream = fs.createReadStream(finalPath);
+        fileStream.pipe(res);
+
+        fileStream.on("error", (err) => {
+            console.error(
+                "[download/invoices] Erreur lecture fichier:",
+                err.message,
+            );
+            if (!res.headersSent) {
+                res.status(500).json({ error: "Erreur lecture fichier" });
+            }
+        });
+
+        res.on("finish", () => {
+            fileStream.close();
+        });
+    } catch (err) {
+        console.error("[download/invoices] Erreur:", err.message);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
+
 // ─── Test SMTP ────────────────────────────────────────────────────────────────
 
 app.post("/api/smtp/test", express.json(), async (req, res) => {

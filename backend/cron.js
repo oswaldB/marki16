@@ -1,4 +1,78 @@
-// backend/cron.js
+// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
+// ============================================================================
+cron.schedule(
+    "0 1 * * *", // 01:00 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
+        generateSuivisMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log("✅ [CRON] generate-suivi terminé avec succès");
+            })
+            .catch((error) => {
+                console.error(
+                    "❌ [CRON] Erreur generate-suivi:",
+                    error.message,
+                );
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// Fonction pour initialiser manuellement les tâches cron (si besoin)
+// ============================================================================
+function setupCronJobs() {
+    console.log("✅ Tâches cron initialisées");
+}
+=======
+// ============================================================================
+// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
+// ============================================================================
+cron.schedule(
+    "0 1 * * *", // 01:00 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
+        generateSuivisMaster({ trigger: "cron" })
+            .then((result) => {
+                console.log("✅ [CRON] generate-suivi terminé avec succès");
+            })
+            .catch((error) => {
+                console.error(
+                    "❌ [CRON] Erreur generate-suivi:",
+                    error.message,
+                );
+            });
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// 5. CLEANUP TEMP FILES : Tous les jours à 2h du matin heure de Paris
+// ============================================================================
+cron.schedule(
+    "0 2 * * *", // 02:00 heure de Paris
+    () => {
+        console.log("⏰ [CRON] Déclenchement: cleanup-temp-files (2h)");
+        cleanupTempFiles();
+    },
+    {
+        scheduled: true,
+        timezone: "Europe/Paris",
+    },
+);
+
+// ============================================================================
+// Fonction pour initialiser manuellement les tâches cron (si besoin)
+// ============================================================================
+function setupCronJobs() {
+    console.log("✅ Tâches cron initialisées");
+}backend/cron.js
 // Configuration des tâches cron pour l'exécution automatique des workflows
 // Heure de Paris (CET/CEST) = UTC+1 ou UTC+2 selon l'heure d'été
 
@@ -24,6 +98,51 @@ const importInvoicesMaster = require("./cloud/workflows/import-invoice/00-master
 const sendEmailsMaster = require("./cloud/workflows/send-emails/00-master");
 const verifyPaidInvoicesMaster = require("./cloud/workflows/verify-paid-invoices/00-master");
 const generateSuivisMaster = require("./cloud/workflows/generate-suivi/00-master");
+
+// Utilitaires pour le nettoyage des fichiers temporaires
+const fs = require("fs");
+const path = require("path");
+const TEMP_DIR = "/tmp/adti-invoices";
+const FILE_RETENTION_HOURS = 24; // Garder les fichiers 24h
+
+/**
+ * Nettoie les fichiers temporaires trop anciens
+ */
+function cleanupTempFiles() {
+    try {
+        if (!fs.existsSync(TEMP_DIR)) return;
+
+        const now = Date.now();
+        const retentionMs = FILE_RETENTION_HOURS * 60 * 60 * 1000;
+        const files = fs.readdirSync(TEMP_DIR);
+        let deletedCount = 0;
+
+        for (const file of files) {
+            const filePath = path.join(TEMP_DIR, file);
+            try {
+                const stats = fs.statSync(filePath);
+                if (now - stats.mtimeMs > retentionMs) {
+                    fs.unlinkSync(filePath);
+                    deletedCount++;
+                    console.log(`[cleanupTempFiles] Supprimé: ${file}`);
+                }
+            } catch (err) {
+                console.warn(
+                    `[cleanupTempFiles] Erreur avec ${file}:`,
+                    err.message,
+                );
+            }
+        }
+
+        console.log(
+            `[cleanupTempFiles] Nettoyage terminé: ${deletedCount} fichiers supprimés`,
+        );
+        return deletedCount;
+    } catch (err) {
+        console.error("[cleanupTempFiles] Erreur:", err.message);
+        return 0;
+    }
+}
 
 console.log("📅 Configuration des tâches cron...");
 

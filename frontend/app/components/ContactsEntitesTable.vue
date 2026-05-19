@@ -20,7 +20,7 @@
           size="xs"
           @click.stop="row.toggleExpanded()"
         />
-        
+
         <!-- Icône pour différencier entreprises et employés -->
         <UIcon
           v-if="row.original.isEntite"
@@ -32,12 +32,12 @@
           name="i-heroicons-user-circle"
           class="size-4 text-gray-400 flex-shrink-0"
         />
-        
+
         <!-- Nom -->
         <span :class="row.original.isEntite ? 'font-semibold text-gray-900' : 'text-gray-700'">
           {{ row.original.nom }} {{ row.original.isEntite ? '' : row.original.prenom }}
         </span>
-        
+
         <!-- Badge avec nombre d'employés pour les entreprises -->
         <UBadge v-if="row.original.isEntite && row.original.subRows" color="neutral" variant="subtle">
           {{ row.original.subRows.length }} employé{{ row.original.subRows.length > 1 ? 's' : '' }}
@@ -74,22 +74,38 @@
     </template>
 
     <template #actions-cell="{ row }">
-      <!-- Bouton de relance par email -->
-      <UButton
-        color="primary"
-        icon="i-heroicons-envelope"
-        size="xs"
-        variant="ghost"
-        @click.stop="() => $emit('relance-email', row.original.id)"
-        title="Définir un email de relance"
-      >
-        Définir un email de relance
-      </UButton>
+      <!-- Boutons d'actions -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <UButton
+          color="primary"
+          icon="i-heroicons-envelope"
+          size="xs"
+          variant="ghost"
+          @click.stop="() => $emit('relance-email', row.original.id)"
+          title="Définir un email de relance"
+        >
+          Définir email
+        </UButton>
+        <UButton
+          :color="row.original.isBlacklisted ? 'green' : 'red'"
+          :icon="row.original.isBlacklisted ? 'i-heroicons-check-circle' : 'i-heroicons-no-symbol'"
+          size="xs"
+          variant="ghost"
+          :loading="blacklistLoading"
+          @click.stop="() => handleToggleBlacklist(row.original)"
+          :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+        >
+          {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
+        </UButton>
+      </div>
     </template>
   </UTable>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useBlacklistStore } from '~/stores/blacklistStore'
+
 const props = defineProps({
   entites: {
     type: Array,
@@ -107,28 +123,43 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['relance-email'])
+const emit = defineEmits(['relance-email', 'blacklist-toggled'])
+const blacklistStore = useBlacklistStore()
+const blacklistLoading = ref(false)
+
+async function handleToggleBlacklist(contact) {
+  try {
+    blacklistLoading.value = true
+    const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
+    await blacklistStore.toggleBlacklist(contact.id, !isCurrentlyBlacklisted)
+    emit('blacklist-toggled')
+  } catch (error) {
+    console.error('Erreur toggle blacklist:', error)
+  } finally {
+    blacklistLoading.value = false
+  }
+}
 const expanded = ref({})
 
 // Helper function to get email from pointer or string
 function getEmailFromPointer(emailRelance) {
   if (!emailRelance) return null
-  
+
   // If it's a Parse Object/Pointer, get the email from it
   if (emailRelance.id && typeof emailRelance.get === 'function') {
     return emailRelance.get('email')
   }
-  
+
   // If it's already a string (backward compatibility)
   if (typeof emailRelance === 'string') {
     return emailRelance
   }
-  
+
   // If it's an object with email property
   if (emailRelance.email) {
     return emailRelance.email
   }
-  
+
   return null
 }
 </script>

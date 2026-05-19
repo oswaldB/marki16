@@ -125,16 +125,29 @@
           </template>
 
           <template #actions-cell="{ row }">
-            <UButton
-              color="primary"
-              icon="i-heroicons-envelope"
-              size="xs"
-              variant="ghost"
-              @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
-              title="Définir un email de relance"
-            >
-              Définir un email de relance
-            </UButton>
+            <div class="flex items-center gap-2 flex-wrap">
+              <UButton
+                color="primary"
+                icon="i-heroicons-envelope"
+                size="xs"
+                variant="ghost"
+                @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
+                title="Définir un email de relance"
+              >
+                Définir email
+              </UButton>
+              <UButton
+                :color="row.original.isBlacklisted ? 'green' : 'red'"
+                :icon="row.original.isBlacklisted ? 'i-heroicons-check-circle' : 'i-heroicons-no-symbol'"
+                size="xs"
+                variant="ghost"
+                :loading="blacklistStore.loading"
+                @click="() => toggleContactBlacklist(row.original)"
+                :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+              >
+                {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
+              </UButton>
+            </div>
           </template>
         </UTable>
 
@@ -182,6 +195,7 @@
           :colonnes="colonnesEntites"
           :loading="loadingEntites"
           @relance-email="ouvrirSlideoverEmailPourContact"
+          @blacklist-toggled="() => chargerEntitesGroupes()"
         />
       </UCard>
     </div>
@@ -250,16 +264,29 @@
           </template>
 
           <template #actions-cell="{ row }">
-            <UButton
-              color="primary"
-              icon="i-heroicons-envelope"
-              size="xs"
-              variant="ghost"
-              @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
-              title="Définir un email de relance"
-            >
-              Définir un email de relance
-            </UButton>
+            <div class="flex items-center gap-2 flex-wrap">
+              <UButton
+                color="primary"
+                icon="i-heroicons-envelope"
+                size="xs"
+                variant="ghost"
+                @click="() => ouvrirSlideoverEmailPourContact(row.original.id)"
+                title="Définir un email de relance"
+              >
+                Définir email
+              </UButton>
+              <UButton
+                :color="row.original.isBlacklisted ? 'green' : 'red'"
+                :icon="row.original.isBlacklisted ? 'i-heroicons-check-circle' : 'i-heroicons-no-symbol'"
+                size="xs"
+                variant="ghost"
+                :loading="blacklistStore.loading"
+                @click="() => toggleContactBlacklist(row.original)"
+                :title="row.original.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+              >
+                {{ row.original.isBlacklisted ? 'Blacklisté' : 'Blacklister' }}
+              </UButton>
+            </div>
           </template>
         </UTable>
       </UCard>
@@ -272,8 +299,11 @@
 import { h, resolveComponent } from 'vue'
 import { useContactsStoreComposable, useContactsEntitesComposable, useContactsParticuliersComposable, useContactsSyncComposable } from '~/composables/useContactsStore'
 import EmailSelectionSlideover from '~/components/EmailSelectionSlideover.vue'
+import { useBlacklistStore } from '~/stores/blacklistStore'
 
 const { $parse } = useNuxtApp()
+const blacklistStore = useBlacklistStore()
+const toast = useToast()
 
 const ongletActif = ref('tous')
 const globalFilter = ref('')
@@ -301,6 +331,36 @@ function sortHeader(label) {
 
 async function refresh() {
   await Promise.all([charger(true, 1, pageSize.value), chargerSansEmailCount()])
+}
+
+// Toggle blacklist pour un contact
+async function toggleContactBlacklist(contact) {
+  try {
+    const isCurrentlyBlacklisted = contact.isBlacklisted || contact.get?.('isBlacklisted') || false
+    await blacklistStore.toggleBlacklist(contact.id, !isCurrentlyBlacklisted)
+
+    // Recharger les données pour mettre à jour l'affichage
+    if (ongletActif.value === 'tous' || ongletActif.value === 'sans-email') {
+      await charger()
+    } else if (ongletActif.value === 'par-entite') {
+      await chargerEntitesGroupes()
+    } else if (ongletActif.value === 'par-groupe-particuliers') {
+      await chargerParticuliersGroupes()
+    }
+
+    toast.add({
+      title: 'Succès',
+      description: `Contact ${!isCurrentlyBlacklisted ? 'blacklisté' : 'retiré de la blacklist'}`,
+      color: 'green'
+    })
+  } catch (error) {
+    console.error('Erreur toggle blacklist:', error)
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de mettre à jour la blacklist',
+      color: 'red'
+    })
+  }
 }
 
 // Helper function to get email from pointer or string

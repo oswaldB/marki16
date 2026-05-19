@@ -125,7 +125,7 @@ const authStore = useAuthStore()
 const navItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
   { to: '/impayes', label: 'Impayés', icon: 'i-heroicons-banknotes' },
-  { to: '/impayes2', label: 'Impayés (v2)', icon: 'i-heroicons-banknotes' },
+  // { to: '/impayes2', label: 'Impayés (v2)', icon: 'i-heroicons-banknotes' },
   { to: '/contacts', label: 'Contacts', icon: 'i-heroicons-users' },
   { to: '/blacklist', label: 'Blacklist', icon: 'i-heroicons-no-symbol' },
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },

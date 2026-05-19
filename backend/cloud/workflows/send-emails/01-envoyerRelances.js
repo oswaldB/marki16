@@ -2,6 +2,11 @@
 // Envoie les relances par email et met à jour leur statut
 
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const archiver = require("archiver");
+const SftpClient = require("ssh2-sftp-client");
 
 // Initialiser Parse si ce n'est pas déjà fait
 if (typeof Parse === "undefined") {
@@ -18,6 +23,144 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
+// Configuration
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 Mo
+const TEMP_DIR = "/tmp/adti-invoices";
+const PUBLIC_DOWNLOAD_URL =
+    process.env.PUBLIC_DOWNLOAD_URL ||
+    "http://localhost:1555/download/invoices";
+
+// Assurer que le dossier temporaire existe
+if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true, mode: 0o777 });
+}
+
+/**
+ * Génère un token unique pour le téléchargement
+ */
+function generateDownloadToken() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+/**
+ * Télécharge un PDF depuis SFTP
+ * @param {string} sftpPath - Chemin du fichier sur le serveur SFTP
+ * @returns {Promise<string>} Chemin local du fichier téléchargé
+ */
+async function downloadPdfFromSftp(sftpPath) {
+    const sftp = new SftpClient();
+    const localFilename =
+        path.basename(sftpPath) || `facture_${Date.now()}.pdf`;
+    const localPath = path.join(TEMP_DIR, localFilename);
+
+    try {
+        await sftp.connect({
+            host: process.env.FTP_HOST,
+            port: parseInt(process.env.FTP_PORT || "2222", 10),
+            username: process.env.FTP_USERNAME,
+            password: process.env.FTP_PASSWORD,
+        });
+
+        const readStream = await sftp.createReadStream(sftpPath);
+        const writeStream = fs.createWriteStream(localPath);
+
+        await new Promise((resolve, reject) => {
+            readStream
+                .pipe(writeStream)
+                .on("finish", () => {
+                    sftp.end()
+                        .then(() => resolve(localPath))
+                        .catch(() => resolve(localPath));
+                })
+                .on("error", (err) => {
+                    sftp.end().catch(() => {});
+                    writeStream.close();
+                    fs.unlink(localPath, () => {});
+                    reject(err);
+                });
+        });
+
+        return localPath;
+    } catch (err) {
+        console.error(
+            "[downloadPdfFromSftp] Erreur téléchargement SFTP:",
+            err.message,
+        );
+        if (fs.existsSync(localPath)) {
+            fs.unlinkSync(localPath);
+        }
+        throw err;
+    }
+}
+
+/**
+ * Crée un ZIP à partir de plusieurs fichiers PDF
+ * @param {Array<string>} pdfPaths - Liste des chemins des PDFs
+ * @param {string} outputPath - Chemin de sortie du ZIP
+ * @returns {Promise<string>} Chemin du fichier ZIP créé
+ */
+async function createZipFromPdfs(pdfPaths, outputPath) {
+    return new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(outputPath);
+        const archive = archiver("zip", { zlib: { level: 9 } });
+
+        output.on("close", () => {
+            resolve(outputPath);
+        });
+
+        archive.on("error", (err) => {
+            output.close();
+            if (fs.existsSync(outputPath)) {
+                fs.unlinkSync(outputPath);
+            }
+            reject(err);
+        });
+
+        archive.pipe(output);
+
+        for (const pdfPath of pdfPaths) {
+            if (fs.existsSync(pdfPath)) {
+                archive.file(pdfPath, { name: path.basename(pdfPath) });
+            }
+        }
+
+        archive.finalize();
+    });
+}
+
+/**
+ * Vérifie la taille d'un fichier
+ * @param {string} filePath - Chemin du fichier
+ * @returns {Promise<number>} Taille en octets
+ */
+async function getFileSize(filePath) {
+    return new Promise((resolve) => {
+        fs.stat(filePath, (err, stats) => {
+            resolve(err ? 0 : stats.size);
+        });
+    });
+}
+
+/**
+ * Nettoie les fichiers temporaires
+ * @param {Array<string>} files - Liste des fichiers à supprimer
+ */
+function cleanupTempFiles(files) {
+    for (const file of files) {
+        try {
+            if (fs.existsSync(file)) {
+                fs.unlinkSync(file);
+            }
+        } catch (err) {
+            console.warn(
+                "[cleanupTempFiles] Impossible de supprimer",
+                file,
+                err.message,
+            );
+        }
+    }
+}
+
 /**
  * Crée un transporteur SMTP configuré à partir d'un profil SMTP
  * @param {Object} smtpProfile - Profil SMTP Parse
@@ -29,18 +172,14 @@ async function createSmtpTransporter(smtpProfile) {
         throw new Error("Aucun profil SMTP spécifié pour la relance");
     }
 
-    // Récupérer les informations du profil SMTP
     const smtpConfig = await smtpProfile.fetch({ useMasterKey: true });
 
-    // Noms de champs dans Parse : host, port, username, password, email_from
     const host = smtpConfig.get("host");
     const port = smtpConfig.get("port");
     const user = smtpConfig.get("username");
     const password = smtpConfig.get("password");
-    // secure n'existe pas dans la classe, on utilise false par défaut
     const secure = false;
 
-    // Vérifier que toutes les informations nécessaires sont présentes
     if (!host || !port || !user || !password) {
         throw new Error(
             `Profil SMTP ${smtpProfile.id} mal configuré: host=${host}, port=${port}, user=${user}`,
@@ -71,7 +210,7 @@ async function selectionnerRelancesAEnvoyer() {
 
     query.equalTo("statut", "a_envoyer");
     query.lessThanOrEqualTo("date_envoi_prevue", new Date());
-    query.limit(1000); // Limite pour éviter de surcharger le système
+    query.limit(1000);
 
     return await query.find({ useMasterKey: true });
 }
@@ -111,53 +250,161 @@ async function envoyerEmail(relance, transporter) {
     const emailData = {
         from:
             process.env.SMTP_FROM || '"Marki15 Relances" <noreply@marki15.com>',
-        // to: contact.get('email'),
-        to: "oswald.bernard@gmail.com",
+        to: contact ? contact.get("email") : "oswald.bernard@gmail.com",
         subject: relance.get("sujet"),
         html: contenuHtml,
-        text: contenuText, // Version texte
+        text: contenuText,
         headers: {
             "X-Relance-ID": relance.id,
             "X-Impaye-ID": relance.get("impaye").id,
         },
     };
 
-    // Ajouter les pièces jointes si nécessaire
+    // Gestion des pièces jointes
     const impaye = relance.get("impaye");
-    const urlPdf = impaye.get("url_pdf");
-    if (urlPdf) {
-        // Note: En production, il faudrait télécharger le PDF depuis l'URL
-        // Pour l'instant, nous ajoutons juste un lien dans le contenu
-        emailData.html += `<p><a href="${urlPdf}">Télécharger la facture</a></p>`;
-    }
+    const tempFiles = [];
+    let downloadLink = null;
+    let downloadToken = null;
 
     try {
+        // Récupérer tous les PDFs liés
+        const pdfUrls = [];
+        if (impaye && impaye.get("url_pdf")) {
+            pdfUrls.push(impaye.get("url_pdf"));
+        }
+
+        // Support pour plusieurs impayés (si la relance en a plusieurs)
+        const impayes = Array.isArray(relance.get("impayes"))
+            ? relance.get("impayes")
+            : impaye
+              ? [impaye]
+              : [];
+
+        for (const imp of impayes) {
+            if (
+                imp &&
+                imp.get("url_pdf") &&
+                !pdfUrls.includes(imp.get("url_pdf"))
+            ) {
+                pdfUrls.push(imp.get("url_pdf"));
+            }
+        }
+
+        if (pdfUrls.length > 0) {
+            const downloadedPdfs = [];
+
+            // Télécharger tous les PDFs depuis SFTP
+            for (const urlPdf of pdfUrls) {
+                try {
+                    const localPath = await downloadPdfFromSftp(urlPdf);
+                    downloadedPdfs.push(localPath);
+                    tempFiles.push(localPath);
+                } catch (err) {
+                    console.warn(
+                        `[envoyerRelances] Impossible de télécharger ${urlPdf}: ${err.message}`,
+                    );
+                }
+            }
+
+            if (downloadedPdfs.length > 0) {
+                let attachmentPath = null;
+
+                if (downloadedPdfs.length === 1) {
+                    // Un seul PDF
+                    const fileSize = await getFileSize(downloadedPdfs[0]);
+                    if (fileSize <= MAX_ATTACHMENT_SIZE) {
+                        attachmentPath = downloadedPdfs[0];
+                    }
+                } else {
+                    // Plusieurs PDFs, créer un ZIP
+                    const zipName = `factures_${relance.id}_${Date.now()}.zip`;
+                    const zipPath = path.join(TEMP_DIR, zipName);
+                    await createZipFromPdfs(downloadedPdfs, zipPath);
+                    tempFiles.push(zipPath);
+
+                    const zipSize = await getFileSize(zipPath);
+                    if (zipSize <= MAX_ATTACHMENT_SIZE) {
+                        attachmentPath = zipPath;
+                    } else {
+                        // ZIP trop gros, créer un lien public
+                        downloadToken = generateDownloadToken();
+                        const publicZipPath = path.join(
+                            TEMP_DIR,
+                            downloadToken + ".zip",
+                        );
+                        fs.renameSync(zipPath, publicZipPath);
+                        tempFiles.push(publicZipPath);
+
+                        downloadLink = `${PUBLIC_DOWNLOAD_URL}/${downloadToken}`;
+                        console.log(
+                            `[envoyerRelances] ZIP trop gros (${zipSize} octets), lien public: ${downloadLink}`,
+                        );
+                    }
+                }
+
+                // Joindre le fichier s'il n'est pas trop gros
+                if (attachmentPath) {
+                    const fileSize = await getFileSize(attachmentPath);
+                    if (fileSize <= MAX_ATTACHMENT_SIZE) {
+                        emailData.attachments = emailData.attachments || [];
+                        emailData.attachments.push({
+                            filename: path.basename(attachmentPath),
+                            path: attachmentPath,
+                        });
+                        console.log(
+                            `[envoyerRelances] Pièce jointe ajoutée: ${path.basename(attachmentPath)} (${fileSize} octets)`,
+                        );
+                    } else {
+                        // Fichier trop gros même individuellement
+                        downloadToken = generateDownloadToken();
+                        const ext = path.extname(attachmentPath);
+                        const publicPath = path.join(
+                            TEMP_DIR,
+                            downloadToken + ext,
+                        );
+                        fs.renameSync(attachmentPath, publicPath);
+                        tempFiles.push(publicPath);
+                        downloadLink = `${PUBLIC_DOWNLOAD_URL}/${downloadToken}`;
+                        console.log(
+                            `[envoyerRelances] Fichier trop gros (${fileSize} octets), lien public: ${downloadLink}`,
+                        );
+                    }
+                }
+
+                // Ajouter le lien dans le contenu si pas de pièce jointe
+                if (downloadLink) {
+                    emailData.html += `<p><strong>Factures à télécharger:</strong> <a href="${downloadLink}">Télécharger toutes les factures</a></p>`;
+                }
+            }
+        }
+
         const info = await transporter.sendMail(emailData);
         console.log(
-            `[envoyerRelances] Email envoyé à ${contact.get("email")}: ${info.messageId}`,
+            `[envoyerRelances] Email envoyé à ${contact ? contact.get("email") : "test"}: ${info.messageId}`,
         );
-        return { success: true, messageId: info.messageId };
+
+        return {
+            success: true,
+            messageId: info.messageId,
+            tempFiles,
+            downloadToken,
+            downloadLink,
+        };
     } catch (error) {
-        console.error(
-            `[envoyerRelances] Erreur envoi email à ${contact.get("email")}:`,
-            error.message,
-        );
+        console.error(`[envoyerRelances] Erreur envoi email: ${error.message}`);
+        // Nettoyer les fichiers en cas d'erreur
+        cleanupTempFiles(tempFiles);
         return { success: false, error: error.message };
     }
 }
 
 /**
  * Met à jour le statut d'une relance
- * @param {Object} relance - La relance à mettre à jour
- * @param {string} statut - Nouveau statut
- * @param {Object} details - Détails supplémentaires
- * @returns {Promise<Object>} Relance mise à jour
  */
 async function mettreAJourStatutRelance(relance, statut, details = {}) {
     relance.set("statut", statut);
     relance.set("date_envoi", new Date());
 
-    // Ajouter les détails spécifiques au statut
     if (statut === "envoye") {
         relance.set("envoye_par", "smtp");
         relance.set("envoye_le", new Date());
@@ -172,9 +419,6 @@ async function mettreAJourStatutRelance(relance, statut, details = {}) {
 
 /**
  * Crée une entrée de journal pour l'envoi
- * @param {Object} relance - La relance concernée
- * @param {string} statut - Statut de l'envoi
- * @param {Object} details - Détails supplémentaires
  */
 async function journaliserEnvoi(relance, statut, details = {}) {
     try {
@@ -203,8 +447,6 @@ async function journaliserEnvoi(relance, statut, details = {}) {
 
 /**
  * Envoie toutes les relances prêtes
- * @param {Object} options - Options de configuration
- * @returns {Promise<Object>} Statistiques d'envoi
  */
 async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
     const startedAt = new Date();
@@ -218,7 +460,6 @@ async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
     try {
         console.log("[envoyerRelances] Début de l'envoi des relances");
 
-        // 1. Sélectionner les relances à envoyer
         const relances = await selectionnerRelancesAEnvoyer();
         stats.relancesSelectionnees = relances.length;
         console.log(
@@ -234,7 +475,6 @@ async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
             console.log("[envoyerRelances] Mode dryRun - pas d'envoi réel");
         }
 
-        // 3. Traiter chaque relance
         for (const relance of relances.slice(0, limit)) {
             try {
                 console.log(
@@ -242,24 +482,31 @@ async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
                 );
 
                 if (!dryRun) {
-                    // 2. Créer le transporteur SMTP avec le profil de la relance
                     const smtpProfil = relance.get("smtpProfil");
                     const transporter = await createSmtpTransporter(smtpProfil);
 
-                    // 4. Envoyer l'email
                     const result = await envoyerEmail(relance, transporter);
 
+                    // Nettoyer les fichiers temporaires après envoi
+                    if (result.tempFiles && result.tempFiles.length > 0) {
+                        // Ne pas nettoyer immédiatement si on a un lien public
+                        // (le fichier doit rester disponible pour téléchargement)
+                        if (!result.downloadLink) {
+                            cleanupTempFiles(result.tempFiles);
+                        }
+                    }
+
                     if (result.success) {
-                        // 5. Mettre à jour le statut
                         await mettreAJourStatutRelance(relance, "envoye", {
                             messageId: result.messageId,
+                            downloadToken: result.downloadToken,
+                            downloadLink: result.downloadLink,
                         });
                         stats.relancesEnvoyees++;
                         console.log(
                             `[envoyerRelances] Relance ${relance.id} envoyée avec succès`,
                         );
                     } else {
-                        // 6. Marquer comme erreur
                         await mettreAJourStatutRelance(relance, "erreur", {
                             error: result.error,
                         });
@@ -274,14 +521,12 @@ async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
                         );
                     }
 
-                    // 7. Journaliser l'envoi
                     await journaliserEnvoi(
                         relance,
                         result.success ? "envoye" : "erreur",
                         result,
                     );
                 } else {
-                    // Mode dryRun - simuler l'envoi
                     stats.relancesEnvoyees++;
                     console.log(
                         `[envoyerRelances] Mode dryRun - relance ${relance.id} serait envoyée`,
@@ -300,7 +545,6 @@ async function envoyerRelances({ dryRun = false, limit = 100 } = {}) {
                 });
                 stats.relancesErreurs++;
 
-                // Marquer la relance comme erreur même en dryRun
                 if (!dryRun) {
                     await mettreAJourStatutRelance(relance, "erreur", {
                         error: error.message,
