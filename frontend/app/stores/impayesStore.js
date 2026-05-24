@@ -5,7 +5,7 @@ export const useImpayesStore = defineStore("impayes", {
         allImpayes: [],
         loading: false,
         lastFetched: null,
-        cacheDuration: 300000, // 5 minutes
+        cacheDuration: 0, // Désactivé - pas de cache
         viewsData: {
             unitaire: { data: [], loaded: false },
             payeur: { data: [], loaded: false },
@@ -18,10 +18,7 @@ export const useImpayesStore = defineStore("impayes", {
 
     getters: {
         hasCache: (state) => {
-            return (
-                state.lastFetched &&
-                Date.now() - state.lastFetched < state.cacheDuration
-            );
+            return false; // Désactivé - toujours recharger
         },
     },
 

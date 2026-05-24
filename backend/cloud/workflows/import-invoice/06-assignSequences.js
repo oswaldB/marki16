@@ -22,6 +22,65 @@ const {
     appliquerReglesAttributionAutomatique,
 } = require("../../workflows/appliquer-regles-attribution/01-appliquerReglesAttributionAutomatique");
 
+// ============================================================================
+// UTILITAIRES POUR BATCH SAVE
+// ============================================================================
+
+/**
+ * Sauvegarde un tableau d'objets Parse par lots (batch)
+ * Utilise Parse.Object.saveAll() pour minimiser les requêtes réseau
+ * @param {Parse.Object[]} objects - Tableau d'objets Parse à sauvegarder
+ * @param {Object} options - Options pour saveAll (ex: { useMasterKey: true })
+ * @param {number} batchSize - Taille maximale d'un batch (défaut: 50)
+ * @returns {Promise<Parse.Object[]>} Tableau des objets sauvegardés
+ */
+async function batchSave(objects, options = {}, batchSize = 50) {
+    if (!objects || objects.length === 0) {
+        return [];
+    }
+
+    const results = [];
+    const totalBatches = Math.ceil(objects.length / batchSize);
+
+    for (let i = 0; i < totalBatches; i++) {
+        const startIdx = i * batchSize;
+        const endIdx = startIdx + batchSize;
+        const batch = objects.slice(startIdx, endIdx);
+
+        info(
+            `Sauvegarde batch ${i + 1}/${totalBatches} (${batch.length} objets)`,
+            "import-invoice",
+            "batchSave",
+            { batchNum: i + 1, totalBatches, batchSize: batch.length }
+        );
+
+        try {
+            const saved = await Parse.Object.saveAll(batch, options);
+            results.push(...saved);
+            info(
+                `Batch ${i + 1}/${totalBatches} sauvegardé avec succès`,
+                "import-invoice",
+                "batchSave",
+                { batchNum: i + 1, savedCount: saved.length }
+            );
+        } catch (err) {
+            error(
+                `Erreur sauvegarde batch ${i + 1}/${totalBatches}: ${err.message}`,
+                "import-invoice",
+                "batchSave",
+                {
+                    batchNum: i + 1,
+                    error: err.message,
+                    stack: err.stack?.substring(0, 500),
+                }
+            );
+            throw err;
+        }
+    }
+
+    return results;
+}
+
 /**
  * Étape 6 : Attribue automatiquement des séquences aux impayés
  * @returns {Promise<Object>} { stats }
@@ -57,7 +116,9 @@ async function assignSequences() {
             { count: impayes.length },
         );
 
-        // 2. Traiter chaque impayé
+        // 2. Traiter chaque impayé et collecter ceux à sauvegarder
+        const impayesToSave = [];
+        
         for (const impaye of impayes) {
             try {
                 stats.impayesTraites++;
@@ -75,11 +136,11 @@ async function assignSequences() {
                         { sequenceId: sequence.id },
                     );
 
-                    // 4. Sauvegarder l'impayé avec la séquence attribuée
+                    // 4. Préparer l'impayé avec la séquence attribuée (sans save immédiat)
                     impaye.set("sequence", sequence);
-                    await impaye.save(null, { useMasterKey: true });
+                    impayesToSave.push(impaye);
                     info(
-                        `Étape 6: Séquence sauvegardée pour ${impaye.id}`,
+                        `Étape 6: Séquence préparée pour ${impaye.id}`,
                         "import-invoice",
                         "assignSequences",
                         { impayeId: impaye.id },
@@ -118,6 +179,23 @@ async function assignSequences() {
                     stack: err.stack && err.stack.substring(0, 500),
                 });
             }
+        }
+
+        // 5. Sauvegarder tous les impayés modifiés en batch
+        if (impayesToSave.length > 0) {
+            info(
+                `Étape 6: Sauvegarde de ${impayesToSave.length} impayés avec séquences par batch`,
+                "import-invoice",
+                "assignSequences",
+                { count: impayesToSave.length },
+            );
+            await batchSave(impayesToSave, { useMasterKey: true }, 50);
+            info(
+                `Étape 6: ${impayesToSave.length} impayés sauvegardés avec succès`,
+                "import-invoice",
+                "assignSequences",
+                { savedCount: impayesToSave.length },
+            );
         }
 
         info(

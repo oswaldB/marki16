@@ -16,6 +16,25 @@ export function useImpayesStoreComposable() {
     // Synchroniser la vue active avec l'URL
     const activeView = ref(route.query.vue || "unitaire");
 
+    // Synchroniser filtreSequence avec activeView
+    // Quand on est sur la vue "sans-sequence", forcer filtreSequence à "none"
+    // Quand on quit la vue "sans-sequence", réinitialiser à "all"
+    watch(activeView, (newView) => {
+        if (newView === "sans-sequence") {
+            filtreSequence.value = "none";
+        } else if (filtreSequence.value === "none") {
+            filtreSequence.value = "all";
+        }
+    }, { immediate: true });
+
+    // Synchroniser activeView avec filtreSequence
+    // Quand on sélectionne "Sans séquence" dans le filtre, basculer vers la vue
+    watch(filtreSequence, (newFiltre) => {
+        if (newFiltre === "none" && activeView.value !== "sans-sequence") {
+            activeView.value = "sans-sequence";
+        }
+    });
+
     // Données réactives
     const impayes = computed(() => {
         return store.viewsData[activeView.value]?.data || [];

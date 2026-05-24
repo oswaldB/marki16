@@ -377,14 +377,14 @@ async function envoyerEmailsDeTest(
                         if (smtpId) {
                             await sendEmailViaSmtp({
                                 smtpId: smtpId,
-                                to: "oswald.bernard@gmail.com",
+                                to: testEmail,
                                 subject: objet,
                                 html: corps,
                                 text: corps.replace(/<[^>]*>/g, ""),
                             });
                         } else {
                             await sendEmail({
-                                to: "oswald.bernard@gmail.com",
+                                to: testEmail,
                                 subject: objet,
                                 html: corps,
                                 text: corps.replace(/<[^>]*>/g, ""),
@@ -461,14 +461,14 @@ async function envoyerEmailsDeTest(
                 if (smtpId) {
                     await sendEmailViaSmtp({
                         smtpId: smtpId,
-                        to: "oswald.bernard@gmail.com",
+                        to: testEmail,
                         subject: objet,
                         html: corps,
                         text: corps.replace(/<[^>]*>/g, ""),
                     });
                 } else {
                     await sendEmail({
-                        to: "oswald.bernard@gmail.com",
+                        to: testEmail,
                         subject: objet,
                         html: corps,
                         text: corps.replace(/<[^>]*>/g, ""),

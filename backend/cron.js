@@ -1,78 +1,3 @@
-// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
-// ============================================================================
-cron.schedule(
-    "0 1 * * *", // 01:00 heure de Paris
-    () => {
-        console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
-        generateSuivisMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log("✅ [CRON] generate-suivi terminé avec succès");
-            })
-            .catch((error) => {
-                console.error(
-                    "❌ [CRON] Erreur generate-suivi:",
-                    error.message,
-                );
-            });
-    },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
-);
-
-// ============================================================================
-// Fonction pour initialiser manuellement les tâches cron (si besoin)
-// ============================================================================
-function setupCronJobs() {
-    console.log("✅ Tâches cron initialisées");
-}
-=======
-// ============================================================================
-// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
-// ============================================================================
-cron.schedule(
-    "0 1 * * *", // 01:00 heure de Paris
-    () => {
-        console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
-        generateSuivisMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log("✅ [CRON] generate-suivi terminé avec succès");
-            })
-            .catch((error) => {
-                console.error(
-                    "❌ [CRON] Erreur generate-suivi:",
-                    error.message,
-                );
-            });
-    },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
-);
-
-// ============================================================================
-// 5. CLEANUP TEMP FILES : Tous les jours à 2h du matin heure de Paris
-// ============================================================================
-cron.schedule(
-    "0 2 * * *", // 02:00 heure de Paris
-    () => {
-        console.log("⏰ [CRON] Déclenchement: cleanup-temp-files (2h)");
-        cleanupTempFiles();
-    },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
-);
-
-// ============================================================================
-// Fonction pour initialiser manuellement les tâches cron (si besoin)
-// ============================================================================
-function setupCronJobs() {
-    console.log("✅ Tâches cron initialisées");
-}backend/cron.js
 // Configuration des tâches cron pour l'exécution automatique des workflows
 // Heure de Paris (CET/CEST) = UTC+1 ou UTC+2 selon l'heure d'été
 
@@ -101,7 +26,6 @@ const generateSuivisMaster = require("./cloud/workflows/generate-suivi/00-master
 
 // Utilitaires pour le nettoyage des fichiers temporaires
 const fs = require("fs");
-const path = require("path");
 const TEMP_DIR = "/tmp/adti-invoices";
 const FILE_RETENTION_HOURS = 24; // Garder les fichiers 24h
 
@@ -111,12 +35,10 @@ const FILE_RETENTION_HOURS = 24; // Garder les fichiers 24h
 function cleanupTempFiles() {
     try {
         if (!fs.existsSync(TEMP_DIR)) return;
-
         const now = Date.now();
         const retentionMs = FILE_RETENTION_HOURS * 60 * 60 * 1000;
         const files = fs.readdirSync(TEMP_DIR);
         let deletedCount = 0;
-
         for (const file of files) {
             const filePath = path.join(TEMP_DIR, file);
             try {
@@ -133,7 +55,6 @@ function cleanupTempFiles() {
                 );
             }
         }
-
         console.log(
             `[cleanupTempFiles] Nettoyage terminé: ${deletedCount} fichiers supprimés`,
         );
@@ -146,108 +67,84 @@ function cleanupTempFiles() {
 
 console.log("📅 Configuration des tâches cron...");
 
-// ============================================================================
-// 1. IMPORT INVOICE : Tous les jours à minuit (00:00 heure de Paris)
-// ============================================================================
+// 1. IMPORT INVOICE : Tous les jours à minuit
 cron.schedule(
-    "0 0 * * *", // 00:00 UTC (minuit heure de Paris en hiver)
+    "0 0 * * *",
     () => {
         console.log("⏰ [CRON] Déclenchement: import-invoice (minuit)");
         importInvoicesMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log("✅ [CRON] import-invoice terminé avec succès");
-            })
-            .catch((error) => {
+            .then(() => console.log("✅ [CRON] import-invoice terminé"))
+            .catch((error) =>
                 console.error(
                     "❌ [CRON] Erreur import-invoice:",
                     error.message,
-                );
-            });
+                ),
+            );
     },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
+    { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// ============================================================================
-// 2. SEND EMAILS : Tous les jours à 18h heure de Paris
-// ============================================================================
+// 2. SEND EMAILS : Tous les jours à 18h
 cron.schedule(
-    "0 18 * * *", // 18:00 heure de Paris
+    "0 18 * * *",
     () => {
         console.log("⏰ [CRON] Déclenchement: send-emails (18h)");
         sendEmailsMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log("✅ [CRON] send-emails terminé avec succès");
-            })
-            .catch((error) => {
-                console.error("❌ [CRON] Erreur send-emails:", error.message);
-            });
+            .then(() => console.log("✅ [CRON] send-emails terminé"))
+            .catch((error) =>
+                console.error("❌ [CRON] Erreur send-emails:", error.message),
+            );
     },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
+    { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// ============================================================================
-// 3. VERIFY PAID INVOICES : Toutes les heures à hh:50 heure de Paris
-// ============================================================================
+// 3. VERIFY PAID INVOICES : Toutes les heures à hh:50
 cron.schedule(
-    "50 * * * *", // hh:50 heure de Paris
+    "50 * * * *",
     () => {
         console.log("⏰ [CRON] Déclenchement: verify-paid-invoices (hh:50)");
         verifyPaidInvoicesMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log(
-                    "✅ [CRON] verify-paid-invoices terminé avec succès",
-                );
-            })
-            .catch((error) => {
+            .then(() => console.log("✅ [CRON] verify-paid-invoices terminé"))
+            .catch((error) =>
                 console.error(
                     "❌ [CRON] Erreur verify-paid-invoices:",
                     error.message,
-                );
-            });
+                ),
+            );
     },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
+    { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// ============================================================================
-// 4. GENERATE SUIVI : Tous les jours à 1h du matin heure de Paris
-// ============================================================================
+// 4. GENERATE SUIVI : Tous les jours à 1h
 cron.schedule(
-    "0 1 * * *", // 01:00 heure de Paris
+    "0 1 * * *",
     () => {
         console.log("⏰ [CRON] Déclenchement: generate-suivi (1h)");
         generateSuivisMaster({ trigger: "cron" })
-            .then((result) => {
-                console.log("✅ [CRON] generate-suivi terminé avec succès");
-            })
-            .catch((error) => {
+            .then(() => console.log("✅ [CRON] generate-suivi terminé"))
+            .catch((error) =>
                 console.error(
                     "❌ [CRON] Erreur generate-suivi:",
                     error.message,
-                );
-            });
+                ),
+            );
     },
-    {
-        scheduled: true,
-        timezone: "Europe/Paris",
-    },
+    { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// ============================================================================
-// Fonction pour initialiser manuellement les tâches cron (si besoin)
-// ============================================================================
+// 5. CLEANUP TEMP FILES : Tous les jours à 2h
+cron.schedule(
+    "0 2 * * *",
+    () => {
+        console.log("⏰ [CRON] Déclenchement: cleanup-temp-files (2h)");
+        cleanupTempFiles();
+    },
+    { scheduled: true, timezone: "Europe/Paris" },
+);
+
 function setupCronJobs() {
     console.log("✅ Tâches cron initialisées");
 }
 
 module.exports = { setupCronJobs };
-
 console.log("✅ Fichier cron.js chargé - tâches planifiées activées");

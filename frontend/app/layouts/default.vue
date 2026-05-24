@@ -232,6 +232,7 @@ const settingsItems = [
   { to: '/sequences', label: 'Séquences', icon: 'i-heroicons-queue-list' },
   { to: '/settings/smtp', label: 'Profils SMTP', icon: 'i-heroicons-envelope' },
   { to: '/settings/users', label: 'Utilisateurs', icon: 'i-heroicons-user-group' },
+  { to: '/faq', label: 'FAQ', icon: 'i-heroicons-question-mark-circle' },
 ]
 
 const allItems = [...mainItems, ...impayesItems, ...relancesItems, ...contactsItems, ...settingsItems]

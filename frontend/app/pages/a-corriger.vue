@@ -11,8 +11,8 @@
         <button
           @click="activeTab = 'contacts'"
           :class="[
-            activeTab === 'contacts' 
-              ? 'border-sky-500 text-sky-600' 
+            activeTab === 'contacts'
+              ? 'border-sky-500 text-sky-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
             'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
           ]"
@@ -22,8 +22,8 @@
         <button
           @click="activeTab = 'impayes'"
           :class="[
-            activeTab === 'impayes' 
-              ? 'border-sky-500 text-sky-600' 
+            activeTab === 'impayes'
+              ? 'border-sky-500 text-sky-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
             'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
           ]"
@@ -126,14 +126,14 @@ function formatDate(val) {
 
 function parseContact(c) {
   if (!c) return null
-  
+
   // Try different ways to access the data
   const getValue = (key) => {
     if (c.get) return c.get(key)
     if (c[key] !== undefined) return c[key]
     return undefined
   }
-  
+
   return {
     id: c.id,
     nom: getValue('nom') || getValue('name') || getValue('Nom') || '—',
@@ -145,13 +145,13 @@ function parseContact(c) {
 
 function parseImpaye(i) {
   if (!i) return null
-  
+
   const getValue = (key) => {
     if (i.get) return i.get(key)
     if (i[key] !== undefined) return i[key]
     return undefined
   }
-  
+
   return {
     id: i.id,
     nfacture: getValue('nfacture') || '—',
@@ -166,28 +166,45 @@ function parseImpaye(i) {
 async function chargerContactsSansEmail() {
   loading.value = true
   try {
-    // Create two separate queries and combine results
+    // Create three separate queries to capture all contacts without email
     const q1 = new $parse.Query('Contact')
     q1.doesNotExist('email')
-    q1.limit(200)
-    
+    q1.limit(10000)
+
     const q2 = new $parse.Query('Contact')
     q2.equalTo('email', '')
-    q2.limit(200)
-    
-    // Execute both queries
+    q2.limit(10000)
+
+    // Execute all three queries
     const results1 = await q1.find()
     const results2 = await q2.find()
-    
-    // Combine and deduplicate results
-    const allResults = [...results1, ...results2]
-    const uniqueResults = allResults.filter((item, index, self) => 
-      index === self.findIndex((t) => t.id === item.id)
-    )
-    
-    contactsSansEmail.value = uniqueResults.map(parseContact)
-    
-    // Debug: log the first contact to see the structure
+
+    // 3. email is null
+    const q3 = new $parse.Query('Contact')
+    q3.equalTo('email', null)
+    q3.limit(10000)
+    const results3 = await q3.find()
+
+    // Combine and deduplicate results using a Set for better performance
+    const seenIds = new Set()
+    const uniqueResults = [...results1, ...results2, ...results3].filter((item) => {
+      if (seenIds.has(item.id)) {
+        return false
+      }
+      seenIds.add(item.id)
+      return true
+    })
+
+    contactsSansEmail.value = uniqueResults
+      .sort((a, b) => {
+        const nomA = (a.get ? a.get('nom') : a.nom) || ''
+        const nomB = (b.get ? b.get('nom') : b.nom) || ''
+        return nomA.localeCompare(nomB, 'fr', { sensitivity: 'base' })
+      })
+      .map(parseContact)
+
+    // Debug: log count and first contact to see the structure
+    console.log(`Contacts sans email trouvés: ${uniqueResults.length}`)
     if (uniqueResults.length > 0) {
       console.log('First contact:', {
         id: uniqueResults[0].id,
@@ -208,11 +225,11 @@ async function chargerImpayesSansPayeur() {
     const q = new $parse.Query('Impaye')
     q.doesNotExist('payeur')
     q.equalTo('facture_soldee', false)
-    q.limit(200)
+    q.limit(10000)
 
     const results = await q.find()
     console.log('Impayés trouvés:', results.length, 'résultats')
-    
+
     if (results.length > 0) {
       console.log('Premier impayé brut:', {
         id: results[0].id,
@@ -220,7 +237,7 @@ async function chargerImpayesSansPayeur() {
         nfacture: results[0].get ? results[0].get('nfacture') : results[0].nfacture
       })
     }
-    
+
     impayesSansPayeur.value = results.map(parseImpaye)
     console.log('Impayés parsés:', impayesSansPayeur.value)
   } catch (err) {

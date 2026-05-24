@@ -15,6 +15,71 @@ const cron = require("node-cron");
 const app = express();
 const PORT = process.env.PORT || 1555;
 
+// ─── Conformité SQLite ────────────────────────────────────────────────────────
+// Endpoint pour récupérer les statistiques de conformité depuis SQLite
+app.get("/api/conformite/sqlite", async (req, res) => {
+    const dbPath = "/home/arthur/adti/sync.db";
+
+    try {
+        // Vérifier que le fichier existe
+        if (!fs.existsSync(dbPath)) {
+            return res.status(404).json({
+                success: false,
+                error: "Base SQLite introuvable",
+                path: dbPath,
+            });
+        }
+
+        const Database = require("better-sqlite3");
+    console.log("[DEBUG] better-sqlite3 loaded:", typeof Database);
+        const db = new Database(dbPath);
+
+        try {
+            // Requête 1: Compter les factures uniques (nfacture)
+            const totalFactures = db.prepare(`
+                SELECT COUNT(DISTINCT nfacture) as count
+                FROM _GCO__GcoPiece
+                WHERE nfacture IS NOT NULL
+            `).get().count || 0;
+
+            // Requête 2: Compter les factures avec resteapayer > 0
+            const resteApayerGt0 = db.prepare(`
+                SELECT COUNT(DISTINCT nfacture) as count
+                FROM _GCO__GcoPiece
+                WHERE nfacture IS NOT NULL AND resteapayer > 0
+            `).get().count || 0;
+
+            // Requête 3: Compter les factures avec resteapayer > 0 ET nfacture > 44432
+            const resteApayerGt0NfactureGt44432 = db.prepare(`
+                SELECT COUNT(DISTINCT nfacture) as count
+                FROM _GCO__GcoPiece
+                WHERE nfacture IS NOT NULL AND resteapayer > 0 AND nfacture > 44432
+            `).get().count || 0;
+
+            db.close();
+
+
+            res.json({
+                success: true,
+                data: {
+                    total_factures: totalFactures,
+                    resteapayer_gt_0: resteApayerGt0,
+                    resteapayer_gt_0_nfacture_gt_44432: resteApayerGt0NfactureGt44432,
+                },
+            });
+        } catch (dbError) {
+            db.close();
+            throw dbError;
+        }
+    } catch (error) {
+        console.error("[API] Erreur conformité SQLite:", error.message);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 // Activer CORS pour toutes les routes
 app.use(cors());
 
