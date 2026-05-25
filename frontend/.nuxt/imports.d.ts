@@ -38,6 +38,7 @@ export { useDynamicOptions } from '../app/composables/useDynamicOptions';
 export { useIaSequence } from '../app/composables/useIaSequence';
 export { useImpayesStoreComposable } from '../app/composables/useImpayesStore';
 export { useLiensPaiement } from '../app/composables/useLiensPaiement';
+export { useOllamaChat } from '../app/composables/useOllamaChat';
 export { SCENARIO_FORMATS, DOCUMENTATION, SEQUENCE_TYPES, VARIABLES, EXEMPLE_VARS, champOptions, operateurOptions, groupeLogiqueOptions, scenarioTabs, editorOptions, getScenario, getCurrentCorps, updateCorps, switchScenario, useSequenceEditor } from '../app/composables/useSequenceEditor';
 export { useSequenceRules } from '../app/composables/useSequenceRules';
 export { useAuthStore } from '../app/stores/auth';

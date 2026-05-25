@@ -24,6 +24,7 @@ export const ImpayeDrawerPdf: typeof import("../app/components/ImpayeDrawerPdf.v
 export const ModalChatGptEmail: typeof import("../app/components/ModalChatGptEmail.vue")['default']
 export const ModalIaSequence: typeof import("../app/components/ModalIaSequence.vue")['default']
 export const NaiveTest: typeof import("../app/components/NaiveTest.vue")['default']
+export const OllamaChatPanel: typeof import("../app/components/OllamaChatPanel.vue")['default']
 export const PauseSequenceDrawer: typeof import("../app/components/PauseSequenceDrawer.vue")['default']
 export const PdfIframe: typeof import("../app/components/PdfIframe.vue")['default']
 export const RelanceDrawer: typeof import("../app/components/RelanceDrawer.vue")['default']
@@ -199,6 +200,7 @@ export const LazyImpayeDrawerPdf: LazyComponent<typeof import("../app/components
 export const LazyModalChatGptEmail: LazyComponent<typeof import("../app/components/ModalChatGptEmail.vue")['default']>
 export const LazyModalIaSequence: LazyComponent<typeof import("../app/components/ModalIaSequence.vue")['default']>
 export const LazyNaiveTest: LazyComponent<typeof import("../app/components/NaiveTest.vue")['default']>
+export const LazyOllamaChatPanel: LazyComponent<typeof import("../app/components/OllamaChatPanel.vue")['default']>
 export const LazyPauseSequenceDrawer: LazyComponent<typeof import("../app/components/PauseSequenceDrawer.vue")['default']>
 export const LazyPdfIframe: LazyComponent<typeof import("../app/components/PdfIframe.vue")['default']>
 export const LazyRelanceDrawer: LazyComponent<typeof import("../app/components/RelanceDrawer.vue")['default']>
