@@ -8,9 +8,24 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
+const archiver = require("archiver");
+const SftpClient = require("ssh2-sftp-client");
 
 // Importer les fonctions d'envoi d'email (étape 2)
 const { sendEmail, sendEmailViaSmtp } = require("./02-sendEmails");
+
+// Configuration pour les pièces jointes
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 Mo
+const TEMP_DIR = "/tmp/adti-invoices-test";
+const PUBLIC_DOWNLOAD_URL =
+    process.env.PUBLIC_DOWNLOAD_URL ||
+    "http://localhost:1555/download/invoices";
+
+// Assurer que le dossier temporaire existe
+if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true, mode: 0o777 });
+}
 
 // Configuration Ollama (identique à 02-generateRelances.js)
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "https://ollama.com/api";
@@ -37,6 +52,214 @@ function writeLog(message, workflowName = "send-sequence-test") {
             "[logger] Impossible d'écrire dans le fichier de log:",
             err.message,
         );
+    }
+}
+
+// =========================================================================
+// FONCTIONS UTILITAIRES POUR LES PIÈCES JOINTES
+// =========================================================================
+
+/**
+ * Génère un token unique pour le téléchargement
+ */
+function generateDownloadToken() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+/**
+ * Télécharge un PDF depuis SFTP
+ */
+async function downloadPdfFromSftp(sftpPath) {
+    const sftp = new SftpClient();
+    const localFilename =
+        path.basename(sftpPath) || `facture_${Date.now()}.pdf`;
+    const localPath = path.join(TEMP_DIR, localFilename);
+
+    try {
+        await sftp.connect({
+            host: process.env.FTP_HOST,
+            port: parseInt(process.env.FTP_PORT || "2222", 10),
+            username: process.env.FTP_USERNAME,
+            password: process.env.FTP_PASSWORD,
+        });
+
+        const readStream = await sftp.createReadStream(sftpPath);
+        const writeStream = fs.createWriteStream(localPath);
+
+        await new Promise((resolve, reject) => {
+            readStream
+                .pipe(writeStream)
+                .on("finish", () => {
+                    sftp.end()
+                        .then(() => resolve(localPath))
+                        .catch(() => resolve(localPath));
+                })
+                .on("error", (err) => {
+                    sftp.end().catch(() => {});
+                    writeStream.close();
+                    fs.unlink(localPath, () => {});
+                    reject(err);
+                });
+        });
+
+        return localPath;
+    } catch (err) {
+        console.error("[downloadPdfFromSftp] Erreur:", err.message);
+        if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+        throw err;
+    }
+}
+
+/**
+ * Crée un ZIP à partir de plusieurs PDFs
+ */
+async function createZipFromPdfs(pdfPaths, outputPath) {
+    return new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(outputPath);
+        const archive = archiver("zip", { zlib: { level: 9 } });
+
+        output.on("close", () => resolve(outputPath));
+        archive.on("error", (err) => {
+            output.close();
+            if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+            reject(err);
+        });
+
+        archive.pipe(output);
+        for (const pdfPath of pdfPaths) {
+            if (fs.existsSync(pdfPath)) {
+                archive.file(pdfPath, { name: path.basename(pdfPath) });
+            }
+        }
+        archive.finalize();
+    });
+}
+
+/**
+ * Vérifie la taille d'un fichier
+ */
+async function getFileSize(filePath) {
+    return new Promise((resolve) => {
+        fs.stat(filePath, (err, stats) => resolve(err ? 0 : stats.size));
+    });
+}
+
+/**
+ * Nettoie les fichiers temporaires
+ */
+function cleanupTempFiles(files) {
+    if (!files || files.length === 0) return;
+    for (const file of files) {
+        try {
+            if (fs.existsSync(file)) fs.unlinkSync(file);
+        } catch (err) {
+            console.warn(
+                "[cleanupTempFiles] Impossible de supprimer",
+                file,
+                err.message,
+            );
+        }
+    }
+}
+
+/**
+ * Prépare les pièces jointes à partir des impayés
+ */
+async function prepareAttachments(impayesArray) {
+    const attachments = [];
+    const tempFiles = [];
+    let downloadLink = null;
+
+    try {
+        const pdfUrls = [];
+        for (const impaye of impayesArray) {
+            const impayeData = convertToSimpleObject(impaye);
+            const urlPdf = impayeData.url_pdf || impayeData.get?.("url_pdf");
+            if (urlPdf && !pdfUrls.includes(urlPdf)) {
+                pdfUrls.push(urlPdf);
+            }
+        }
+
+        if (pdfUrls.length === 0) {
+            return { attachments, tempFiles, downloadLink };
+        }
+
+        const downloadedPdfs = [];
+        for (const urlPdf of pdfUrls) {
+            try {
+                const localPath = await downloadPdfFromSftp(urlPdf);
+                downloadedPdfs.push(localPath);
+                tempFiles.push(localPath);
+            } catch (err) {
+                console.warn(
+                    `[prepareAttachments] Impossible de télécharger ${urlPdf}: ${err.message}`,
+                );
+            }
+        }
+
+        if (downloadedPdfs.length === 0) {
+            return { attachments, tempFiles, downloadLink };
+        }
+
+        if (downloadedPdfs.length === 1) {
+            const fileSize = await getFileSize(downloadedPdfs[0]);
+            if (fileSize <= MAX_ATTACHMENT_SIZE) {
+                attachments.push({
+                    filename: path.basename(downloadedPdfs[0]),
+                    path: downloadedPdfs[0],
+                });
+                console.log(
+                    `[prepareAttachments] Pièce jointe: ${path.basename(downloadedPdfs[0])} (${fileSize} octets)`,
+                );
+            } else {
+                const downloadToken = generateDownloadToken();
+                const ext = path.extname(downloadedPdfs[0]);
+                const publicPath = path.join(TEMP_DIR, downloadToken + ext);
+                fs.renameSync(downloadedPdfs[0], publicPath);
+                tempFiles.push(publicPath);
+                downloadLink = `${PUBLIC_DOWNLOAD_URL}/${downloadToken}`;
+                console.log(
+                    `[prepareAttachments] Fichier trop gros (${fileSize} octets), lien: ${downloadLink}`,
+                );
+            }
+        } else {
+            const zipName = `factures_test_${Date.now()}.zip`;
+            const zipPath = path.join(TEMP_DIR, zipName);
+            await createZipFromPdfs(downloadedPdfs, zipPath);
+            tempFiles.push(zipPath);
+
+            const zipSize = await getFileSize(zipPath);
+            if (zipSize <= MAX_ATTACHMENT_SIZE) {
+                attachments.push({ filename: zipName, path: zipPath });
+                console.log(
+                    `[prepareAttachments] ZIP: ${zipName} (${zipSize} octets)`,
+                );
+            } else {
+                const downloadToken = generateDownloadToken();
+                const publicZipPath = path.join(
+                    TEMP_DIR,
+                    downloadToken + ".zip",
+                );
+                fs.renameSync(zipPath, publicZipPath);
+                tempFiles.push(publicZipPath);
+                downloadLink = `${PUBLIC_DOWNLOAD_URL}/${downloadToken}`;
+                console.log(
+                    `[prepareAttachments] ZIP trop gros (${zipSize} octets), lien: ${downloadLink}`,
+                );
+            }
+
+            for (const pdfPath of downloadedPdfs) {
+                try {
+                    if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+                } catch (e) {}
+            }
+        }
+
+        return { attachments, tempFiles, downloadLink };
+    } catch (err) {
+        console.error("[prepareAttachments] Erreur:", err.message);
+        cleanupTempFiles(tempFiles);
+        return { attachments: [], tempFiles: [], downloadLink: null };
     }
 }
 
@@ -334,6 +557,11 @@ async function envoyerEmailsDeTest(
                         ? prepareMultipleImpayeData(impayesArray, payeur)
                         : prepareImpayeData(impayesArray[0], payeur);
 
+                    // Préparer les pièces jointes
+                    const { attachments, tempFiles, downloadLink } =
+                        await prepareAttachments(impayesArray);
+                    let corpsWithLink = null;
+
                     // Générer l'email via Ollama (appel direct)
                     console.log(
                         `[Ollama] Génération pour scénario ${activeScenario.format}...`,
@@ -369,6 +597,13 @@ async function envoyerEmailsDeTest(
                         );
                     }
 
+                    // Ajouter le lien de téléchargement si pas de pièce jointe
+                    if (downloadLink) {
+                        corpsWithLink =
+                            corps +
+                            `<p><strong>Factures à télécharger:</strong> <a href="${downloadLink}">Télécharger toutes les factures</a></p>`;
+                    }
+
                     console.log(`Objet généré: ${objet.substring(0, 80)}...`);
 
                     const smtpId = activeScenario.smtp || email.smtp;
@@ -379,26 +614,42 @@ async function envoyerEmailsDeTest(
                                 smtpId: smtpId,
                                 to: testEmail,
                                 subject: objet,
-                                html: corps,
-                                text: corps.replace(/<[^>]*>/g, ""),
+                                html: corpsWithLink || corps,
+                                text: (corpsWithLink || corps).replace(
+                                    /<[^>]*>/g,
+                                    "",
+                                ),
+                                attachments:
+                                    attachments.length > 0
+                                        ? attachments
+                                        : undefined,
                             });
                         } else {
                             await sendEmail({
                                 to: testEmail,
                                 subject: objet,
-                                html: corps,
-                                text: corps.replace(/<[^>]*>/g, ""),
+                                html: corpsWithLink || corps,
+                                text: (corpsWithLink || corps).replace(
+                                    /<[^>]*>/g,
+                                    "",
+                                ),
+                                attachments:
+                                    attachments.length > 0
+                                        ? attachments
+                                        : undefined,
                             });
                         }
                         emailsSent++;
                         console.log(
-                            `✅ Email envoyé via ${smtpId ? "SMTP" : "défaut"}`,
+                            `✅ Email envoyé via ${smtpId ? "SMTP" : "défaut"} avec ${attachments.length} pièce(s) jointe(s)`,
                         );
                     } catch (emailError) {
                         console.error(
                             `❌ Erreur envoi email ${smtpId ? "via SMTP " + smtpId : "par défaut"}:`,
                             emailError.message,
                         );
+                    } finally {
+                        if (!downloadLink) cleanupTempFiles(tempFiles);
                     }
                 } catch (genError) {
                     console.error(
@@ -419,6 +670,11 @@ async function envoyerEmailsDeTest(
             const impayeData = isMultiple
                 ? prepareMultipleImpayeData(impayesArray, payeur)
                 : prepareImpayeData(impayesArray[0], payeur);
+
+            // Préparer les pièces jointes
+            const { attachments, tempFiles, downloadLink } =
+                await prepareAttachments(impayesArray);
+            let corpsWithLink = null;
 
             // Générer l'email via Ollama (appel direct)
             console.log(
@@ -453,6 +709,13 @@ async function envoyerEmailsDeTest(
                 console.log(`[Ollama] Mode fallback (USE_OLLAMA=false)`);
             }
 
+            // Ajouter le lien de téléchargement si pas de pièce jointe
+            if (downloadLink) {
+                corpsWithLink =
+                    corps +
+                    `<p><strong>Factures à télécharger:</strong> <a href="${downloadLink}">Télécharger toutes les factures</a></p>`;
+            }
+
             console.log(`Objet généré: ${objet.substring(0, 80)}...`);
 
             const smtpId = scenario.smtp || email.smtp;
@@ -463,26 +726,32 @@ async function envoyerEmailsDeTest(
                         smtpId: smtpId,
                         to: testEmail,
                         subject: objet,
-                        html: corps,
-                        text: corps.replace(/<[^>]*>/g, ""),
+                        html: corpsWithLink || corps,
+                        text: (corpsWithLink || corps).replace(/<[^>]*>/g, ""),
+                        attachments:
+                            attachments.length > 0 ? attachments : undefined,
                     });
                 } else {
                     await sendEmail({
                         to: testEmail,
                         subject: objet,
-                        html: corps,
-                        text: corps.replace(/<[^>]*>/g, ""),
+                        html: corpsWithLink || corps,
+                        text: (corpsWithLink || corps).replace(/<[^>]*>/g, ""),
+                        attachments:
+                            attachments.length > 0 ? attachments : undefined,
                     });
                 }
                 emailsSent++;
                 console.log(
-                    `✅ Email envoyé via ${smtpId ? "SMTP" : "défaut"}`,
+                    `✅ Email envoyé via ${smtpId ? "SMTP" : "défaut"} avec ${attachments.length} pièce(s) jointe(s)`,
                 );
             } catch (emailError) {
                 console.error(
                     `❌ Erreur envoi email ${smtpId ? "via SMTP " + smtpId : "par défaut"}:`,
                     emailError.message,
                 );
+            } finally {
+                if (!downloadLink) cleanupTempFiles(tempFiles);
             }
         } catch (genError) {
             console.error(`❌ Erreur génération Ollama:`, genError.message);
