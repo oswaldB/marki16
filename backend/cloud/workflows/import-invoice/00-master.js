@@ -233,11 +233,18 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
             "importInvoicesMaster",
             { step: 5 },
         );
+        // ÉTAPE 4.5: Créer les contacts et lier les employés aux entreprises
+        const createContactsWithRelations = require("./04-createContactsWithRelations");
+        const contactsResult = await createContactsWithRelations({
+            interlocuteursByDossier,
+        });
+
         result = await processAndSaveImpayes({
             pieces,
             statutsMap,
             employesMap,
             interlocuteursByDossier,
+            contactsMap: contactsResult.contactsMap,
         });
         stats.etape5 = result.stats;
         info(
