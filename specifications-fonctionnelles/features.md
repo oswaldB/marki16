@@ -118,7 +118,7 @@ Ce document recense toutes les **features** et **user stories** du frontend Mark
 - **Description** : Définir et exécuter des séquences d'actions automatisées
 - **Dossier** : features/FT013-gestion-sequences/
 - **User Stories** :
-  - [FT13-US001 - Création d'une séquence](features/FT013-gestion-sequences/user-stories/FT013-US001-creation-sequence.md)
+  - [FT013-US001 - Création d'une séquence](features/FT013-gestion-sequences/user-stories/FT013-US001-creation-sequence.md)
   - [FT013-US002 - Séquences de relance](features/FT013-gestion-sequences/user-stories/FT013-US002-sequences-relances.md)
   - [FT013-US003 - Séquences de suivi](features/FT013-gestion-sequences/user-stories/FT013-US003-sequences-suivi.md)
 
