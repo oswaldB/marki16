@@ -17,3 +17,6 @@ Afin de **éviter les erreurs dans la base de données**
     Quand je corrige le mapping
     Alors les erreurs sont résolues
     Et je peux procéder à l'import
+
+
++>>> a mettre à jour une fois la description de la feature mise à jour<<<+
