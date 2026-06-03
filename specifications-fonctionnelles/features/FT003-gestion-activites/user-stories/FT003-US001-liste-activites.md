@@ -16,3 +16,6 @@ Afin de **suivre l'état des opérations**
     Étant donné que je suis sur la page activités
     Quand je sélectionne un filtre ou un tri
     Alors la liste est mise à jour selon mes critères
+
+
++>>> donne moi une liste de filtres et tris possibles <<<+
