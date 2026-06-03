@@ -18,3 +18,6 @@ Afin de **terminer ma session en toute sécurité**
     Quand la durée d'inactivité dépasse le seuil configuré
     Alors ma session est automatiquement terminée
     Et je suis redirigé vers la page de login
+
+
++>>> la partie déconnexion se fait à partir du web component de la sidebar menu. Pour se déconnecter on efface en local storage et en session storage les identifiants de connexion le token <<<+
