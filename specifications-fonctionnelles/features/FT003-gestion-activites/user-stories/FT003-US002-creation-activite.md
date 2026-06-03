@@ -1,3 +1,5 @@
+
++>>> la création d'activité ne peut pas se faire depuis cette page activités supprime cette user story +>>>
 # Création d'une activité
 
 En tant que **utilisateur autorisé**
