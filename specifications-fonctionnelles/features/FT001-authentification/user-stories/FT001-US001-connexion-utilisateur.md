@@ -26,3 +26,6 @@ Afin de **accéder à mes fonctionnalités et données**
     Et que je clique sur le bouton "Se connecter"
     Alors un message d'erreur s'affiche
     Et la soumission est bloquée
+
+
++>>> l'identifiant de connexion est un text libre et pas un email.<<<+
