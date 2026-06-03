@@ -156,3 +156,8 @@ Ce document recense toutes les **features** et **user stories** du frontend Mark
 
 *Dernière mise à jour : 3 juin 2026*
 *Généré automatiquement à partir du dépôt marki16*
+
+
+#£ il manque des features : import depuis la base externe en sqlite3, les redirection ça ne veut rien dire, pour les espaces clients il faut les espaces clients simples et les espaces clients complexe, il manque la gestion des suivis, supprime gestion services,#£
+
+#£ met  à jour tout le dossier features/ avec cette version £#
