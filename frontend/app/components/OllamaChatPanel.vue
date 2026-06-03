@@ -2,54 +2,17 @@
   <UCard class="h-full flex flex-col">
     <!-- Header -->
     <template #header>
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-          <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="size-5" />
-          <span class="font-semibold">Chat avec Ollama</span>
-          <UBadge color="blue" variant="subtle" size="xs">
-            Modèle: mistral
-          </UBadge>
-        </div>
-        <div class="flex items-center gap-2">
-          <UBadge :color="contextType === 'sequence' ? 'primary' : 'neutral'" variant="subtle" size="xs">
-            {{ contextType === 'sequence' ? 'Séquence complète' : `Email ${selectedEmailIndex + 1}` }}
-          </UBadge>
-        </div>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="size-5" />
+        <span class="font-semibold">Chat avec Ollama</span>
+        <UBadge color="blue" variant="subtle" size="xs">
+          Modèle: mistral
+        </UBadge>
       </div>
     </template>
 
     <!-- Contenu principal -->
     <div class="flex-1 flex flex-col gap-4 min-h-0">
-      <!-- Sélecteur de contexte -->
-      <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
-        <div class="text-sm font-medium text-gray-700 mb-2">
-          Contexte du chat
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            variant="outline"
-            size="sm"
-            :color="selectedEmailIndex === null ? 'primary' : 'neutral'"
-            @click="$emit('select-context', null)"
-          >
-            Toute la séquence
-          </UButton>
-          <UButton
-            v-for="(email, idx) in emails"
-            :key="email._key || idx"
-            variant="outline"
-            size="sm"
-            :color="selectedEmailIndex === idx ? 'primary' : 'neutral'"
-            @click="$emit('select-context', idx)"
-          >
-            Email {{ idx + 1 }}
-          </UButton>
-        </div>
-        <div v-if="signature" class="mt-3 p-2 bg-white rounded border text-xs text-gray-600">
-          <div class="font-medium mb-1">Signature SMTP:</div>
-          <div v-html="signature" class="prose prose-sm max-w-none" />
-        </div>
-      </div>
 
       <!-- Messages -->
       <div class="flex-1 overflow-y-auto min-h-0 space-y-3">
@@ -110,22 +73,16 @@
         </div>
       </div>
 
-      <!-- Variables disponibles -->
-      <div v-if="formattedVariables" class="border-t pt-3">
-        <div class="text-xs text-gray-500 mb-1">
-          Variables disponibles: <span class="font-mono">{{ formattedVariables }}</span>
-        </div>
-      </div>
-
       <!-- Input -->
       <div class="border-t pt-3">
         <div class="flex gap-2">
           <UInput
-            v-model="currentInput"
+            :model-value="currentInput"
             placeholder="Ex: Rédige un email de relance pour un impayé de plus de 30 jours..."
             class="flex-1"
             :disabled="loading"
             @keyup.enter="handleSend"
+            @update:modelValue="(val) => $emit('update:currentInput', val)"
           />
           <UButton
             icon="i-heroicons-paper-airplane"
@@ -165,15 +122,10 @@ const props = defineProps({
   loading: Boolean,
   messages: Array,
   currentInput: String,
-  currentResponse: String,
-  selectedEmailIndex: Number,
-  contextType: String,
-  formattedVariables: String,
-  emails: Array,
-  signature: String
+  currentResponse: String
 })
 
-const emit = defineEmits(['send-message', 'select-context', 'copy-response', 'insert-response'])
+const emit = defineEmits(['send-message', 'select-context', 'copy-response', 'insert-response', 'update:currentInput'])
 
 function handleSend() {
   emit('send-message')

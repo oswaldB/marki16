@@ -432,7 +432,7 @@ const {
 
 // Ajouter les colonnes email_relance et actions aux colonnes des entités
 const colonnesEntites = computed(() => [
-  ...colonnesEntitesBase.value,
+  ...colonnesEntitesBase,
   {
     id: 'email_relance',
     header: 'Email de relance',

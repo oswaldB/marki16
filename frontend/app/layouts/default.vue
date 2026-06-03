@@ -145,36 +145,36 @@
             </template>
 
             <!-- Impayés dropdown -->
-            <UDropdown :items="impayesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+            <UDropdownMenu :items="impayesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
                 <UIcon name="i-heroicons-banknotes" class="size-8" />
                 <span class="text-sm mt-2 font-medium">Impayés</span>
               </button>
-            </UDropdown>
+            </UDropdownMenu>
 
             <!-- Relances dropdown -->
-            <UDropdown :items="relancesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+            <UDropdownMenu :items="relancesDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
                 <UIcon name="i-heroicons-calendar-days" class="size-8" />
                 <span class="text-sm mt-2 font-medium">Relances</span>
               </button>
-            </UDropdown>
+            </UDropdownMenu>
 
             <!-- Contacts dropdown -->
-            <UDropdown :items="contactsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+            <UDropdownMenu :items="contactsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
                 <UIcon name="i-heroicons-users" class="size-8" />
                 <span class="text-sm mt-2 font-medium">Contacts</span>
               </button>
-            </UDropdown>
+            </UDropdownMenu>
 
             <!-- Settings dropdown -->
-            <UDropdown :items="settingsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
+            <UDropdownMenu :items="settingsDropdownItems" :popper="{ placement: 'top' }" class="min-w-[80px] h-full">
               <button class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-gray-700">
                 <UIcon name="i-heroicons-cog-6-tooth" class="size-8" />
                 <span class="text-sm mt-2 font-medium">Param.</span>
               </button>
-            </UDropdown>
+            </UDropdownMenu>
 
             <!-- Logout button -->
             <button
@@ -209,10 +209,10 @@ const mainItems = [
 ]
 
 const impayesItems = [
-  { to: '/impayes', label: 'Unitaire', icon: 'i-heroicons-table-cells' },
-  { to: '/impayes?vue=payeur', label: 'Par payeur', icon: 'i-heroicons-user-group' },
-  { to: '/impayes?vue=contact', label: 'Par contact', icon: 'i-heroicons-user' },
-  { to: '/impayes?vue=sans-sequence', label: 'Sans séquence', icon: 'i-heroicons-document-minus' },
+  { to: '/impayes/2', label: 'Unitaire', icon: 'i-heroicons-table-cells' },
+  { to: '/impayes/2?vue=payeur', label: 'Par payeur', icon: 'i-heroicons-user-group' },
+  { to: '/impayes/2?vue=contact', label: 'Par contact', icon: 'i-heroicons-user' },
+  { to: '/impayes/2?vue=sans-sequence', label: 'Sans séquence', icon: 'i-heroicons-document-minus' },
 ]
 
 const relancesItems = [
@@ -273,37 +273,37 @@ const currentPageTitle = computed(() => {
 })
 
 // Mobile dock dropdowns
-const impayesDropdownItems = computed(() => [
-  ...impayesItems.map(item => ([{
+const impayesDropdownItems = computed(() =>
+  impayesItems.map(item => ({
     label: item.label,
     icon: item.icon,
     to: item.to
-  }]))
-])
+  }))
+)
 
-const relancesDropdownItems = computed(() => [
-  ...relancesItems.map(item => ([{
+const relancesDropdownItems = computed(() =>
+  relancesItems.map(item => ({
     label: item.label,
     icon: item.icon,
     to: item.to
-  }]))
-])
+  }))
+)
 
-const contactsDropdownItems = computed(() => [
-  ...contactsItems.map(item => ([{
+const contactsDropdownItems = computed(() =>
+  contactsItems.map(item => ({
     label: item.label,
     icon: item.icon,
     to: item.to
-  }]))
-])
+  }))
+)
 
-const settingsDropdownItems = computed(() => [
-  ...settingsItems.map(item => ([{
+const settingsDropdownItems = computed(() =>
+  settingsItems.map(item => ({
     label: item.label,
     icon: item.icon,
     to: item.to
-  }]))
-])
+  }))
+)
 
 const userName = computed(() => {
   const user = authStore.user

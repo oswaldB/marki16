@@ -59,6 +59,7 @@ const QUERY_PIECES = `
   LEFT JOIN _ADN_DIAG__Dossier d ON pm.idmetier = d.idDossier
   WHERE p.nfacture IS NOT NULL
   AND p.datemaj >= datetime('now', '-24 hours')
+  -- AND p.nfacture > 44432
   AND p.resteapayer >= 0
   AND p.valide = 1
   ORDER BY p.datepiece DESC

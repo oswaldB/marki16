@@ -309,7 +309,7 @@
           <template #header>
             <div class="flex items-center justify-between">
               <p class="text-sm font-semibold text-gray-700">Impayés récents</p>
-              <NuxtLink to="/impayes" class="text-xs text-sky-600 hover:underline">Voir tout →</NuxtLink>
+              <NuxtLink to="/impayes/2" class="text-xs text-sky-600 hover:underline">Voir tout →</NuxtLink>
             </div>
           </template>
           <div v-if="impayes_recents.length === 0" class="text-sm text-gray-400 py-4 text-center">

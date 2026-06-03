@@ -79,6 +79,7 @@ Quelques règles importantes:
 + Si tu mets un tableau alors il faut un border sur tous les td.
 + Si la date d'échéance est arrivée avant alors il faut accorder les temps en fonction.
 + Si l'email dit que l'on applique les taux de pénalités alors il faut rajouter 40€ au montant TTC.
++ LES BOUCLES [[loop ...]] DOIVENT ETRE TRAITEES AVEC TOUTES LES DONNEES DES IMPAYES. NE PAS OUBLIER AUCUN IMPAYE DANS LES BOUCLES. TOUS les impayés de la liste doivent apparaître dans le tableau généré.
 
 ---
 Voici les informations :
@@ -150,7 +151,7 @@ Retourne UNIQUEMENT le texte corrigé, sans commentaire ni explication.`,
         if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
             cleaned = cleaned.slice(1, -1);
         }
-        if (cleaned.startsWith('`') && cleaned.endsWith('`')) {
+        if (cleaned.startsWith("`") && cleaned.endsWith("`")) {
             cleaned = cleaned.slice(1, -1);
         }
 
@@ -376,7 +377,10 @@ async function generateRelances() {
                 const MAX_GENERATION_ATTEMPTS = 5;
                 let hasVariables = true;
 
-                while (hasVariables && generationAttempts < MAX_GENERATION_ATTEMPTS) {
+                while (
+                    hasVariables &&
+                    generationAttempts < MAX_GENERATION_ATTEMPTS
+                ) {
                     generationAttempts++;
 
                     if (generationAttempts > 1) {
@@ -400,7 +404,8 @@ async function generateRelances() {
                                     history,
                                     relance,
                                 );
-                                const result = await generateEmailContent(prompt);
+                                const result =
+                                    await generateEmailContent(prompt);
                                 objet = result.objet;
                                 corps = result.corps;
                                 info(
@@ -426,16 +431,22 @@ async function generateRelances() {
                             }
                         }
                     } else {
-                        objet = activeScenario.objet || "Relance - Facture impayée";
+                        objet =
+                            activeScenario.objet || "Relance - Facture impayée";
                         corps =
                             activeScenario.corps ||
                             "Veuillez régulariser votre situation.";
                     }
 
                     // Vérifier s'il reste des variables non remplacées
-                    hasVariables = hasUnreplacedVariables(objet) || hasUnreplacedVariables(corps);
+                    hasVariables =
+                        hasUnreplacedVariables(objet) ||
+                        hasUnreplacedVariables(corps);
 
-                    if (hasVariables && generationAttempts >= MAX_GENERATION_ATTEMPTS) {
+                    if (
+                        hasVariables &&
+                        generationAttempts >= MAX_GENERATION_ATTEMPTS
+                    ) {
                         warn(
                             `Étape 2: Relance ${relance.id} a encore des variables non remplacées après ${MAX_GENERATION_ATTEMPTS} tentatives`,
                             "generate-relances",

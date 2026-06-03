@@ -62,15 +62,6 @@
         >
           Régénérer les relances
         </UButton>
-        <UButton
-          icon="i-heroicons-folder"
-          color="neutral"
-          @click="navigateToSuivi"
-          size="sm"
-          class="md:size-auto"
-        >
-          Voir Suivi
-        </UButton>
       </div>
     </div>
 
@@ -100,22 +91,23 @@
       <div class="space-y-4">
         <div v-if="loading" class="text-center py-6 text-gray-400">Chargement...</div>
 
-        <SequenceEmailCard
-          v-for="(email, idx) in emailsSorted"
-          :key="email._key"
-          :email="email"
-          :index="idx"
-          :smtp-options="smtpOptions"
-          :all-variables="allVariables"
-          :editor-refs="editorRefs"
-          @delete="supprimerEmail"
-          @open-chatgpt="openChatGptModal"
-          @open-smtp="showSmtpModal = true"
-          @open-liens="showLienModal = true"
-          @editor-mounted="(key, el) => editorRefs[key] = el"
-          @corps-change="(email, html) => updateCorps(email, html)"
-          @smtp-change="onSmtpChange"
-        />
+        <div v-for="(email, idx) in emailsSorted" :key="email._key">
+          <SequenceEmailCard
+            :email="email"
+            :index="idx"
+            :smtp-options="smtpOptions"
+            :all-variables="allVariables"
+            :editor-refs="editorRefs"
+            @delete="supprimerEmail"
+            @open-chatgpt="openChatGptModal"
+            @open-smtp="showSmtpModal = true"
+            @open-liens="showLienModal = true"
+            @test-email="openSingleEmailTest"
+            @editor-mounted="(key, el) => editorRefs[key] = el"
+            @corps-change="(email, html) => updateCorps(email, html)"
+            @smtp-change="onSmtpChange"
+          />
+        </div>
 
         <UButton variant="outline" icon="i-heroicons-plus" @click="ajouterEmail">
           Ajouter un email
@@ -140,6 +132,14 @@
       v-model="showTestModal"
       :sequence="sequence"
       :emails="emails"
+      @test-sent="onTestSent"
+    />
+
+    <SingleEmailTestSlideover
+      v-model="showSingleEmailTestModal"
+      :sequence="sequence"
+      :emails="emails"
+      :email-index="currentSingleEmailIndex"
       @test-sent="onTestSent"
     />
 
@@ -179,6 +179,7 @@ import ModalIaSequence from '~/components/ModalIaSequence.vue'
 import ModalChatGptEmail from '~/components/ModalChatGptEmail.vue'
 import SmtpDrawer from '~/components/SmtpDrawer.vue'
 import SequenceTestSlideover from '~/components/SequenceTestSlideover.vue'
+import SingleEmailTestSlideover from '~/components/SingleEmailTestSlideover.vue'
 import SlideoverRegenererRelances from '~/components/SlideoverRegenererRelances.vue'
 import { useSequenceEditor, updateCorps, VARIABLES, getCurrentCorps, editorOptions } from '~/composables/useSequenceEditor'
 import { useSequenceRules } from '~/composables/useSequenceRules'
@@ -255,8 +256,17 @@ const {
 // ── State local ────────────────────────────────────────────────
 const runningAutoAssign = ref(false)
 const showTestModal = ref(false)
+const showSingleEmailTestModal = ref(false)
 const showRegenererSlideover = ref(false)
 const regenerating = ref(false)
+
+// Fonction pour ouvrir le test d'email individuel
+const currentSingleEmailIndex = ref(null)
+
+function openSingleEmailTest(index) {
+  currentSingleEmailIndex.value = index
+  showSingleEmailTestModal.value = true
+}
 
 // ── Navigation vers suivi ─────────────────────────────────────
 function navigateToSuivi() {

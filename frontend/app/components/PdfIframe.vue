@@ -8,7 +8,7 @@
     </p>
     <iframe
       v-else
-      :src="`/api/pdf/${impayeId}`"
+      :src="src"
       class="w-full h-full border-0"
       @load="loading = false"
       @error="erreur = true; loading = false"
@@ -18,13 +18,17 @@
 
 <script setup>
 const props = defineProps({
-  impayeId: { type: String, required: true },
+  impayeId: { type: String, default: null },
+  src: { type: String, default: null },
 })
 
 const loading = ref(true)
 const erreur = ref(false)
 
-watch(() => props.impayeId, () => {
+// Utiliser src si fourni, sinon calculer à partir de impayeId
+const src = computed(() => props.src || null)
+
+watch(() => [props.impayeId, props.src], () => {
   loading.value = true
   erreur.value = false
 })

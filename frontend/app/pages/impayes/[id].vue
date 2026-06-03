@@ -4,7 +4,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div class="flex items-center gap-3">
-        <UButton icon="i-heroicons-arrow-left" color="neutral" variant="ghost" to="/impayes">
+        <UButton icon="i-heroicons-arrow-left" color="neutral" variant="ghost" to="/impayes/2">
           Retour
         </UButton>
         <div>

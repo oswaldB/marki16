@@ -39,9 +39,15 @@ function getValue(obj, key) {
  * Construit le prompt pour l'LLM
  */
 const buildPrompt = (scenario, impayes, history, suivi) => {
-    const impayesJson = JSON.stringify(impayes.map((i) => i.toJSON ? i.toJSON() : i));
-    const historyJson = JSON.stringify(history.map((h) => h.toJSON ? h.toJSON() : h));
-    const suiviJson = suivi.toJSON ? JSON.stringify(suivi.toJSON()) : JSON.stringify(suivi);
+    const impayesJson = JSON.stringify(
+        impayes.map((i) => (i.toJSON ? i.toJSON() : i)),
+    );
+    const historyJson = JSON.stringify(
+        history.map((h) => (h.toJSON ? h.toJSON() : h)),
+    );
+    const suiviJson = suivi.toJSON
+        ? JSON.stringify(suivi.toJSON())
+        : JSON.stringify(suivi);
 
     return `Tu es un redacteur de emails de suivi d'impayés. Ta mission consiste à générer l'objet et le corps de l'email à partir du template fourni, des informations des impayés et de l'historique.
 
@@ -56,7 +62,7 @@ Quelques règles importantes:
 + Si un tableau est présent, ajoute un border sur tous les td: <td style="border: 1px solid #ddd;">
 + Si la date d'échéance est passée, accorde les temps en fonction (ex: "est dû" → "était dû")
 + Remplace [[aujourdhui, date("DD/MM/YYYY")]] par la date du jour au format JJ/MM/AAAA
-+ Les variables de boucle [[loop impayes]]...[[endloop]] doivent être répétées pour chaque impayé
++ LES BOUCLES [[loop ...]] DOIVENT ETRE TRAITEES AVEC TOUTES LES DONNEES DES IMPAYES. NE PAS OUBLIER AUCUN IMPAYE DANS LES BOUCLES. TOUS les impayés de la liste doivent apparaître dans le tableau généré.
 
 --- Informations ---
 + Template objet: ${scenario.objet || ""}
@@ -88,7 +94,9 @@ async function generateContentWithRetry(prompt, retries = 0) {
         });
 
         if (!response.ok) {
-            throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+            throw new Error(
+                `Ollama API error: ${response.status} ${response.statusText}`,
+            );
         }
 
         const data = await response.json();
@@ -119,12 +127,15 @@ async function generateContentWithRetry(prompt, retries = 0) {
                     return parsed;
                 }
             } catch (e) {
-                throw new Error(`Failed to parse Ollama response as JSON: ${e.message}`);
+                throw new Error(
+                    `Failed to parse Ollama response as JSON: ${e.message}`,
+                );
             }
         }
 
-        throw new Error("Ollama response does not contain valid JSON with objet and corps");
-
+        throw new Error(
+            "Ollama response does not contain valid JSON with objet and corps",
+        );
     } catch (err) {
         if (retries < MAX_RETRIES) {
             warn(
@@ -135,7 +146,9 @@ async function generateContentWithRetry(prompt, retries = 0) {
             );
             return generateContentWithRetry(prompt, retries + 1);
         }
-        throw new Error(`LLM échoué après ${MAX_RETRIES} tentatives: ${err.message}`);
+        throw new Error(
+            `LLM échoué après ${MAX_RETRIES} tentatives: ${err.message}`,
+        );
     }
 }
 
@@ -308,7 +321,11 @@ async function generateSuivis() {
                     `Étape 2: Suivi ${suiviId} - ${impayes.length} impayés, ${history.length} éléments d'historique`,
                     "generate-suivi",
                     "generateSuivis",
-                    { suiviId, impayeCount: impayes.length, historyCount: history.length },
+                    {
+                        suiviId,
+                        impayeCount: impayes.length,
+                        historyCount: history.length,
+                    },
                 );
 
                 // Générer le prompt
@@ -346,7 +363,6 @@ async function generateSuivis() {
                     "generateSuivis",
                     { suiviId },
                 );
-
             } catch (err) {
                 error(
                     `Étape 2: Erreur pour Suivi ${suiviId}: ${err.message}`,
@@ -367,7 +383,6 @@ async function generateSuivis() {
             "generateSuivis",
             { processed: stats.processed, errors: stats.errors.length },
         );
-
     } catch (err) {
         error(
             `Erreur dans generateSuivis: ${err.message}`,
@@ -388,7 +403,10 @@ async function generateSuivis() {
         `Parse check - Étape 2: ${finalStats.enAttente} en attente | ${finalStats.pretPourEnvoi} prêts pour envoi`,
         "generate-suivi",
         "generateSuivis",
-        { enAttente: finalStats.enAttente, pretPourEnvoi: finalStats.pretPourEnvoi },
+        {
+            enAttente: finalStats.enAttente,
+            pretPourEnvoi: finalStats.pretPourEnvoi,
+        },
     );
 
     return { stats };

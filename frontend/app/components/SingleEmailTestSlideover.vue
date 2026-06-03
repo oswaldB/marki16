@@ -2,7 +2,7 @@
   <USlideover v-model:open="isOpen">
     <template #header>
       <div class="flex items-center justify-between w-full">
-        <span class="font-semibold">Tester la séquence</span>
+        <span class="font-semibold">Tester un email individuel</span>
         <UButton
           color="gray"
           variant="ghost"
@@ -26,6 +26,20 @@
             type="email"
             required
           />
+        </div>
+
+        <!-- Informations sur l'email à tester -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Email à tester</h3>
+          <div class="bg-gray-50 rounded-lg p-3 text-sm">
+            <div class="flex items-start gap-2">
+              <UIcon name="i-heroicons-envelope" class="size-4 text-gray-500 mt-0.5" />
+              <div class="flex-1">
+                <p class="font-medium">Email {{ emailIndex + 1 }}: {{ emailInfo.objet || 'Sans objet' }}</p>
+                <p class="text-xs text-gray-500">Délai: J+{{ emailInfo.delai }}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Liste des payeurs avec impayés actifs -->
@@ -80,28 +94,8 @@
           </div>
 
           <p class="text-xs text-gray-500 mt-2">
-            Sélectionnez un payeur pour tester la séquence avec ses données
+            Sélectionnez un payeur pour tester l'email avec ses données
           </p>
-        </div>
-
-        <!-- Résumé des emails à envoyer -->
-        <div>
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Emails qui seront envoyés</h3>
-          <div class="space-y-2">
-            <div
-              v-for="(email, index) in emailsToSend"
-              :key="index"
-              class="bg-gray-50 rounded-lg p-3 text-sm"
-            >
-              <div class="flex items-start gap-2">
-                <UIcon name="i-heroicons-envelope" class="size-4 text-gray-500 mt-0.5" />
-                <div class="flex-1">
-                  <p class="font-medium">Email {{ index + 1 }}: {{ email.objet || 'Sans objet' }}</p>
-                  <p class="text-xs text-gray-500">Délai: {{ email.delai }} jours</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </template>
@@ -117,7 +111,7 @@
         </UButton>
         <UButton
           :loading="sendingTest"
-          :disabled="!testEmail || !selectedPayeur || emailsToSend.length === 0"
+          :disabled="!testEmail || !selectedPayeur"
           @click="envoyerTest"
         >
           Envoyer le test
@@ -133,7 +127,8 @@ import { ref, computed, watch } from 'vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   sequence: { type: Object, required: true },
-  emails: { type: Array, required: true }
+  emails: { type: Array, required: true },
+  emailIndex: { type: Number, default: null }
 })
 
 const emit = defineEmits(['update:modelValue', 'test-sent'])
@@ -154,6 +149,20 @@ const payeursAvecImpayes = ref([])
 const loadingPayeurs = ref(false)
 const sendingTest = ref(false)
 
+// Informations sur l'email à tester (calculé depuis props.emailIndex)
+const emailInfo = computed(() => {
+  if (props.emailIndex === null || props.emailIndex === undefined || !props.emails[props.emailIndex]) {
+    return { delai: 0, objet: 'Sans objet' }
+  }
+  const email = props.emails[props.emailIndex]
+  const scenarioActif = email.activeScenario || 'single'
+  const scenario = email.scenarios?.find(s => s?.format === scenarioActif)
+  return {
+    delai: email.delai || 0,
+    objet: scenario?.objet || email.objet || 'Sans objet'
+  }
+})
+
 // Charger uniquement les payeurs avec impayés actifs non soldés
 async function chargerPayeursAvecImpayes() {
   try {
@@ -164,7 +173,7 @@ async function chargerPayeursAvecImpayes() {
     const impayeQuery = new $parse.Query(Impaye)
     impayeQuery.equalTo('facture_soldee', false)
     impayeQuery.include('payeur')
-    impayeQuery.limit(1000) // Limiter à 1000 impayés pour éviter la surcharge
+    impayeQuery.limit(1000)
 
     const impayes = await impayeQuery.find()
 
@@ -224,34 +233,6 @@ function selectPayeur(payeur) {
   selectedPayeurData.value = payeur
 }
 
-// Emails à envoyer (basé sur les emails de la séquence) - pour affichage uniquement
-const emailsToSend = computed(() => {
-  return props.emails
-    .filter(email => {
-      // Filtrer les emails invalides
-      if (!email) return false;
-
-      // Vérifier que scenarios existe et n'est pas vide
-      if (!email.scenarios || !Array.isArray(email.scenarios)) return false;
-
-      // Utiliser activeScenario ou 'single' par défaut
-      const scenarioActif = email.activeScenario || 'single';
-      const scenario = email.scenarios.find(s => s && s.format === scenarioActif);
-      return scenario && scenario.active !== false;
-    })
-    .map(email => {
-      const scenarioActif = email.activeScenario || 'single';
-      const scenario = email.scenarios.find(s => s && s.format === scenarioActif);
-      return {
-        delai: email.delai || 0,
-        objet: scenario?.objet || email.objet || 'Sans objet',
-        corps: scenario?.corps || email.corps || '',
-        smtp: scenario?.smtp || email.smtp || ''
-      };
-    })
-    .filter(email => email.objet || email.corps); // Filtrer les emails vides
-})
-
 // Envoyer le test
 async function envoyerTest() {
   if (!testEmail.value || !selectedPayeur.value) {
@@ -259,67 +240,52 @@ async function envoyerTest() {
     return
   }
 
-  // Vérifier que nous avons des emails à envoyer
-  if (emailsToSend.value.length === 0) {
-    toast.add({ title: 'Erreur', description: 'Aucun email valide à envoyer', color: 'red' })
-    return
-  }
-
   try {
     sendingTest.value = true
-    console.log('Envoi test avec données:', {
-      sequenceId: props.sequence.id,
-      testEmail: testEmail.value,
-      payeurId: selectedPayeur.value,
-      payeurData: selectedPayeurData.value,
-      emails: emailsToSend.value
-    });
 
-    // Appeler le cloud code pour envoyer les emails de test
-    // Envoyer les emails originaux avec des informations supplémentaires
     const currentUser = await $parse.User.current()
 
-    // Préparer les données à envoyer (retirer activeScenario pour laisser le backend décider)
-    const emailsWithoutActiveScenario = props.emails.map(email => {
-      const { activeScenario, ...emailWithoutActiveScenario } = email;
-      return emailWithoutActiveScenario;
-    });
-
+    // Préparer les données pour l'envoi
     const requestData = {
       sequenceId: props.sequence.id,
       testEmail: testEmail.value,
       payeurId: selectedPayeur.value,
       payeurData: selectedPayeurData.value,
-      emails: emailsWithoutActiveScenario,
+      emailIndex: props.emailIndex,
       userId: currentUser ? currentUser.id : null,
       userEmail: currentUser ? currentUser.get('email') : null,
       userName: currentUser ? currentUser.get('username') : null
-    };
+    }
 
+    const result = await $parse.Cloud.run('testSingleEmail', requestData)
 
+    console.log('Résultat cloud function:', result)
 
-    const result = await $parse.Cloud.run('sendSequenceTest', requestData)
-
-    console.log('Résultat cloud function:', result);
-
-    toast.add({
-      title: 'Test envoyé',
-      description: `${result.sentEmails || 'des'} emails de test ont été envoyés à ${testEmail.value}`,
-      color: 'green'
-    })
+    if (result.success) {
+      toast.add({
+        title: 'Test envoyé',
+        description: `1 email de test a été envoyé à ${testEmail.value}`,
+        color: 'green'
+      })
+    } else {
+      toast.add({
+        title: 'Erreur',
+        description: result.message || 'Échec de l\'envoi du test',
+        color: 'red'
+      })
+    }
 
     emit('test-sent')
     isOpen.value = false
   } catch (error) {
-    console.error('Erreur envoi test complète:', error)
+    console.error('Erreur envoi test:', error)
 
-    // Extraire plus d'informations de l'erreur
-    let errorMessage = 'Impossible d\'envoyer le test';
+    let errorMessage = 'Impossible d\'envoyer le test'
     if (error && error.message) {
-      errorMessage = error.message;
+      errorMessage = error.message
     }
     if (error && error.code) {
-      errorMessage += ` (Code: ${error.code})`;
+      errorMessage += ` (Code: ${error.code})`
     }
 
     toast.add({

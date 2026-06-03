@@ -9,8 +9,22 @@ const fs = require("fs");
 const cors = require("cors");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
+const crypto = require("crypto");
 
 const cron = require("node-cron");
+
+// 🚨 Gestion globale des erreurs non capturées (ssh2, etc.)
+process.on("uncaughtException", (err, origin) => {
+    console.error(`\n❌ UNCAUGHT EXCEPTION: ${err.message}`);
+    console.error(`   Origin: ${origin}`);
+    console.error(`   Stack: ${err.stack}\n`);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+    console.error(`\n⚠️  UNHANDLED REJECTION:`);
+    console.error(`   Reason: ${reason?.message || reason}`);
+    if (reason?.stack) console.error(`   Stack: ${reason.stack}\n`);
+});
 
 const app = express();
 const PORT = process.env.PORT || 1555;
@@ -31,40 +45,55 @@ app.get("/api/conformite/sqlite", async (req, res) => {
         }
 
         const Database = require("better-sqlite3");
-    console.log("[DEBUG] better-sqlite3 loaded:", typeof Database);
+        console.log("[DEBUG] better-sqlite3 loaded:", typeof Database);
         const db = new Database(dbPath);
 
         try {
             // Requête 1: Compter les factures uniques (nfacture)
-            const totalFactures = db.prepare(`
+            const totalFactures =
+                db
+                    .prepare(
+                        `
                 SELECT COUNT(DISTINCT nfacture) as count
                 FROM _GCO__GcoPiece
                 WHERE nfacture IS NOT NULL
-            `).get().count || 0;
+            `,
+                    )
+                    .get().count || 0;
 
             // Requête 2: Compter les factures avec resteapayer > 0
-            const resteApayerGt0 = db.prepare(`
+            const resteApayerGt0 =
+                db
+                    .prepare(
+                        `
                 SELECT COUNT(DISTINCT nfacture) as count
                 FROM _GCO__GcoPiece
                 WHERE nfacture IS NOT NULL AND resteapayer > 0
-            `).get().count || 0;
+            `,
+                    )
+                    .get().count || 0;
 
             // Requête 3: Compter les factures avec resteapayer > 0 ET nfacture > 44432
-            const resteApayerGt0NfactureGt44432 = db.prepare(`
+            const resteApayerGt0NfactureGt44432 =
+                db
+                    .prepare(
+                        `
                 SELECT COUNT(DISTINCT nfacture) as count
                 FROM _GCO__GcoPiece
                 WHERE nfacture IS NOT NULL AND resteapayer > 0 AND nfacture > 44432
-            `).get().count || 0;
+            `,
+                    )
+                    .get().count || 0;
 
             db.close();
-
 
             res.json({
                 success: true,
                 data: {
                     total_factures: totalFactures,
                     resteapayer_gt_0: resteApayerGt0,
-                    resteapayer_gt_0_nfacture_gt_44432: resteApayerGt0NfactureGt44432,
+                    resteapayer_gt_0_nfacture_gt_44432:
+                        resteApayerGt0NfactureGt44432,
                 },
             });
         } catch (dbError) {
@@ -136,7 +165,8 @@ const parseServer = new ParseServer({
     appId: process.env.PARSE_APP_ID || "marki15-app-id",
     masterKey: process.env.PARSE_MASTER_KEY || "marki15-master-key",
     javascriptKey: process.env.PARSE_JAVASCRIPT_KEY || "",
-    serverURL: process.env.PARSE_SERVER_URL || "http://127.0.0.1:1555/parse",
+    serverURL:
+        process.env.PARSE_SERVER_URL || "https://dev.markidiags.com/api/parse",
     cloud: path.resolve(__dirname, "cloud/main.js"),
     ...(emailAdapter ? { emailAdapter } : {}),
     // Configuration CORS pour Parse Server
@@ -144,7 +174,11 @@ const parseServer = new ParseServer({
     enableAnonymousUsers: false,
     // Activer les requêtes cross-origin
     publicServerURL:
-        process.env.PARSE_SERVER_URL || "http://127.0.0.1:1555/parse",
+        process.env.PARSE_PUBLIC_URL ||
+        process.env.PARSE_SERVER_URL ||
+        "https://dev.markidiags.com/api/parse",
+    // Timeout des cloud functions (10 minutes)
+    cloudFunctionTimeout: 600,
 });
 
 // Configuration Parse Dashboard
@@ -152,7 +186,8 @@ const dashboardConfig = {
     apps: [
         {
             serverURL:
-                process.env.PARSE_SERVER_URL || "http://127.0.0.1:1555/parse",
+                process.env.PARSE_SERVER_URL ||
+                "https://dev.markidiags.com/api/parse",
             appId: process.env.PARSE_APP_ID || "marki15-app-id",
             masterKey: process.env.PARSE_MASTER_KEY || "marki15-master-key",
             appName: "Marki16 Parse Dashboard",
@@ -436,8 +471,41 @@ ${excerpt}`;
 
 const SftpClient = require("ssh2-sftp-client");
 
+// Clé secrète pour signer les URLs PDF (à mettre dans .env)
+const PDF_SIGNING_SECRET =
+    process.env.PDF_SIGNING_SECRET || "marki16-default-pdf-secret-change-me";
+
+// Endpoint pour accéder au PDF (vérifie la signature)
 app.get("/api/pdf/:impayelId", async (req, res) => {
     const { impayelId } = req.params;
+    const { sig, expires } = req.query;
+
+    // Vérifier la signature et l'expiration
+    if (!sig || !expires) {
+        return res.status(403).json({
+            error: "Lien invalide ou expiré. Veuillez réutiliser le lien envoyé par email.",
+        });
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    if (parseInt(expires) < now) {
+        return res.status(403).json({
+            error: "Ce lien a expiré. Veuillez réutiliser le lien envoyé par email.",
+        });
+    }
+
+    // Vérifier la signature
+    const dataToSign = `${impayelId}:${expires}:${PDF_SIGNING_SECRET}`;
+    const expectedSig = crypto
+        .createHmac("sha256", PDF_SIGNING_SECRET)
+        .update(dataToSign)
+        .digest("hex");
+
+    if (sig !== expectedSig) {
+        return res.status(403).json({
+            error: "Lien invalide. Veuillez réutiliser le lien envoyé par email.",
+        });
+    }
 
     // Récupérer l'impayé depuis Parse
     let impaye;

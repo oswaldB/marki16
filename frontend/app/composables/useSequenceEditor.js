@@ -60,6 +60,10 @@ Total: [[total_impayes]]`,
                 name: "Condition avec Montant Élevé",
                 prompt: "[[ if (total_impayes > 1000) { +]]⚠️ Votre solde de [[total_impayes]] dépasse 1000€.[[ } else { +]]Votre solde est de [[total_impayes]].[[ } +]]",
             },
+            {
+                name: "Email avec Lien PDF",
+                prompt: "Bonjour [[payeur_nom]], vous pouvez consulter votre facture [[nfacture]] en cliquant sur ce lien : [[lien_pdf]]. Cordialement.",
+            },
         ],
     },
 };
@@ -78,6 +82,7 @@ export const VARIABLES = [
             "payeur_email",
             "payeur_telephone",
             "payeur_type",
+            "payeur_civilite",
         ],
     },
     {
@@ -121,6 +126,7 @@ export const VARIABLES = [
             "apporteur_email",
             "apporteur_telephone",
             "apporteur_societe",
+            "apporteur_civilite",
         ],
     },
     {
@@ -137,6 +143,7 @@ export const VARIABLES = [
             "proprietaire_contact_nom",
             "proprietaire_contact_prenom",
             "proprietaire_contact_email",
+            "proprietaire_contact_civilite",
         ],
     },
     {
@@ -145,6 +152,7 @@ export const VARIABLES = [
             "apporteur_contact_nom",
             "apporteur_contact_prenom",
             "apporteur_contact_email",
+            "apporteur_contact_civilite",
         ],
     },
     {
@@ -178,6 +186,10 @@ export const VARIABLES = [
         vars: ["total_impayes", "nfactures_liste", "ndossier_liste"],
     },
     {
+        groupe: "LIENS",
+        vars: ["lien_pdf", "lien_espace"],
+    },
+    {
         groupe: "FORMATAGE",
         vars: [
             'Pour formater une date : [[date_echeance, date("DD/MM/YYYY")]] - Remplacez le format par celui souhaité (ex: "YYYY-MM-DD", "MM/DD/YYYY", etc.)',
@@ -197,9 +209,11 @@ export const EXEMPLE_VARS = {
     payeur_email: "jean@example.com",
     payeur_telephone: "0612345678",
     payeur_type: "Propriétaire",
+    payeur_civilite: "M",
     payeur_contact_nom: "Martin",
     payeur_contact_prenom: "Pierre",
     payeur_contact_email: "pierre@example.com",
+    payeur_contact_civilite: "M",
     adresse_bien: "123 rue de la Paix",
     code_postal: "75001",
     ville: "Paris",
@@ -215,21 +229,29 @@ export const EXEMPLE_VARS = {
     proprietaire_prenom: "Paul",
     proprietaire_email: "contact@dupont.com",
     proprietaire_telephone: "0123456789",
+    proprietaire_civilite: "M",
     proprietaire_contact_nom: "Durand",
     proprietaire_contact_prenom: "Sophie",
     proprietaire_contact_email: "sophie@dupont.com",
+    proprietaire_contact_civilite: "Mme",
     apporteur_nom: "Martin",
     apporteur_prenom: "Pierre",
     apporteur_email: "pierre@agence.com",
     apporteur_telephone: "0600000000",
     apporteur_societe: "Agence Immobilière",
+    apporteur_civilite: "M",
     apporteur_contact_nom: "Bernard",
     apporteur_contact_prenom: "Luc",
     apporteur_contact_email: "luc@agence.com",
+    apporteur_contact_civilite: "M",
     // Variables pour le format multiple (liste de tous les impayés)
     total_impayes: "5000",
     nfactures_liste: "FA-001, FA-002, FA-003",
     ndossier_liste: "DOS-001, DOS-002",
+    // Lien vers le PDF (redirige automatiquement vers le PDF signé - expire en 3 min)
+    lien_pdf: "https://domaine.com/redirect-pdf/abc123",
+    // Lien vers l'espace contact (redirige vers la liste des impayés du contact - expire en 3 min)
+    lien_espace: "https://domaine.com/redirect-espace/abc123",
 };
 
 export const champOptions = [

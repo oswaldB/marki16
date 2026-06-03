@@ -441,12 +441,12 @@
                     <span>Facture {{ imp.nfacture }}</span>
                     <span v-if="imp.payeurNom" class="text-gray-400">· {{ imp.payeurNom }}</span>
                   </div>
-                  <a :href="`/api/pdf/${imp.id}`" target="_blank">
+                  <a v-if="pdfLinks[imp.id]" :href="pdfLinks[imp.id]" target="_blank">
                     <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="ghost" size="xs">Télécharger</UButton>
                   </a>
                 </div>
                 <div class="relative" style="height: 300px">
-                  <PdfIframe :impaye-id="imp.id" />
+                  <PdfIframe v-if="pdfLinks[imp.id]" :src="pdfLinks[imp.id]" />
                 </div>
               </div>
 
@@ -554,12 +554,12 @@
                 <span>Facture {{ imp.nfacture }}</span>
                 <span v-if="imp.payeurNom" class="text-gray-400">· {{ imp.payeurNom }}</span>
               </div>
-              <a :href="`/api/pdf/${imp.id}`" target="_blank">
+              <a v-if="pdfLinks[imp.id]" :href="pdfLinks[imp.id]" target="_blank">
                 <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="ghost" size="xs">Télécharger</UButton>
               </a>
             </div>
             <div class="relative" style="height: 420px">
-              <PdfIframe :impaye-id="imp.id" />
+              <PdfIframe v-if="pdfLinks[imp.id]" :src="pdfLinks[imp.id]" />
             </div>
           </div>
           <div v-if="!relanceDrawer?.impayes || relanceDrawer?.impayes.length === 0" class="text-center py-4 text-gray-400 text-sm">
@@ -627,6 +627,7 @@ const loading = ref(false)
 const relances = ref([])
 const sequences = ref([])
 const selection = ref([])
+const pdfLinks = ref({}) // { impayeId: signedUrl }
 const annulantGroupe = ref(false)
 const validantGroupe = ref(false)
 const creatingRelances = ref(false)
@@ -1015,10 +1016,29 @@ async function charger() {
 
     const results = await q.find()
     relances.value = results.map(parseRelance)
+    // Générer les liens PDF signés pour chaque impayé unique
+    await generatePdfLinks()
   } catch (err) {
     toast.add({ title: 'Erreur chargement', description: err.message, color: 'red' })
   } finally {
     loading.value = false
+  }
+}
+
+// Générer des liens PDF signés (expire en 3 min) pour tous les impayés uniques
+async function generatePdfLinks() {
+  const uniqueImpayeIds = [...new Set(relances.value.flatMap(r => [r.impaye?.id, ...(r.impayes || []).map(i => i.id)].filter(Boolean)))]
+
+  for (const impayeId of uniqueImpayeIds) {
+    if (pdfLinks.value[impayeId]) continue // déjà généré
+
+    try {
+      const response = await $parse.Cloud.run('generatePdfLink', { impayelId })
+      pdfLinks.value[impayeId] = response.url
+    } catch (err) {
+      console.error(`Erreur génération lien PDF pour ${impayeId}:`, err)
+      pdfLinks.value[impayeId] = null
+    }
   }
 }
 

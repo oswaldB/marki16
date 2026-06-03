@@ -73,6 +73,13 @@
               :to="`/sequences/${row.original.type}/${row.original.id}`"
             />
             <UButton
+              icon="i-heroicons-document-duplicate"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              @click="dupliquerSequence(row.original)"
+            />
+            <UButton
               icon="i-heroicons-trash"
               color="red"
               variant="ghost"
@@ -196,6 +203,28 @@ async function supprimerSequence() {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
   } finally {
     deleting.value = false
+  }
+}
+
+async function dupliquerSequence(row) {
+  try {
+    const originalSeq = row._seq
+    const newSeq = new $parse.Object('Sequence')
+
+    newSeq.set('nom', `${originalSeq.get('nom')} (Copie)`)
+    newSeq.set('type', originalSeq.get('type'))
+    newSeq.set('emails', originalSeq.get('emails') || [])
+    newSeq.set('regles', originalSeq.get('regles') || [])
+    newSeq.set('regles_type', originalSeq.get('regles_type'))
+    newSeq.set('lien_paiement', originalSeq.get('lien_paiement') || '')
+    newSeq.set('publiee', false)
+
+    await newSeq.save()
+
+    toast.add({ title: 'Séquence dupliquée', color: 'green' })
+    router.push(`/sequences/${newSeq.get('type')}/${newSeq.id}`)
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
   }
 }
 

@@ -11,6 +11,13 @@
             @click="collapsed = !collapsed"
           />
           <UButton
+            icon="i-heroicons-beaker"
+            color="orange"
+            variant="ghost"
+            size="xs"
+            @click="$emit('test-email', index)"
+          />
+          <UButton
             icon="i-heroicons-trash"
             color="red"
             variant="ghost"
@@ -117,13 +124,26 @@
       </div>
 
       <!-- Variables -->
-      <VariablesPicker
-        :variables="variablesForEmail"
-        :active-scenario="email.activeScenario"
-        @copy="onCopyVariable"
-        @copy-payment-link="onCopyPaymentLink"
-        @open-liens="$emit('openLiens')"
-      />
+      <div class="border border-gray-200 rounded-lg overflow-hidden">
+        <div class="flex items-center justify-between p-2 bg-gray-50 border-b border-gray-200">
+          <span class="text-xs font-semibold text-gray-600">Variables disponibles</span>
+          <UButton
+            :icon="variablesCollapsed ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'"
+            variant="ghost"
+            size="2xs"
+            @click="variablesCollapsed = !variablesCollapsed"
+          />
+        </div>
+        <div v-show="!variablesCollapsed">
+          <VariablesPicker
+            :variables="variablesForEmail"
+            :active-scenario="email.activeScenario"
+            @copy="onCopyVariable"
+            @copy-payment-link="onCopyPaymentLink"
+            @open-liens="$emit('openLiens')"
+          />
+        </div>
+      </div>
     </div>
   </UCard>
 </template>
@@ -150,12 +170,13 @@ const props = defineProps({
 
 const emit = defineEmits([
   'delete', 'openChatgpt', 'openSmtp', 'openLiens',
-  'corpsChange', 'smtpChange', 'editorMounted',
+  'test-email', 'corpsChange', 'smtpChange', 'editorMounted',
 ])
 
 const toast = useToast()
 
 const collapsed = ref(false)
+const variablesCollapsed = ref(true)
 
 const currentScenario = computed(() => getScenario(props.email, props.email.activeScenario || 'single'))
 

@@ -195,13 +195,13 @@
           <UButton color="neutral" variant="outline" @click="resetWizard">
             Nouvel import
           </UButton>
-          <UButton v-if="importStats.noSequence" color="warning" variant="outline" to="/impayes">
+          <UButton v-if="importStats.noSequence" color="warning" variant="outline" to="/impayes/2?vue=sans-sequence">
             Voir les impayés sans séquence
           </UButton>
           <UButton v-if="importStats.noEmail" color="warning" variant="outline" to="/contacts/sans-email">
             Voir les contacts sans email
           </UButton>
-          <UButton to="/impayes">
+          <UButton to="/impayes/2">
             Aller aux impayés
           </UButton>
         </div>

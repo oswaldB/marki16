@@ -326,26 +326,11 @@ Exemple complet :
                 .join(", ");
             const prompt = `Rédige un email de suivi de règlement pour le secteur immobilier.
 Contexte du payeur : ${scenarioLabels[fmt]}.
-Variables disponibles : ${vars}
+${currentScenario?.corps ? `Contenu existant à améliorer/continuer :\n${currentScenario.corps}\n\n` : ""}Variables disponibles : ${vars}
 
-IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet) :
-
-Bonjour [[payeur_nom]],
-
-Voici l'état actuel de vos règlements :
-| Facture | Montant | Statut |
-|---------|---------|--------|
-| [[nfacture]] | [[montant_total]] € | [[statut]] |
-
-[Voir le détail](MET ICI LE LIEN DE PAIEMENT)
-
-Pour plusieurs impayés, utilisez des boucles :
-| Numéro de facture | Montant | Statut |
-|-------------------|---------|--------|
-[[loop impayes]]
-| [[nfacture]] | [[montant]] | [[statut]] |
-[[endloop]]
-`;
+IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet).
+Utilise les variables fournies. Pour plusieurs impayés, utilise des boucles avec [[loop impayes]] et [[endloop]].
+Inclut un lien de paiement avec [Voir le détail](MET ICI LE LIEN DE PAIEMENT).`;
             await copyToClipboard(prompt);
         } else {
             // Prompt ChatGPT pour RELANCES (par défaut)
@@ -369,27 +354,11 @@ Contexte du payeur : ${scenarioLabels[fmt]}.${
             }Email ${idx + 1} (J+${
                 email?.delai ?? 0
             }) - Objet prévu : ${currentScenario?.objet || "..."}
-Variables disponibles : ${vars}
+${currentScenario?.corps ? `Contenu existant à améliorer/continuer :\n${currentScenario.corps}\n\n` : ""}Variables disponibles : ${vars}
 
-IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet) :
-
-Bonjour [[payeur_nom]],
-
-Votre facture [[nfacture]] est en retard.
-
-[Lien de paiement](MET ICI LE LIEN DE PAIEMENT)
-
-| Facture | Date d'échéance | Montant TTC | Reste à payer |
-|---------|-----------------|-------------|---------------|
-| [[nfacture]] | [[date_echeance]] | [[montant_total]] € | [[reste_a_payer]] € |
-
-Pour plusieurs impayés, utilisez des boucles :
-| Numéro de facture | Montant |
-|-------------------|---------|
-[[loop impayes]]
-| [[nfacture]] | [[montant]] |
-[[endloop]]
-`;
+IMPORTANT: Retourne UNIQUEMENT le corps de l'email en Markdown (sans l'objet).
+Utilise les variables fournies. Pour plusieurs impayés, utilise des boucles avec [[loop impayes]] et [[endloop]].
+Inclut un lien de paiement avec [Régler ma facture](MET ICI LE LIEN DE PAIEMENT).`;
             await copyToClipboard(prompt);
         }
     }
