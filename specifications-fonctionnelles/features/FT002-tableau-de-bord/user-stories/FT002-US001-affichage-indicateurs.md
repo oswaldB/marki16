@@ -17,4 +17,6 @@ Afin de **avoir une vue d'ensemble de l'activité**
     Étant donné que je suis sur le tableau de bord
     Quand je sélectionne une période spécifique
     Alors les indicateurs se mettent à jour
-    Et les données correspondent à la période sélectionnée
+    Et les données correspondent à la période sélectionnée.
+
++>>> soit plus précis. je veux tous les kpis, toutes les requêtes et tous les détails des graphs à faire. la source le folder /frontend/ page dashboard. <<<+
