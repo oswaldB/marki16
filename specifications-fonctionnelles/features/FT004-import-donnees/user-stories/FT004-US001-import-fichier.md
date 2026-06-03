@@ -21,4 +21,4 @@ Afin de **mettre à jour la base de données en masse**
     Et l'import est annulé
 
 
-+>>> met toi à jour avec la description de cette feature ../description.md
++>>> met toi à jour avec la description de cette feature ../description.md <<<+
