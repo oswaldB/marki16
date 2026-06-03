@@ -2,7 +2,7 @@
 
 - **Objectif** : Permettre aux utilisateurs de se connecter et de s'authentifier de manière sécurisée dans l'application
 - **Périmètre** : 
-  - Page de login (login.vue)
+  - Page de login (login.html)
   - Vérification des identifiants
   - Gestion des sessions utilisateurs
   - Inclut : Mécanisme de connexion, validation des credentials
