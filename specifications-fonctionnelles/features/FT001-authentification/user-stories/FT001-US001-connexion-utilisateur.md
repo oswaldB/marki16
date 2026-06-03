@@ -29,3 +29,4 @@ Afin de **accéder à mes fonctionnalités et données**
 
 
 +>>> l'identifiant de connexion est un text libre et pas un email.<<<+
++>>> il manque le scénario de en local storage ou en session storage on a un le login token de sauvegarder sous la clé : 'login_token'
