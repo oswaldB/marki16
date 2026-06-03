@@ -15,3 +15,5 @@ Afin de **gagner du temps dans mes tâches quotidiennes**
     Étant donné que je suis sur le tableau de bord
     Quand j'utilise le menu principal
     Alors je peux accéder à toutes les sections
+
++>>> supprime ce dossier <<<+
