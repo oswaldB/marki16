@@ -21,3 +21,6 @@ Afin de **retrouver l'accès à mon compte**
     Et que je confirme le nouveau mot de passe
     Alors mon mot de passe est mis à jour
     Et je suis redirigé vers la page de login
+
+
++>>> pas du tout. pour le mot de passe oublié, on affiche un message en haut de page en style alert permanent qui demande à prendre contact avec l'administrateur. <<<+
