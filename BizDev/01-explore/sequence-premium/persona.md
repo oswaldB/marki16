@@ -84,7 +84,7 @@
 | Objection                          | Réponse                                                                                     |
 |-----------------------------------|---------------------------------------------------------------------------------------------|
 | "On a déjà un outil."            | "Marki s'intègre avec la plupart des CRM (DiagBox, Immopole, etc.). On peut vous montrer comment le connecter en 5 minutes." |
-| "C'est trop cher."               | "C'est **gratuit à vie** pour les premiers partenaires. Et même à 5 000€/an, cela représente un gain de 10 000€/an en temps économisé." |
+| "C'est trop cher."               | "C'est **gratuit à vie** pour les premiers partenaires. Et même à 5 000€/an #£ l'offre est à 5000€ maintenant pour une licence vie £#, cela représente un gain de 10 000€/an en temps économisé." |
 | "On n'a pas le temps."           | "Notre solution est **clé en main** : on la configure pour vous en 1 journée, sans perturbation de votre activité." |
 
 ---
