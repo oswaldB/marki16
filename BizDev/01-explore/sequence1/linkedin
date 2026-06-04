@@ -1,0 +1,25 @@
+# LinkedIn #1 - J0 (Séquence #1)
+**Type** : [Message de connexion / Message de suivi / Réponse]
+**Date** : [YYYY-MM-DD]
+**Statut** : [Envoyé / Lu / Répondu / Ignoré]
+
+---
+
+## **💬 Contenu**
+[Corps du message LinkedIn ici]
+
+---
+
+## **👥 Destinataires**
+- [lead_[ID]_[NAME]](leads/lead_[ID]_[NAME].md)
+
+---
+
+## **📊 Réponses**
+- lead_[ID]_[NAME] : [Réponse reçue ou "Aucune"]
+
+---
+
+## **📝 Notes**
+- [Notes supplémentaires sur cette campagne LinkedIn]
+- **Prochaine étape** : [Ex: "Envoyer un email de suivi avec email#2_J+3.md"]
