@@ -46,13 +46,14 @@
 - **Prix** : 5 000€/an (licence vie)
 - **Valeur** : Automatisation complète des relances et suivi
 - **ROI** : Gain de temps estimé à 10 000€/an
+- **Détails** : [Voir la documentation technique](../specifications-fonctionnelles/features.md)
 
 ### **Offre 2 : Agence de relances et de suivi**
-- **Concept** : Service externalisé de gestion des relances et du suivi pour les cabinets
-- **Modèle** : Équivalent au coût d'une assistante dédiée
-- **Calcul** : 1 300€/mois × 12 mois = **15 600€/an**
-- **Temps estimé** : 2 jours/semaine (soit ~8-9 jours/mois) d'une assistante qualifiée
-- **Valeur** : Externalisation complète de la gestion des relances, sans embauche ni gestion interne
+- **Concept** : Service externalisé de gestion complète des relances et du suivi
+- **Prix** : 15 600€/an (1 300€/mois)
+- **Temps** : 2 jours/semaine d'une assistante qualifiée
+- **Valeur** : Externalisation sans embauche ni gestion interne
+- **Détails complets** : [Voir offre2-agence-relances.md](offre2-agence-relances.md)
 
 ---
 
@@ -82,7 +83,7 @@
 
 ### **Comportement d'achat**
 - **Décision** : Processus rapide si la valeur est claire (1 à 2 appels + démo).
-- **Budget** : Prêt à investir l'offre est à 5000€ maintenant pour une licence vie ou 15 600€/an pour le service complet si le ROI est démontré (ex: gain de temps = économie de 10 000€/an).
+- **Budget** : Prêt à investir 5 000€/an pour une licence vie ou 15 600€/an pour le service complet si le ROI est démontré (ex: gain de temps = économie de 10 000€/an).
 - **Fidélité** : Fidèle aux outils qui fonctionnent, mais ouvert aux innovations si gain prouvé.
 
 ---
@@ -108,9 +109,11 @@
 > 
 > Avec notre **agence de relances et de suivi**, vous bénéficiez de :
 > - ✅ **Une assistante dédiée** 2 jours/semaine pour gérer vos relances
-> - ✅ **Un coût fixe** de 1 300€/mois (15 600€/an) - équivalent à une assistante interne
+> - ✅ **Un coût fixe** de 1 300€/mois (15 600€/an) avec prorata possible
 > - ✅ **Zéro gestion RH** : pas de recrutement, pas de congés, pas de turnover
 > - ✅ **Expertise métiers** : nous connaissons les spécificités du diagnostic immobilier
+> 
+> Plus d'infos : [offre2-agence-relances.md](offre2-agence-relances.md)
 > 
 > Seriez-vous ouvert à un échange pour évaluer vos besoins ?"
 
@@ -118,9 +121,10 @@
 | Objection | Réponse |
 |-----------|---------|
 | "On a déjà un outil." | "Marki s'intègre avec la plupart des CRM (DiagBox, Immopole, etc.). On peut vous montrer comment le connecter en 5 minutes." |
-| "C'est trop cher." | "C'est **5000€/an pour une licence vie** ou **15 600€/an pour le service complet**, et cela représente un gain de 10 000€/an à 20 000€/an en temps économisé." |
+| "C'est trop cher." | "C'est **5000€/an pour une licence vie** ou **15 600€/an pour le service complet** (avec prorata), et cela représente un gain de 10 000€/an à 20 000€/an en temps économisé." |
 | "On n'a pas le temps." | "Notre solution est **clé en main** : on la configure pour vous en 1 journée, sans perturbation de votre activité." |
 | "On préfère garder le contrôle." | "Avec l'Offre 2, vous gardez le contrôle stratégique tout en externalisant l'exécution. Vous recevez des rapports réguliers." |
+| "On veut essayer avant." | "Nous proposons des engagements flexibles avec prorata temporis sur l'Offre 2." |
 
 ---
 
