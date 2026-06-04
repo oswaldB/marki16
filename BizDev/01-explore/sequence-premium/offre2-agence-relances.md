@@ -7,10 +7,10 @@ Service externalisé complet de **gestion des relances et du suivi** pour les ca
 ## 💰 Tarification
 
 ### Modèle de coût
-- **Coût mensuel** : 1 300€/mois
-- **Temps alloué** : 2 jours/semaine (soit ~8,67 jours/mois)
-- **Coût journalier** : ~150€/jour (1 300€ ÷ 8,67 jours)
-- **Coût annuel** : **15 600€/an** (1 300€ × 12 mois)
+- **Coût de référence** : Une assistante à temps plein coûte **1 300€/mois**
+- **Temps alloué au client** : 2 jours/semaine (soit ~40% du temps d'une assistante)
+- **Budget annuel client** : **15 600€/an** (1 300€ × 12 mois) - on se cale sur le coût d'une assistante à temps plein
+- **Coût journalier équivalent** : ~150€/jour (1 300€ ÷ 8,67 jours/mois)
 
 ### Prorata temporis
 | Période | Jours | Coût |
@@ -22,6 +22,8 @@ Service externalisé complet de **gestion des relances et du suivi** pour les ca
 | 6 mois | 48-54 jours | 7 800€ |
 | 1 an | 96-108 jours | 15 600€ |
 
+**Note** : Le tarif est basé sur le budget annuel d'une assistante dédiée (1 300€/mois), même si elle ne consacre que 2 jours/semaine à votre cabinet. Cela permet une tarification simple et prévisible.
+
 ## 🎯 Valeur Proposée
 
 - **Externalisation complète** : Pas besoin d'embaucher ou de gérer une assistante
@@ -29,6 +31,7 @@ Service externalisé complet de **gestion des relances et du suivi** pour les ca
 - **Flexibilité** : Adaptation aux besoins du cabinet
 - **Continuité** : Pas de turnover, pas de congés à gérer
 - **Rapports réguliers** : Suivi transparent de l'activité
+- **Budget maîtrisé** : Coût fixe annuel de 15 600€, quel que soit le volume réel de travail
 
 ## 📋 Ce qui est inclus
 
@@ -59,6 +62,7 @@ Service externalisé complet de **gestion des relances et du suivi** pour les ca
 2. **Réduction des coûts cachés** : Pas de gestion RH, pas de formation
 3. **Amélioration du cash-flow** : Moins d'impayés grâce à un suivi rigoureux
 4. **Scalabilité** : Service adaptable à la taille de votre cabinet
+5. **Simplicité** : Un budget fixe annuel, sans surprise
 
 ## 📞 Contact
 
