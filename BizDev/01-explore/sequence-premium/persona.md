@@ -5,16 +5,18 @@
 **Budget** : 5 000€/an (prêt à payer pour une solution premium)
 **Objectif** : Identifier des cabinets prêts à adopter une offre gratuite à vie pour **Marki** et ses dérivés (module de relances d'impayés pour les particuliers + module de suivi pour les agences immobilières).
 
+#£ retire l'offre ici £#
+
 ---
 
 ## **📌 Description du Persona**
 
 ### **Profil général**
 - **Type d'entreprise** : Cabinet de diagnostic immobilier (DPE, amiante, plomb, électricité, gaz, termites, etc.).
-- **Taille** : 5 à 50 employés (PME ou TPE structurées).
+- **Taille** : 5 à 50 employés (PME ou TPE structurées). #£ plus spécifique qui souffre vraiment de cela au point de payer 5000€. si on prend les maths : 10% d'impayés et 1% de perte sèche annuelle. donc il faut viser des cabinets qui font combien de CA? et surtout Marki réduit les impayés mais ne les règles pas, même si objectif un seul impayés par an.#£
 - **Chiffre d'affaires** : 500K€ à 5M€/an.
-- **Localisation** : France (priorité aux zones urbaines : Paris, Lyon, Bordeaux, Toulouse, Nantes, etc.).
-- **Statut juridique** : SARL, SAS, ou entreprise individuelle.
+- **Localisation** : France (priorité aux zones urbaines : Paris, Lyon, Bordeaux, Toulouse, Nantes, etc.). #£ regarde les zones où il y a plus de diagnostiqueurs immobiliers via une recherche Google £#
+- **Statut juridique** : SARL, SAS, ou entreprise individuelle. 
 
 ### **Besoin principal**
 - **Automatiser les relances** :
@@ -22,13 +24,13 @@
   - Relances de suivi pour les agences immobilières (suivi des diagnostics, rappels, etc.).
 - **Gagner du temps** : Réduire les tâches manuelles répétitives (emails, appels, SMS).
 - **Améliorer la traçabilité** : Suivre l'état des dossiers et des paiements en temps réel.
-- **Intégration simple** : Solution compatible avec leurs outils existants (CRM, logiciels métiers).
+- **Intégration simple** : Solution compatible avec leurs outils existants (CRM, logiciels métiers). #£ liste les logiciels métiers propre aux diag #£.
 
 ### **Douleurs actuelles**
 - **Relances manuelles** : Perte de temps sur les relances d'impayés ou de suivi.
 - **Oublis** : Risque de perdre des clients ou des paiements à cause d'un suivi insuffisant.
 - **Manque de visibilité** : Difficulté à suivre l'état des dossiers et des paiements.
-- **Coûts cachés** : Temps passé = argent perdu (ex: 10h/semaine à 50€/h = 2 000€/mois).
+- **Coûts cachés** : Temps passé = argent perdu (ex: 10h/semaine à 50€/h = 2 000€/mois). #£ fait un tableau avec coût travail mensuel heure par mois couts par mois. pour le tableau je veux 2300€ à 6000€ pour les coûts travail mensuel£#
 
 ---
 
