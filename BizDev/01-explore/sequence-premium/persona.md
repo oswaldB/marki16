@@ -51,7 +51,7 @@
 - **Concept** : Service externalisé de gestion des relances et du suivi pour les cabinets
 - **Modèle** : Équivalent au coût d'une assistante dédiée
 - **Calcul** : 1 300€/mois × 12 mois = **15 600€/an**
-- **Temps estimé** : 2 jours/mois d'une assistante qualifiée
+- **Temps estimé** : 2 jours/semaine (soit ~8-9 jours/mois) d'une assistante qualifiée
 - **Valeur** : Externalisation complète de la gestion des relances, sans embauche ni gestion interne
 
 ---
@@ -107,7 +107,7 @@
 > Et si vous externalisiez **100% de vos relances et suivi** à un coût maîtrisé ?
 > 
 > Avec notre **agence de relances et de suivi**, vous bénéficiez de :
-> - ✅ **Une assistante dédiée** 2 jours/mois pour gérer vos relances
+> - ✅ **Une assistante dédiée** 2 jours/semaine pour gérer vos relances
 > - ✅ **Un coût fixe** de 1 300€/mois (15 600€/an) - équivalent à une assistante interne
 > - ✅ **Zéro gestion RH** : pas de recrutement, pas de congés, pas de turnover
 > - ✅ **Expertise métiers** : nous connaissons les spécificités du diagnostic immobilier
