@@ -1,3 +1,5 @@
+#£ offre premium est pensé pour être l'offre la plus chère d'une sorte de campagne Kickstarter, il faut donc tout refaire dans ce document. #£
+
 # Offre Premium : Marki pour les Cabinets de Diagnostic Immobilier
 
 **Nom de l'offre** : **Marki Premium - Automatisation des Relances**
