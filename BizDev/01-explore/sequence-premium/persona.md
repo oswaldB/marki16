@@ -39,15 +39,15 @@
 ### **Inclusion**
 ✅ **Activité** : Cabinet spécialisé dans le diagnostic immobilier (obligatoire).
 ✅ **Taille** : 5 à 50 employés (capacité à payer 5 000€/an).
-✅ **Outils** : Utilise déjà un CRM ou un logiciel de gestion (ex: **DiagBox, Immopole, Logic-Immo, ou solution maison**).
-✅ **Besoin identifié** : A mentionné un problème de suivi ou de relances (sur leur site, LinkedIn, ou en entretien).
-✅ **Décideur** : Le gérant, le directeur, ou le responsable informatique est accessible.
+✅ **Outils** : Utilise déjà un CRM ou un logiciel de gestion (ex: **DiagBox, Immopole, Logic-Immo, ou solution maison**). #£Pas nécessairement. £#
+✅ **Besoin identifié** : A mentionné un problème de suivi ou de relances (sur leur site, LinkedIn, ou en entretien). #£ pas simple à trouver je pense £#
+✅ **Décideur** : Le gérant, le directeur, ou le responsable informatique est accessible. #£ le DAF£#
 
 ### **Exclusion**
 ❌ **Micro-entreprises** : Moins de 5 employés (budget limité).
 ❌ **Grandes entreprises** : Plus de 50 employés (besoins trop complexes pour une offre standard).
 ❌ **Secteur non cible** : Cabinets spécialisés uniquement dans l'expertise comptable ou juridique (hors diagnostic immobilier).
-❌ **Pas de besoin** : Déjà satisfait par une solution existante (à vérifier).
+❌ **Pas de besoin** : Déjà satisfait par une solution existante (à vérifier). #£ retire ce critère £#
 
 ---
 
@@ -110,7 +110,7 @@
 
 ## **🎯 Cibles prioritaires**
 
-### **Top 10 cabinets à contacter en premier** (exemples)
+### **Top 10 cabinets à contacter en premier** (exemples) #£ supprime cela £#
 1. **Diag'Express** (Paris) - 20 employés - Utilise DiagBox.
 2. **ImmoDiag** (Lyon) - 15 employés - Recherche une solution de relance.
 3. **SafeDiag** (Bordeaux) - 10 employés - Actif sur LinkedIn.
@@ -124,7 +124,7 @@
 
 ---
 
-## **📅 Plan d'action**
+## **📅 Plan d'action** #£ supprime cela £#
 
 ### **Phase 1 : Identification (J0-J2)**
 - [ ] Extraire une liste de 100 cabinets cibles (via Pages Jaunes, Société.com, LinkedIn).
@@ -143,7 +143,7 @@
 
 ---
 
-## **📊 Métriques de succès**
+## **📊 Métriques de succès** #£ supprime cela £#
 - **Taux de réponse** : 20% (20 réponses pour 100 emails envoyés).
 - **Taux de démo** : 50% (10 démos pour 20 réponses).
 - **Taux de conversion** : 30% (3 signatures pour 10 démos).
