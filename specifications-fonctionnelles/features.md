@@ -22,6 +22,8 @@ Ce document recense toutes les **features** et **user stories** du frontend Mark
 14. [FT014 - Paramètres système](#FT014-parametres-systeme)
 15. [FT015 - Redirections](#FT015-redirections)
 
+#£ les fonctionnalités manquantes : les suivis qui sont comme les relances mais envoyé de façon récurrente à une fréquence donnée. met à jour dans tout le dossier : ../ specifications fonctionnelles et ici. #£
+
 ---
 
 ## 📂 Détail des fonctionnalités
