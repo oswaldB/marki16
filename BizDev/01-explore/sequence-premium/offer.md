@@ -4,7 +4,7 @@
 
 **Nom de l'offre** : **Marki Premium - Automatisation des Relances**
 **Public cible** : Cabinets de diagnostic immobilier (5-50 employés)
-**Prix** : **5 000€/an**
+**Prix** : **Gratuit à vie** pour les premiers partenaires (valeur : 5 000€/an)
 **Objectif** : Automatiser les relances d'impayés pour les particuliers et les relances de suivi pour les agences immobilières.
 
 ---
@@ -40,13 +40,16 @@
 3. Si pas de réponse, envoi d'un **SMS** à J+7.
 4. Si toujours pas de réponse, **escalade vers le cabinet** pour action manuelle.
 
+#£ pour les relances, il faut dire aussi que l'on intégre les liens de paiements automatiquement pour ne pas ajouter un autre processus. #£
+
 ---
 
 ### **2. Module de Relances de Suivi (Agences Immobilières)**
+#£ les suivis doivent intégrer plus de scénarios : les rapports prêts mais aussi les rapports en attente de règlement par l'agence et aussi les rapports en attente de règlement par leur intermédiaire et enfin les rapports payés.£#
 **Fonctionnalités** :
 - **Rappels automatiques** : Envoi de rappels aux agences pour les diagnostics en cours (ex: "Votre diagnostic pour [adresse] est prêt").
-- **Suivi des délais** : Alertes si un diagnostic n'est pas terminé dans les temps (ex: délai légal de 10 jours).
-- **Intégration avec les CRM** : Compatible avec **DiagBox, Immopole, Logic-Immo, Salesforce, HubSpot**.
+- **Suivi des délais** : Alertes si un diagnostic n'est pas terminé dans les temps (ex: délai légal de 10 jours). #£ non #£
+- **Intégration avec les CRM** : Compatible avec **DiagBox, Immopole, Logic-Immo, Salesforce, HubSpot**. #£ à la demande £#
 - **Tableau de bord** : Vue d'ensemble des dossiers en cours, terminés, et en retard.
 - **Notifications** : Alertes par email ou SMS pour les échéances importantes.
 
@@ -54,8 +57,8 @@
 1. Un diagnostic est terminé pour une agence.
 2. Marki envoie un **email automatique** à l'agence : "Votre diagnostic pour [adresse] est prêt. Téléchargez-le ici : [lien]".
 3. Si l'agence ne télécharge pas le rapport sous 48h, **rappel automatique**.
-4. Si le délai légal approche, **alerte urgente** au cabinet.
 
+#£ il faut aussi préciser que l'on gère les scenarios complexes : envoie des suivie à une personne précise de l'agence ou plusieurs, un email par agent immobilier en plus du gérant ou pas. £# 
 ---
 
 ### **3. Fonctionnalités Transverses**
@@ -65,11 +68,21 @@
 - **Export des données** : Export des historiques et rapports en CSV/Excel.
 - **Support prioritaire** : Accès à un support dédié pour les partenaires premium.
 
+£# Blacklist, validation obligatoire avant envoi en option, gestion des conflits de liste, vos solutions de paiement ou la nôtre (moins cher et plus rapide), liste des récalcitrants pour avoir une vue spéciale pour le recouvrement. £#
 ---
 
 ## **💰 Modèle économique**
 
-### **Offre standard**
+### **Offre de lancement (Premiers 50 cabinets)**
+- **Prix** : **Gratuit à vie** (valeur : 5 000€/an). £# ce n'est pas gratuit à vie. c'est une lifetime licence où seul les frais de serveurs sont à régler après avoir payé en immédiat 8000€- limité à 5 cabinets et accès à toutes les évolutions de Marki. et apport d'affaires 15% de tous les cabinets que vous apportez à Marki.£#
+- **Engagement** : 
+  - Utilisation active de Marki (au moins 10 relances/mois).
+  - Feedback régulier pour améliorer le produit.
+  - Témoignage ou étude de c
+
+
+
+### **Offre premium**
 - **Prix** : 5 000€/an (ou 500€/mois).
 - **Inclus** : Toutes les fonctionnalités premium + mises à jour illimitées.
 
@@ -80,6 +93,7 @@
 | Formation avancée | 500€/jour | Formation pour l'équipe du cabinet. |
 | Support 24/7 | +2 000€/an | Accès à un support prioritaire 24h/24. |
 
+#£ offre à la carte : achat base : 60€ + 5 ou 10€ le module #£
 ---
 
 ## **📌 Conditions et Prérequis**
@@ -135,6 +149,10 @@
 - **Preuves de relance** : Archive complète des emails/SMS envoyés (utile en cas de litige).
 - **Respect des délais légaux** : Alertes automatiques pour éviter les retards.
 
+### **5. Offre gratuite à vie**
+- **Aucun risque** : Les premiers 50 cabinets bénéficient de l'offre gratuitement.
+- **Pas de frais cachés** : Pas de coûts supplémentaires pour les mises à jour.
+#£ corrige ce n'est pas gratuit à vie mais une offre lifetime £#.
 ---
 
 ## **📄 Exemple de contrat type**
@@ -148,9 +166,9 @@
 **Et** :
 - [Nom du Cabinet], représenté par [Nom du Décideur].
 
-**Objet** : Utilisation de la solution Marki pour l'automatisation des relances.
+**Objet** : Utilisation gratuite à vie de la solution Marki pour l'automatisation des relances.
 
-**Durée** : 1 an (renouvelable).
+**Durée** : Illimitée (sous réserve du respect des conditions).
 
 **Engagements du Cabinet** :
 1. Utiliser Marki pour au moins 10 relances/mois.
@@ -158,7 +176,7 @@
 3. Autoriser Marki à utiliser son nom comme référence (avec accord préalable).
 
 **Engagements de Marki** :
-1. Fournir la solution Marki.
+1. Fournir la solution Marki gratuitement.
 2. Assurer le support technique et les mises à jour.
 3. Garantir la confidentialité et la sécurité des données.
 
