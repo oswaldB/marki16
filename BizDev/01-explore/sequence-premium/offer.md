@@ -4,7 +4,7 @@
 
 **Nom de l'offre** : **Marki Premium - Automatisation des Relances**
 **Public cible** : Cabinets de diagnostic immobilier (5-50 employés)
-**Prix** : **Gratuit à vie** pour les premiers partenaires (valeur : 5 000€/an)
+**Prix** : **5 000€/an**
 **Objectif** : Automatiser les relances d'impayés pour les particuliers et les relances de suivi pour les agences immobilières.
 
 ---
@@ -69,14 +69,7 @@
 
 ## **💰 Modèle économique**
 
-### **Offre de lancement (Premiers 50 cabinets)**
-- **Prix** : **Gratuit à vie** (valeur : 5 000€/an).
-- **Engagement** : 
-  - Utilisation active de Marki (au moins 10 relances/mois).
-  - Feedback régulier pour améliorer le produit.
-  - Témoignage ou étude de cas après 3 mois d'utilisation.
-
-### **Offre standard (Après les 50 premiers)**
+### **Offre standard**
 - **Prix** : 5 000€/an (ou 500€/mois).
 - **Inclus** : Toutes les fonctionnalités premium + mises à jour illimitées.
 
@@ -142,10 +135,6 @@
 - **Preuves de relance** : Archive complète des emails/SMS envoyés (utile en cas de litige).
 - **Respect des délais légaux** : Alertes automatiques pour éviter les retards.
 
-### **5. Offre gratuite à vie**
-- **Aucun risque** : Les premiers 50 cabinets bénéficient de l'offre gratuitement.
-- **Pas de frais cachés** : Pas de coûts supplémentaires pour les mises à jour.
-
 ---
 
 ## **📄 Exemple de contrat type**
@@ -159,9 +148,9 @@
 **Et** :
 - [Nom du Cabinet], représenté par [Nom du Décideur].
 
-**Objet** : Utilisation gratuite à vie de la solution Marki pour l'automatisation des relances.
+**Objet** : Utilisation de la solution Marki pour l'automatisation des relances.
 
-**Durée** : Illimitée (sous réserve du respect des conditions).
+**Durée** : 1 an (renouvelable).
 
 **Engagements du Cabinet** :
 1. Utiliser Marki pour au moins 10 relances/mois.
@@ -169,7 +158,7 @@
 3. Autoriser Marki à utiliser son nom comme référence (avec accord préalable).
 
 **Engagements de Marki** :
-1. Fournir la solution Marki gratuitement.
+1. Fournir la solution Marki.
 2. Assurer le support technique et les mises à jour.
 3. Garantir la confidentialité et la sécurité des données.
 
