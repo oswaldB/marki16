@@ -6,6 +6,8 @@ Service externalisé complet de **gestion des relances et du suivi** pour les ca
 
 ## 💰 Tarification
 
+£# on va faire évoluer le modèle en se basant sur un nombre de dossiers par ans. pour le model de 2 jours de relances on est sur un volume de 100000/an. il faut ensuite faire la tarification pour un prix de moins de 1000 dossiers par ans, jusqu'à 50000 dossiers, 100000 dossiers et plus. #£
+
 ### Modèle de coût
 - **Coût de référence** : Une assistante à temps plein (5 jours/semaine) coûte **1 300€/mois**
 - **Temps alloué au client** : **2 jours/semaine** (soit ~40% du temps)
