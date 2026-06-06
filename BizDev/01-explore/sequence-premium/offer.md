@@ -216,3 +216,6 @@
 - [Fiche Persona : Cabinets de Diagnostic Immobilier](persona.md)
 - [Modèle d'email de prospection](../sequence1/email1_J0.md)
 - [Modèle de message LinkedIn](../sequence1/linkedin1_J0.md)
+
+
+#£ rajoute au bon endroit aussi les scénarios suivants : facilité de caisse - règlement en plusieurs fois jusqu'à 1€/jour,mise en pause, facilité de paiement, affacturage sur les agences immobilières ( si agences immobilières éligibles )
