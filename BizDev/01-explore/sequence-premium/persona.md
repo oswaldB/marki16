@@ -154,3 +154,7 @@
 - [Salon des Diagnostiqueurs](https://www.salon-diagnostiqueurs.fr)
 - [DiagBox](https://www.diagbox.fr)
 - [Immopole](https://www.immopole.fr)
+
+
+
+#£ pour le persona on veut le gros cabinet avec au moins 7 techniciens et un CA aux alentours des 2.5 millions d'euros et plus. #£
