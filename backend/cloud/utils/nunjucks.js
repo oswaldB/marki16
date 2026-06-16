@@ -1,20 +1,20 @@
 // backend/cloud/utils/nunjucks.js
 // Module utilitaire pour Nunjucks - Moteur de template
 
-const nunjucks = require('nunjucks');
+const nunjucks = require("nunjucks");
 
 // Configuration de l'environnement Nunjucks
 const env = nunjucks.configure({
-  autoescape: false, // Désactive l'échappement HTML automatique (on génère du HTML)
-  throwOnUndefined: false, // Ne pas planter sur variable manquante
-  tags: {
-    blockStart: '{%',
-    blockEnd: '%}',
-    variableStart: '{{',
-    variableEnd: '}}',
-    commentStart: '{#',
-    commentEnd: '#}'
-  }
+    autoescape: false, // Désactive l'échappement HTML automatique (on génère du HTML)
+    throwOnUndefined: false, // Ne pas planter sur variable manquante
+    tags: {
+        blockStart: "{%",
+        blockEnd: "%}",
+        variableStart: "{{",
+        variableEnd: "}}",
+        commentStart: "{#",
+        commentEnd: "#}",
+    },
 });
 
 // ============================================================================
@@ -23,101 +23,138 @@ const env = nunjucks.configure({
 
 // Filtre pour formater une date
 // Utilisation: {{ date_echeance | date("DD/MM/YYYY") }}
-env.addFilter('date', function(d, format = 'DD/MM/YYYY') {
-  if (!d) return '';
-  
-  const dateObj = new Date(d);
-  if (isNaN(dateObj.getTime())) {
-    // Si ce n'est pas une date valide, retourner la valeur d'origine
-    return d;
-  }
-  
-  const pad = (n) => n.toString().padStart(2, '0');
-  
-  return format
-    .replace(/YYYY/g, dateObj.getFullYear())
-    .replace(/MM/g, pad(dateObj.getMonth() + 1))
-    .replace(/DD/g, pad(dateObj.getDate()))
-    .replace(/HH/g, pad(dateObj.getHours()))
-    .replace(/mm/g, pad(dateObj.getMinutes()))
-    .replace(/ss/g, pad(dateObj.getSeconds()))
-    .replace(/YYYY-MM-DD/g, `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`)
-    .replace(/DD\/MM\/YYYY/g, `${pad(dateObj.getDate())}/${pad(dateObj.getMonth() + 1)}/${dateObj.getFullYear()}`);
+env.addFilter("date", function (d, format = "DD/MM/YYYY") {
+    if (!d) return "";
+
+    // Si d est un objet avec toISOString (comme un Date), le convertir en string
+    if (typeof d === "object" && d !== null) {
+        if (typeof d.toISOString === "function") {
+            d = d.toISOString();
+        } else if (typeof d.toString === "function") {
+            d = d.toString();
+        } else {
+            return "";
+        }
+    }
+
+    const dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) {
+        // Si ce n'est pas une date valide, retourner une chaîne vide
+        return "";
+    }
+
+    const pad = (n) => n.toString().padStart(2, "0");
+
+    return format
+        .replace(/YYYY/g, dateObj.getFullYear())
+        .replace(/MM/g, pad(dateObj.getMonth() + 1))
+        .replace(/DD/g, pad(dateObj.getDate()))
+        .replace(/HH/g, pad(dateObj.getHours()))
+        .replace(/mm/g, pad(dateObj.getMinutes()))
+        .replace(/ss/g, pad(dateObj.getSeconds()))
+        .replace(
+            /YYYY-MM-DD/g,
+            `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`,
+        )
+        .replace(
+            /DD\/MM\/YYYY/g,
+            `${pad(dateObj.getDate())}/${pad(dateObj.getMonth() + 1)}/${dateObj.getFullYear()}`,
+        );
 });
 
 // Filtre pour arrondir un nombre
 // Utilisation: {{ montant | round(2) }}
-env.addFilter('round', function(value, decimals = 0) {
-  if (typeof value !== 'number') {
-    return value;
-  }
-  const factor = Math.pow(10, decimals);
-  return Math.round(value * factor) / factor;
+env.addFilter("round", function (value, decimals = 0) {
+    if (typeof value !== "number") {
+        return value;
+    }
+    const factor = Math.pow(10, decimals);
+    return Math.round(value * factor) / factor;
+});
+
+// Filtre pour convertir en nombre (float)
+// Utilisation: {{ valeur | float }}
+env.addFilter("float", function (value) {
+    if (typeof value === "number") {
+        return value;
+    }
+    if (typeof value === "string") {
+        return parseFloat(value) || 0;
+    }
+    return 0;
 });
 
 // Filtre pour formater un montant en euros
 // Utilisation: {{ montant_total | euro }}
-env.addFilter('euro', function(value) {
-  if (typeof value !== 'number') {
-    return value;
-  }
-  return value.toLocaleString('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+env.addFilter("euro", function (value) {
+    if (typeof value !== "number") {
+        // Si ce n'est pas un nombre, essayer de convertir
+        if (typeof value === "string") {
+            value = parseFloat(value) || 0;
+        } else if (typeof value === "object" && value !== null) {
+            // Ne pas retourner l'objet directement (éviter [object Object])
+            return "";
+        } else {
+            return "";
+        }
+    }
+    return value.toLocaleString("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 });
 
 // Filtre pour convertir en majuscule
-env.addFilter('upper', function(value) {
-  if (typeof value === 'string') {
-    return value.toUpperCase();
-  }
-  return value;
+env.addFilter("upper", function (value) {
+    if (typeof value === "string") {
+        return value.toUpperCase();
+    }
+    return value;
 });
 
 // Filtre pour convertir en minuscule
-env.addFilter('lower', function(value) {
-  if (typeof value === 'string') {
-    return value.toLowerCase();
-  }
-  return value;
+env.addFilter("lower", function (value) {
+    if (typeof value === "string") {
+        return value.toLowerCase();
+    }
+    return value;
 });
 
 // Filtre pour capitaliser (première lettre en majuscule)
-env.addFilter('capitalize', function(value) {
-  if (typeof value === 'string' && value.length > 0) {
-    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-  }
-  return value;
+env.addFilter("capitalize", function (value) {
+    if (typeof value === "string" && value.length > 0) {
+        return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    }
+    return value;
 });
 
 // Filtre pour tronquer un texte
-env.addFilter('truncate', function(value, length = 50, suffix = '...') {
-  if (typeof value !== 'string') {
-    return value;
-  }
-  if (value.length <= length) {
-    return value;
-  }
-  return value.substring(0, length) + suffix;
+env.addFilter("truncate", function (value, length = 50, suffix = "...") {
+    if (typeof value !== "string") {
+        return value;
+    }
+    if (value.length <= length) {
+        return value;
+    }
+    return value.substring(0, length) + suffix;
 });
 
 // Filtre pour remplacer des caractères
-env.addFilter('replace', function(value, from, to) {
-  if (typeof value !== 'string') {
-    return value;
-  }
-  return value.split(from).join(to);
+env.addFilter("replace", function (value, from, to) {
+    if (typeof value !== "string") {
+        return value;
+    }
+    return value.split(from).join(to);
 });
 
 // Filtre pour vérifier si une variable est définie
-env.addFilter('default', function(value, defaultValue) {
-  if (value === null || value === undefined || value === '') {
-    return defaultValue;
-  }
-  return value;
+env.addFilter("default", function (value, defaultValue) {
+    if (value === null || value === undefined || value === "") {
+        return defaultValue;
+    }
+    return value;
 });
 
 // ============================================================================
@@ -131,33 +168,39 @@ env.addFilter('default', function(value, defaultValue) {
  * @returns {string} Le template rendu
  */
 function renderTemplate(template, data) {
-  if (!template) return '';
-  
-  // Préparer le contexte avec toutes les variables nécessaires
-  const context = {
-    ...data,
-    // Helper pour Math (utilisé dans les templates)
-    Math: Math,
-    // Helper pour JSON.stringify si besoin
-    json: JSON.stringify,
-    // Helper pour vérifier si une variable existe
-    defined: (v) => v !== null && v !== undefined,
-    // Helper pour les dates (alternative au filtre)
-    formatDate: (d, format) => {
-      if (!d) return '';
-      return env.filters.date(new Date(d), format);
-    },
-    // Helper pour gérer les variables vides
-    or: (a, b) => a || b
-  };
-  
-  try {
-    return env.renderString(template, context);
-  } catch (error) {
-    // En cas d'erreur, retourner le template non rendu
-    console.error('[NUNJUCKS ERROR]', error.message);
-    return template;
-  }
+    if (!template) return "";
+
+    // Préparer le contexte avec toutes les variables nécessaires
+    const context = {
+        ...data,
+        // Helper pour Math (utilisé dans les templates)
+        Math: Math,
+        // Helper pour JSON.stringify si besoin
+        json: JSON.stringify,
+        // Helper pour vérifier si une variable existe
+        defined: (v) => v !== null && v !== undefined,
+        // Helper pour les dates (alternative au filtre)
+        formatDate: (d, format) => {
+            if (!d) return "";
+            return env.filters.date(new Date(d), format);
+        },
+        // Helper pour gérer les variables vides
+        or: (a, b) => a || b,
+    };
+
+    try {
+        return env.renderString(template, context);
+    } catch (error) {
+        // En cas d'erreur, retourner le template non rendu
+        console.error(
+            "[NUNJUCKS ERROR]",
+            error.message || error,
+            "Stack:",
+            error?.stack,
+        );
+        // Lancer l'erreur pour que renderTemplateSafe puisse la capturer
+        throw error;
+    }
 }
 
 /**
@@ -167,20 +210,20 @@ function renderTemplate(template, data) {
  * @returns {Promise<{success: boolean, result: string, error?: string}>}
  */
 async function renderTemplateSafe(template, data) {
-  try {
-    const result = renderTemplate(template, data);
-    return { success: true, result };
-  } catch (error) {
-    return { 
-      success: false, 
-      result: template,
-      error: error.message 
-    };
-  }
+    try {
+        const result = renderTemplate(template, data);
+        return { success: true, result };
+    } catch (error) {
+        return {
+            success: false,
+            result: template,
+            error: error?.message || String(error) || "Unknown error",
+        };
+    }
 }
 
 module.exports = {
-  env,
-  renderTemplate,
-  renderTemplateSafe
+    env,
+    renderTemplate,
+    renderTemplateSafe,
 };

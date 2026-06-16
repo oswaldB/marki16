@@ -1,11 +1,11 @@
 // backend/cloud/workflows/generate-relances/02-generateRelances.js
-// Étape 2 : Génère les relances en attente
+// Étape 2 : Génère les relances avec Nunjucks
 // Input: { }
 // Output: { stats }
 
 const { info, warn, error } = require("../../utils/logger");
+const { renderTemplateSafe, env } = require("../../utils/nunjucks");
 
-// Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
     const Parse = require("parse/node");
     Parse.initialize(
@@ -18,30 +18,23 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
-// Configuration Ollama
-const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "https://ollama.com/api";
-const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral";
-const USE_OLLAMA = process.env.USE_OLLAMA !== "false" && !!OLLAMA_API_KEY;
-
-/**
- * Vérification Parse - compte les relances en attente
- */
 async function getRelancesStats() {
     try {
         const Relance = Parse.Object.extend("Relance");
-        const query = new Parse.Query(Relance);
-        query.equalTo("statut", "En attente de génération");
-        const results = await query.find({ useMasterKey: true });
-
+        const q = new Parse.Query(Relance);
+        q.equalTo("statut", "En attente de generation");
+        const results = await q.find({ useMasterKey: true });
+        const q2 = new Parse.Query(Relance);
+        q2.equalTo("statut", "genere");
+        const pret = await q2.find({ useMasterKey: true });
         return {
             totalRelances: results.length,
-            pretPourEnvoi: 0,
+            pretPourEnvoi: pret.length,
             enAttente: results.length,
         };
     } catch (err) {
         error(
-            `Erreur vérification Parse: ${err.message}`,
+            `Erreur verification Parse: ${err.message}`,
             "generate-relances",
             "generateRelances",
         );
@@ -49,204 +42,203 @@ async function getRelancesStats() {
     }
 }
 
-/**
- * Vérifie si un texte contient des variables non remplacées ([[ ]])
- */
-function hasUnreplacedVariables(text) {
-    if (!text) return false;
-    // Vérifie la présence de [[ sans ]] ou ]] sans [[
-    const openBrackets = (text.match(/\[\[/g) || []).length;
-    const closeBrackets = (text.match(/\]\]/g) || []).length;
-    return openBrackets > 0 || closeBrackets > 0;
-}
-
-/**
- * Construit le prompt pour l'LLM
- */
-const buildPrompt = (scenario, impayes, history, relance) => {
-    const impayesJson = JSON.stringify(impayes.map((i) => i.toJSON()));
-    const historyJson = JSON.stringify(history.map((h) => h.toJSON()));
-
-    return `Tu es un redacteur de relances d'impayés par email. Ta mission consiste à générer l'objet et le corps de l'email à partir d'un template, des informations des impayes et de l'historique.
-
-Tu ne fais que remplacer les variables.
-Tu ne changes pas les textes.
-
-Quelques règles importantes:
-+ **TOUTES LES VARIABLES ENTRE [[...]] DOIVENT ÊTRE REMPLACÉES OBLIGATOIREMENT SI L'INFORMATION EXISTE DANS LES DONNÉES FOURNIES. NE LAISSE AUCUNE VARIABLE [[...]] SI TU AS L'INFORMATION CORRESPONDANTE.**
-+ Si tu vois du markdown tu le convertis en html surtout pour les liens.
-+ Pour le payeur_nom si celui-ci n'est pas une personne alors tu mets vide. Par exemple Bonjour INDIVISION toto doit devenir Bonjour,
-+ Pas de virgule avec un espace avant
-+ Si tu mets un tableau alors il faut un border sur tous les td.
-+ Si la date d'échéance est arrivée avant alors il faut accorder les temps en fonction.
-+ Si l'email dit que l'on applique les taux de pénalités alors il faut rajouter 40€ au montant TTC.
-+ LES BOUCLES [[loop ...]] DOIVENT ETRE TRAITEES AVEC TOUTES LES DONNEES DES IMPAYES. NE PAS OUBLIER AUCUN IMPAYE DANS LES BOUCLES. TOUS les impayés de la liste doivent apparaître dans le tableau généré.
-
----
-Voici les informations :
-+ la trame d'email:
-  objet: ${scenario.objet || ""}
-  corps: ${scenario.corps || ""}
-+ les informations sur les impayés: ${impayesJson}
-+ l'historique: ${historyJson}
-+ informations supplémentaires:
-  email_index: ${relance.get("email_index")}
-  contact: ${JSON.stringify(relance.get("contact")?.toJSON())}
-
-Génère un objet JSON avec exactement ces champs: {"objet": "...", "corps": "..."}`;
-};
-
-/**
- * Corrige orthographiquement un texte via l'API Ollama
- */
-async function correctOrthographe(text) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
+function toJSONForTemplate(obj) {
+    if (!obj) return null;
+    if (typeof obj.toJSON === "function") {
+        const json = obj.toJSON();
+        // Convertir en JSON string puis reparser pour garantir des objets simples
+        // Cela convertit aussi les dates en strings ISO
+        try {
+            return JSON.parse(JSON.stringify(json));
+        } catch (e) {
+            return json;
+        }
+    }
+    // Pour les objets normaux, faire une copie profonde
     try {
-        const response = await fetch(`${OLLAMA_API_URL}/generate`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${OLLAMA_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: OLLAMA_MODEL,
-                prompt: `Tu es un correcteur orthographique et grammatical strict.
-Corrige UNIQUEMENT les fautes d'orthographe et de grammaire dans le texte suivant, sans modifier le sens, le style, la structure ou le contenu.
-Ne change pas les noms propres, les adresses, les montants, les dates ou toute information spécifique.
-Ne réécris pas, corrige uniquement.
-
-Texte à corriger: ${text}
-
-Retourne UNIQUEMENT le texte corrigé, sans commentaire ni explication.`,
-                stream: false,
-                format: "text",
-                options: {
-                    temperature: 0.1,
-                    top_p: 0.9,
-                    num_predict: 4096,
-                },
-            }),
-            signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(
-                `HTTP ${response.status}: ${await response.text()}`,
-            );
-        }
-
-        const data = await response.json();
-        const rawResponse = data.response || data.choices?.[0]?.text || "";
-
-        let cleaned = rawResponse.trim();
-        if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
-            cleaned = cleaned.slice(1, -1);
-        }
-        if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
-            cleaned = cleaned.slice(1, -1);
-        }
-        if (cleaned.startsWith("`") && cleaned.endsWith("`")) {
-            cleaned = cleaned.slice(1, -1);
-        }
-
-        return cleaned;
-    } catch (err) {
-        clearTimeout(timeoutId);
-        throw err;
+        return JSON.parse(JSON.stringify(obj));
+    } catch (e) {
+        // Si la conversion échoue, retourner l'objet tel quel
+        return obj;
     }
 }
 
-/**
- * Génère le contenu de l'email via l'API Ollama
- */
-async function generateEmailContent(prompt) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
+function extractVariablesFromTemplate(template) {
+    if (!template) return [];
+    const matches = template.match(/\{{\s*[^{]+?\s*\}}/g) || [];
+    return matches.map((m) => m.replace(/\{{\s*|\s*\}}/g, "").trim());
+}
 
-    try {
-        const response = await fetch(`${OLLAMA_API_URL}/generate`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${OLLAMA_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: OLLAMA_MODEL,
-                prompt: prompt,
-                stream: false,
-                format: "json",
-                options: {
-                    temperature: 0.1,
-                    top_p: 0.9,
-                    num_predict: 4096,
-                },
-            }),
-            signal: controller.signal,
-        });
+function extractVariableNames(expression) {
+    // Extraire le nom de la variable avant le premier |
+    const firstPipe = expression.indexOf("|");
+    if (firstPipe === -1) return [expression.trim()];
+    return [expression.substring(0, firstPipe).trim()];
+}
 
-        clearTimeout(timeoutId);
+function checkMissingVariables(template, context, relanceId) {
+    // Extraire toutes les variables du template (sans les pipes)
+    const templateVars = extractVariablesFromTemplate(template);
+    const missing = [];
+    const empty = [];
 
-        if (!response.ok) {
-            throw new Error(
-                `HTTP ${response.status}: ${await response.text()}`,
-            );
+    for (const varExpr of templateVars) {
+        const varNames = extractVariableNames(varExpr);
+        for (const varName of varNames) {
+            if (!(varName in context)) {
+                missing.push(varName);
+            } else if (
+                context[varName] === "" ||
+                context[varName] === null ||
+                context[varName] === undefined
+            ) {
+                empty.push(varName);
+            }
         }
+    }
 
-        const data = await response.json();
-        const rawResponse = data.response || data.choices?.[0]?.text || "";
+    if (missing.length > 0 || empty.length > 0) {
+        warn(
+            `VARIABLES MANQUANTES/VIDES pour ${relanceId}: manquantes=[${missing.join(", ")}], vides=[${empty.join(", ")}]`,
+            "generate-relances",
+            "generateRelances",
+        );
+    }
 
-        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-        const jsonStr = jsonMatch ? jsonMatch[0] : rawResponse;
-        const jsonResponse = JSON.parse(jsonStr);
+    return { missing, empty };
+}
 
-        if (jsonResponse.objet && jsonResponse.corps) {
-            return { objet: jsonResponse.objet, corps: jsonResponse.corps };
+function prepareNunjucksContext(scenario, impayes, history, relance) {
+    const contact = relance.get("contact");
+    const sequence = relance.get("sequence");
+    const contactData = toJSONForTemplate(contact) || {};
+    const sequenceData = toJSONForTemplate(sequence) || {};
+
+    const impayesData = (impayes || []).map((i) => {
+        const json = toJSONForTemplate(i);
+        const today = new Date();
+        let delai = 0;
+        if (json.date_echeance) {
+            const diff = today - new Date(json.date_echeance);
+            delai = Math.floor(diff / (1000 * 60 * 60 * 24));
         }
-
         return {
-            objet: jsonResponse.objet || "Relance d'impayé",
-            corps:
-                jsonResponse.corps ||
-                jsonResponse.body ||
-                "<p>Contenu à compléter</p>",
+            ...json,
+            nfacture: json.nfacture || "",
+            date_echeance: json.date_echeance,
+            montant_total:
+                json.montant_ttc || json.montantTTC || json.montant_total || 0,
+            montant_ttc: json.montant_ttc || json.montantTTC || 0,
+            reste_a_payer: json.reste_a_payer || 0,
+            statut: json.statut || [],
+            lien_pdf: json.lien_pdf || json.url_pdf || "",
+            numero_dossier: json.numero_dossier || "",
+            delai: delai,
         };
-    } catch (err) {
-        clearTimeout(timeoutId);
-        throw err;
-    }
+    });
+
+    const delai =
+        impayesData.length > 0
+            ? Math.max(...impayesData.map((i) => i.delai), 0)
+            : 0;
+    const totalResteAPayer = impayesData.reduce(
+        (sum, i) => sum + (i.reste_a_payer || 0),
+        0,
+    );
+    const montant_avec_penalites =
+        delai >= 18 ? totalResteAPayer + 40 : totalResteAPayer;
+
+    const isPersonne = contactData.civilite || contactData.prenom || false;
+    const nom = contactData.nom || contactData.raison_sociale || "";
+    const prenom = contactData.prenom || "";
+
+    // Extraire les valeurs du premier impayé pour les variables courantes
+    const firstImpaye = impayesData[0] || {};
+
+    // Gérer le cas où delai est NaN
+    const safeDelai = isNaN(delai) || !isFinite(delai) ? 0 : delai;
+    const safeFirstImpayeDelai =
+        isNaN(firstImpaye.delai) || !isFinite(firstImpaye.delai)
+            ? 0
+            : firstImpaye.delai;
+
+    return {
+        // Variables payeur
+        payeur_civilite: contactData.civilite || "",
+        payeur_prenom: prenom,
+        payeur_nom: isPersonne ? `${prenom} ${nom}`.trim() : nom,
+        payeur_email: contactData.email || "",
+        payeur_telephone: contactData.telephone || "",
+
+        // Variables individuelles
+        civilite: contactData.civilite || "",
+        prenom: prenom,
+        nom: nom,
+
+        // Adresse
+        adresse_bien: contactData.adresse || firstImpaye.adresse || "",
+        code_postal: contactData.code_postal || firstImpaye.code_postal || "",
+        ville: contactData.ville || firstImpaye.ville || "",
+
+        // Numéro de dossier
+        numero_dossier:
+            firstImpaye.numero_dossier ||
+            contactData.numero_dossier ||
+            sequenceData.numero_dossier ||
+            "",
+
+        // Autres infos contact
+        adresse: contactData.adresse || "",
+        email: contactData.email || "",
+        telephone: contactData.telephone || "",
+
+        // Variables du premier impayé (pour compatibilité avec les anciens templates)
+        nfacture: firstImpaye.nfacture || "",
+        date_echeance: firstImpaye.date_echeance || "",
+        montant_total:
+            firstImpaye.montant_total || firstImpaye.montant_ttc || 0,
+        montant_ttc: firstImpaye.montant_ttc || 0,
+        reste_a_payer: firstImpaye.reste_a_payer || 0,
+
+        // Données complètes
+        impayes: impayesData,
+        delai: safeDelai,
+        first_impaye_delai: safeFirstImpayeDelai,
+        total_reste_a_payer: totalResteAPayer,
+        montant_avec_penalites:
+            safeDelai >= 18 ? totalResteAPayer + 40 : totalResteAPayer,
+        nb_impayes: impayesData.length,
+
+        // Historique
+        history: (history || []).map((h) => toJSONForTemplate(h) || {}),
+        has_history: (history || []).length > 0,
+        is_personne: isPersonne,
+
+        // Liens
+        lien_pdf: firstImpaye.lien_pdf || firstImpaye.url_pdf || "",
+
+        // Math est déjà disponible dans le contexte via nunjucks.js
+        Math: Math,
+    };
 }
 
-/**
- * Étape 2 : Génère les relances en attente
- * @returns {Promise<Object>} { stats }
- */
 async function generateRelances() {
-    const stats = {
-        processed: 0,
-        errors: 0,
-        erreurs: [],
-    };
-
+    const stats = { processed: 0, errors: 0, erreurs: [] };
     info(
-        "Étape 2: Début de la génération des relances",
+        "Etape 2: Debut de la generation des relances avec Nunjucks",
         "generate-relances",
         "generateRelances",
     );
 
     try {
         const Relance = Parse.Object.extend("Relance");
-        const query = new Parse.Query(Relance);
-        query.equalTo("statut", "En attente de génération");
-        query.limit(9999);
-        query.include(["sequence", "contact"]);
-
-        const relances = await query.find({ useMasterKey: true });
+        const q = new Parse.Query(Relance);
+        q.equalTo("statut", "En attente de generation");
+        q.limit(9999);
+        q.include(["sequence", "contact"]);
+        const relances = await q.find({ useMasterKey: true });
         info(
-            `Étape 2: ${relances.length} relances en attente de génération`,
+            `Etape 2: ${relances.length} relances en attente de generation`,
             "generate-relances",
             "generateRelances",
         );
@@ -260,153 +252,163 @@ async function generateRelances() {
 
                 if (!sequence) {
                     warn(
-                        `Relance ${relance.id}: pas de séquence associée, skip`,
+                        `Relance ${relance.id}: pas de sequence associee`,
                         "generate-relances",
                         "generateRelances",
                     );
                     stats.erreurs.push({
                         relanceId: relance.id,
-                        erreur: "pas de séquence associée",
+                        erreur: "pas de sequence associee",
                     });
                     continue;
                 }
 
-                const historyQuery = new Parse.Query("Relance");
-                historyQuery.equalTo("contact", contact);
-                historyQuery.containedIn("impayes", impayesIds);
-                historyQuery.exists("dateEnvoi");
-                historyQuery.equalTo("statut", "Envoyée");
-                const history = await historyQuery.find({ useMasterKey: true });
+                const hQuery = new Parse.Query("Relance");
+                hQuery.equalTo("contact", contact);
+                hQuery.containedIn("impayes", impayesIds);
+                hQuery.exists("dateEnvoi");
+                hQuery.equalTo("statut", "Envoyee");
+                const history = await hQuery.find({ useMasterKey: true });
 
                 const Impaye = Parse.Object.extend("Impaye");
-                const impayeQuery = new Parse.Query(Impaye);
-                impayeQuery.containedIn("objectId", impayesIds);
-                const impayeDetails = await impayeQuery.find({ useMasterKey: true });
+                const iQuery = new Parse.Query(Impaye);
+                iQuery.containedIn("objectId", impayesIds);
+                const impayeDetails = await iQuery.find({ useMasterKey: true });
 
-                const Sequence = Parse.Object.extend("Sequence");
-                const sequenceQuery = new Parse.Query(Sequence);
-                sequenceQuery.equalTo("objectId", sequence.id);
-                sequenceQuery.equalTo("type", "relances");
-                const fullSequence = await sequenceQuery.first({ useMasterKey: true });
+                const Seq = Parse.Object.extend("Sequence");
+                const sQuery = new Parse.Query(Seq);
+                sQuery.equalTo("objectId", sequence.id);
+                sQuery.equalTo("type", "relances");
+                const fullSeq = await sQuery.first({ useMasterKey: true });
 
-                if (!fullSequence) {
+                if (!fullSeq) {
                     warn(
-                        `Relance ${relance.id}: séquence non trouvée, skip`,
+                        `Relance ${relance.id}: sequence non trouvee`,
                         "generate-relances",
                         "generateRelances",
                     );
                     stats.erreurs.push({
                         relanceId: relance.id,
-                        erreur: "séquence non trouvée",
+                        erreur: "sequence non trouvee",
                     });
                     continue;
                 }
 
-                const scenarios = fullSequence?.get("emails") || [];
-                const matchingScenario = scenarios.find((s) => s.email_index === emailIndex);
+                const scenarios = fullSeq?.get("emails") || [];
+                const matchingScenario = scenarios.find((s) => {
+                    const sObj = toJSONForTemplate(s);
+                    return sObj.email_index === emailIndex;
+                });
+
                 if (!matchingScenario) {
                     warn(
-                        `Relance ${relance.id}: pas de scénario correspondant, skip`,
+                        `Relance ${relance.id}: pas de scenario pour email_index=${emailIndex}`,
                         "generate-relances",
                         "generateRelances",
                     );
                     stats.erreurs.push({
                         relanceId: relance.id,
-                        erreur: "pas de scénario correspondant",
+                        erreur: "pas de scenario correspondant",
                     });
                     continue;
                 }
 
-                const activeScenario = matchingScenario.scenarios?.find((s) => s.active);
+                const msObj = toJSONForTemplate(matchingScenario);
+                const activeScenario = msObj.scenarios?.find((s) => s.active);
+
                 if (!activeScenario) {
                     warn(
-                        `Relance ${relance.id}: pas de scénario actif, skip`,
+                        `Relance ${relance.id}: pas de scenario actif`,
                         "generate-relances",
                         "generateRelances",
                     );
                     stats.erreurs.push({
                         relanceId: relance.id,
-                        erreur: "pas de scénario actif",
+                        erreur: "pas de scenario actif",
                     });
                     continue;
                 }
 
                 info(
-                    `Étape 2: Génération du contenu pour ${relance.id}...`,
+                    `Etape 2: Generation pour ${relance.id}...`,
                     "generate-relances",
                     "generateRelances",
                 );
+                const context = prepareNunjucksContext(
+                    activeScenario,
+                    impayeDetails,
+                    history,
+                    relance,
+                );
 
-                let objet, corps;
-                let generationAttempts = 0;
-                const MAX_GENERATION_ATTEMPTS = 5;
-                let hasVariables = true;
+                const objTpl =
+                    activeScenario.objet ||
+                    msObj.objet ||
+                    "Relance - Facture impayee";
+                const bodyTpl =
+                    activeScenario.corps ||
+                    msObj.corps ||
+                    "Veuillez regulariser.";
 
-                while (hasVariables && generationAttempts < MAX_GENERATION_ATTEMPTS) {
-                    generationAttempts++;
-                    if (generationAttempts > 1) {
-                        info(
-                            `Régénération pour ${relance.id} (tentative ${generationAttempts})`,
-                            "generate-relances",
-                            "generateRelances",
-                        );
-                    }
+                // Vérifier les variables manquantes ou vides avant rendu
+                checkMissingVariables(objTpl, context, relance.id);
+                checkMissingVariables(bodyTpl, context, relance.id);
 
-                    if (USE_OLLAMA) {
-                        let retries = 0;
-                        const MAX_RETRIES = 30;
-                        let success = false;
-                        while (!success && retries < MAX_RETRIES) {
-                            try {
-                                const prompt = buildPrompt(activeScenario, impayeDetails, history, relance);
-                                const result = await generateEmailContent(prompt);
-                                objet = result.objet;
-                                corps = result.corps;
-                                success = true;
-                            } catch (llmError) {
-                                retries++;
-                                warn(`LLM tentative ${retries} pour ${relance.id}: ${llmError.message}`);
-                                if (retries < MAX_RETRIES) await new Promise(resolve => setTimeout(resolve, 1000));
-                                else throw llmError;
-                            }
-                        }
-                    } else {
-                        objet = activeScenario.objet || "Relance - Facture impayée";
-                        corps = activeScenario.corps || "Veuillez régulariser votre situation.";
-                    }
+                const objRes = await renderTemplateSafe(objTpl, context);
+                const bodyRes = await renderTemplateSafe(bodyTpl, context);
 
-                    hasVariables = hasUnreplacedVariables(objet) || hasUnreplacedVariables(corps);
+                const objet = objRes.success ? objRes.result : objTpl;
+                const corps = bodyRes.success ? bodyRes.result : bodyTpl;
+
+                if (!objRes.success) {
+                    error(
+                        `ERREUR OBJET pour ${relance.id}: ${objRes.error}`,
+                        "generate-relances",
+                        "generateRelances",
+                    );
                 }
-
-                if (USE_OLLAMA && !hasVariables) {
-                    try {
-                        const objetCorrige = await correctOrthographe(objet);
-                        const corpsCorrige = await correctOrthographe(corps);
-                        objet = objetCorrige;
-                        corps = corpsCorrige;
-                    } catch (orthoError) {
-                        warn(`Échec correction orthographique pour ${relance.id}: ${orthoError.message}`);
-                    }
+                if (!bodyRes.success) {
+                    error(
+                        `ERREUR CORPS pour ${relance.id}: ${bodyRes.error}`,
+                        "generate-relances",
+                        "generateRelances",
+                    );
                 }
 
                 relance.set("objet", objet);
                 relance.set("corps", corps);
-                relance.set("statut", "pret pour envoi");
+                relance.set("statut", "genere");
+                relance.set("generation_method", "nunjucks");
                 await relance.save(null, { useMasterKey: true });
+
+                info(
+                    `Etape 2: ${relance.id} genere avec succes`,
+                    "generate-relances",
+                    "generateRelances",
+                );
                 stats.processed++;
             } catch (err) {
-                error(`Erreur pour relance ${relance.id}: ${err.message}`);
+                error(
+                    `Erreur pour ${relance.id}: ${err.message}`,
+                    "generate-relances",
+                    "generateRelances",
+                );
                 stats.errors++;
-                stats.erreurs.push({ relanceId: relance.id, erreur: err.message });
+                stats.erreur.push({
+                    relanceId: relance.id,
+                    erreur: err.message,
+                });
             }
         }
 
-        info(`Étape 2: ${stats.processed} réussis | ${stats.errors} erreurs`);
+        info(`Etape 2: ${stats.processed} traites | ${stats.errors} erreurs`);
         const parseStats = await getRelancesStats();
-        info(`Parse check: ${parseStats.totalRelances} en attente | ${parseStats.pretPourEnvoi} prêts`);
+        info(
+            `Parse check: ${parseStats.totalRelances} en attente | ${parseStats.pretPourEnvoi} generes`,
+        );
         return { stats };
     } catch (err) {
-        error(`Erreur Étape 2: ${err.message}`);
+        error(`Erreur Etape 2: ${err.message}`);
         throw err;
     }
 }
