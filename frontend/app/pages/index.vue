@@ -107,6 +107,24 @@
           </div>
         </UCard>
 
+        <UCard>
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-teal-50">
+              <UIcon name="i-heroicons-users" class="size-5 text-teal-500" />
+            </div>
+            <div>
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-500 font-medium">Contacts avec email</p>
+                <UTooltip text="Nombre total de contacts qui ont une adresse email">
+                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
+                </UTooltip>
+              </div>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ contactsAvecEmailCount }}</p>
+              <p class="text-xs text-gray-400">adresses email valides</p>
+            </div>
+          </div>
+        </UCard>
+
       </div>
 
       <!-- ── Ancienneté des impayés ── -->
@@ -373,6 +391,7 @@ const relancesJour = ref([])
 const impayes_recents = ref([])
 const relancesAValider = ref([])
 const contactsSansEmail = ref([])
+const contactsAvecEmailCount = ref(0)
 
 // ── Chargement ────────────────────────────────────────────────
 onMounted(async () => {
@@ -385,6 +404,7 @@ onMounted(async () => {
       chargerImpayes(),
       chargerRelancesAValider(),
       chargerContactsSansEmail(),
+      chargerContactsAvecEmailCount(),
     ])
   } finally {
     loading.value = false
@@ -692,6 +712,16 @@ async function chargerContactsSansEmail() {
     nom:        c.get('nom') || '—',
     telephone:  c.get('telephone') || null,
   }))
+}
+
+async function chargerContactsAvecEmailCount() {
+  if (!$parse.User.current()) return
+  const q = new $parse.Query('Contact')
+  q.exists('email')
+  q.notEqualTo('email', '')
+  q.limit(10000)
+  const results = await q.find()
+  contactsAvecEmailCount.value = results.length
 }
 
 // ── Helpers ────────────────────────────────────────────────────

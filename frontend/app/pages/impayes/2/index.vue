@@ -627,7 +627,6 @@
 </template>
 
 <script setup>
-import { UButton, UCheckbox, UInput, USelect, USlideover, UCard, UBadge, UIcon, UDropdownMenu, UModal, UAlert } from '#components'
 import { useImpayesStoreComposable } from '~/composables/useImpayesStore'
 import ImpayeDrawerPdf from '~/components/ImpayeDrawerPdf.vue'
 import DrawerAssignSequence from '~/components/DrawerAssignSequence.vue'
