@@ -2,8 +2,8 @@
 
 > **Branche** : `impl/nunjucks-migration`  
 > **Parent** : `feature/nunjucks-templates`  
-> **Objectif** : Remplacer la syntaxe `[[...]]` par Nunjucks `{{ ... }}` avec workflow à 2 passes : Nunjucks → Ollama (correction)  
-> ** date** : 16/06/2026
+> **Objectif** : Remplacer la syntaxe `[[...]]` par Nunjucks `{{ ... }}` avec workflow à 2 passes : Nunjucks → Ollama (correction obligatoire)  
+> **Date** : 16/06/2026
 
 ---
 
@@ -12,22 +12,22 @@
 ### Workflow de génération (nouveau)
 
 ```
-TEMPLATE (syntaxe [[...]] ou {{ }})
-       ↓
-[PASSE 1] Conversion automatique [[...]] → {{ }} (si nécessaire)
+TEMPLATE (syntaxe Nunjucks {{ }})
        ↓
 [PASSE 2] Rendu Nunjucks avec données (variables remplacées)
        ↓
-[PASSE 3] Correction Ollama (optionnelle, si USE_OLLAMA_CORRECTION=true)
+[PASSE 3] Correction Ollama (OBLIGATOIRE)
        ↓
 EMAIL PRÊT À ENVoyer
 ```
+
+**Important** : Les templates doivent être en syntaxe Nunjucks `{{ }}` **avant** la migration. Pas de conversion automatique.
 
 ### Ce qui change
 
 | Élément | Avant (syntaxe [[...]]) | Après (Nunjucks) | Impact |
 |---------|------------------------|------------------|--------|
-| **Backend** | `buildPrompt()` + Ollama pour tout générer | `renderTemplate()` Nunjucks + Ollama optionnel pour correction | ⭐⭐⭐ |
+| **Backend** | `buildPrompt()` + Ollama pour tout générer | `renderTemplate()` Nunjucks + Ollama correction | ⭐⭐⭐ |
 | **Templates** | `[[var]]`, `[[loop]]`, `[[if]]` | `{{ var }}`, `{% for %}`, `{% if %}` | ⭐⭐⭐ |
 | **Frontend** | Documentation `[[...]]` | Documentation Nunjucks | ⭐⭐ |
 | **Parsing PDF** | Ollama (inchangé) | Ollama (inchangé) | ⭐ |
@@ -47,49 +47,7 @@ EMAIL PRÊT À ENVoyer
 // =========================================================================
 // CONFIGURATION NUNJUCKS
 // =========================================================================
-const USE_NUNJUCKS = process.env.USE_NUNJUCKS !== "false"; // true par défaut
-const USE_OLLAMA_CORRECTION = process.env.USE_OLLAMA_CORRECTION === "true"; // false par défaut
 const { renderTemplate } = require('../../utils/nunjucks');
-```
-
-#### NOUVELLE FONCTION : Conversion automatique [[...]] → {{ }}
-
-```javascript
-/**
- * Convertit un template de l'ancienne syntaxe [[...]] vers Nunjucks
- * Utilisé pour la rétrocompatibilité pendant la transition
- */
-function convertLegacyTemplate(template) {
-  if (!template || typeof template !== 'string') return template;
-  
-  let result = template;
-  
-  // Variables simples : [[var]] -> {{ var }}
-  result = result.replace(/\\[\\[([a-zA-Z_][a-zA-Z0-9_]*)\\]\\]/g, '{{ $1 }}');
-  
-  // Variables avec propriétés : [[obj.prop]] -> {{ obj.prop }}
-  result = result.replace(/\\[\\[([a-zA-Z_][a-zA-Z0-9_]*)\\.([a-zA-Z_][a-zA-Z0-9_]*)\\]\\]/g, '{{ $1.$2 }}');
-  
-  // Dates : [[var, date("format")]] -> {{ var | date("format") }}
-  result = result.replace(/\\[\\[([^,]+),\s*date\("([^"]+)"\)\\]\\]/g, '{{ $1 | date("$2") }}');
-  
-  // Boucles : [[loop var]] -> {% for var in var %}
-  result = result.replace(/\\[\\[loop\s+([a-zA-Z_][a-zA-Z0-9_]*)\\]\\]/g, '{% for $1 in $1 %}');
-  
-  // Fin de boucle : [[endloop]] -> {% endfor %}
-  result = result.replace(/\\[\\[endloop\\]\\]/g, '{% endfor %}');
-  
-  // Conditions : [[ if (cond) { +]] -> {% if cond %}
-  result = result.replace(/\\[\\[\s*if\s*\(([^)]+)\)\s*\{\s*\+\\]\\]/g, '{% if $1 %}');
-  
-  // Fin de condition : [[ } +]] -> {% endif %}
-  result = result.replace(/\\[\\[\s*\}\s*\+\\]\\]/g, '{% endif %}');
-  
-  // Expressions Math : [[Math.round(x)]] -> {{ x | round }}
-  result = result.replace(/\\[\\[Math\\.round\(([^)]+)\)\\]\\]/g, '{{ $1 | round }}');
-  
-  return result;
-}
 ```
 
 #### NOUVELLE FONCTION : Rendu avec workflow à 2 passes
@@ -97,25 +55,10 @@ function convertLegacyTemplate(template) {
 ```javascript
 /**
  * Génère le contenu d'email avec le nouveau workflow Nunjucks
- * PASSE 1 : Conversion legacy si nécessaire
- * PASSE 2 : Rendu Nunjucks
- * PASSE 3 : Correction Ollama (optionnelle)
+ * PASSE 2 : Rendu Nunjucks avec les variables
+ * PASSE 3 : Correction Ollama (OBLIGATOIRE)
  */
 async function generateContentWithNunjucks(scenario, impayeData, isMultiple) {
-  // =========================================================================
-  // PASSE 1 : Préparation du template
-  // =========================================================================
-  let objetTemplate = scenario.objet || "";
-  let corpsTemplate = scenario.corps || "";
-  
-  // Conversion automatique si ancienne syntaxe détectée
-  if (objetTemplate.includes('[[[') || objetTemplate.includes('[[')) {
-    objetTemplate = convertLegacyTemplate(objetTemplate);
-  }
-  if (corpsTemplate.includes('[[[') || corpsTemplate.includes('[[')) {
-    corpsTemplate = convertLegacyTemplate(corpsTemplate);
-  }
-  
   // =========================================================================
   // PASSE 2 : Rendu Nunjucks avec les variables
   // =========================================================================
@@ -125,8 +68,8 @@ async function generateContentWithNunjucks(scenario, impayeData, isMultiple) {
     "03-generateContent"
   );
   
-  let objet = renderTemplate(objetTemplate, impayeData);
-  let corps = renderTemplate(corpsTemplate, impayeData);
+  let objet = renderTemplate(scenario.objet || "", impayeData);
+  let corps = renderTemplate(scenario.corps || "", impayeData);
   
   info(
     `[NUNJUCKS] ✅ Rendu Nunjucks terminé`,
@@ -135,9 +78,9 @@ async function generateContentWithNunjucks(scenario, impayeData, isMultiple) {
   );
   
   // =========================================================================
-  // PASSE 3 : Correction Ollama (optionnelle)
+  // PASSE 3 : Correction Ollama (OBLIGATOIRE)
   // =========================================================================
-  if (USE_OLLAMA && USE_OLLAMA_CORRECTION && OLLAMA_API_KEY) {
+  if (USE_OLLAMA && OLLAMA_API_KEY) {
     try {
       info(
         `[OLLAMA CORRECTION] Appel pour correction linguistique...`,
@@ -155,6 +98,7 @@ async function generateContentWithNunjucks(scenario, impayeData, isMultiple) {
         3. NE REMPLACE PAS les variables par des valeurs
         4. Conserve TOUT le HTML tel quel
         5. Retourne UNIQUEMENT le texte corrigé, sans explication
+        6. Le corps doit être en HTML valide
         
         Corps à corriger :
         ${corps}
@@ -193,10 +137,10 @@ async function generateContentWithNunjucks(scenario, impayeData, isMultiple) {
 
 let objet, corps;
 
-// Si Nunjucks est activé, utiliser le nouveau workflow
-if (USE_NUNJUCKS) {
+// Utiliser le nouveau workflow Nunjucks + Ollama correction
+if (USE_OLLAMA) {
   info(
-    `[GENERATE CONTENT] 🚀 Utilisation du workflow Nunjucks`,
+    `[GENERATE CONTENT] 🚀 Utilisation du workflow Nunjucks + Ollama correction`,
     "send-sequence-test",
     "03-generateContent"
   );
@@ -209,10 +153,10 @@ if (USE_NUNJUCKS) {
   objet = result.objet;
   corps = result.corps;
   
-  // Si Nunjucks échoue et qu'Ollama est activé, tentative de fallback
+  // Si le rendu échoue, fallback vers l'ancien workflow
   if ((!objet || !corps) && USE_OLLAMA) {
     warn(
-      `[GENERATE CONTENT] ⚠️ Nunjucks a retourné un résultat vide, fallback vers Ollama`,
+      `[GENERATE CONTENT] ⚠️ Workflow Nunjucks a échoué, fallback vers Ollama legacy`,
       "send-sequence-test",
       "03-generateContent"
     );
@@ -227,39 +171,12 @@ if (USE_NUNJUCKS) {
     corps = result.corps || corps || "Veuillez régulariser votre situation.";
   }
 } 
-// Sinon, utiliser l'ancien workflow Ollama (pour rétrocompatibilité)
-elif (USE_OLLAMA) {
-  info(
-    `[GENERATE CONTENT] ➡️ Génération via Ollama (mode legacy)`,
-    "send-sequence-test",
-    "03-generateContent"
-  );
-  try {
-    const prompt = buildPrompt(
-      scenario,
-      impayesForPrompt,
-      [],
-      emailIndex
-    );
-    const result = await generateEmailContent(prompt);
-    objet = result.objet;
-    corps = result.corps;
-  } catch (ollamaError) {
-    error(
-      `[GENERATE CONTENT] ❌ Erreur Ollama: ${ollamaError.message}`,
-      "send-sequence-test",
-      "03-generateContent"
-    );
-    objet = scenario.objet || "Relance d'impayé";
-    corps = scenario.corps || "Veuillez régulariser votre situation.";
-  }
-} 
-// Mode fallback sans rien
+// Mode fallback sans Ollama
 else {
   objet = scenario.objet || "Relance d'impayé";
   corps = scenario.corps || "Veuillez régulariser votre situation.";
   info(
-    `[GENERATE CONTENT] ℹ️ Mode fallback (ni Nunjucks ni Ollama)`,
+    `[GENERATE CONTENT] ℹ️ Mode fallback (USE_OLLAMA=false)`,
     "send-sequence-test",
     "03-generateContent"
   );
@@ -275,14 +192,11 @@ else {
 # NUNJUCKS CONFIGURATION
 # ============================================================================
 
-# Activer Nunjucks pour le rendu des templates
-USE_NUNJUCKS=true
-
-# Activer la correction Ollama APRÈS Nunjucks (optionnel)
-USE_OLLAMA_CORRECTION=false
-
 # L'appel Ollama pour le parsing de PDF reste ACTIF (inchangé)
 # OLLAMA_API_URL, OLLAMA_API_KEY, OLLAMA_MODEL restent identiques
+
+# Pas de USE_NUNJUCKS ou USE_OLLAMA_CORRECTION nécessaire
+# Le workflow Nunjucks + correction Ollama est activé dès que USE_OLLAMA=true
 ```
 
 ### Étape 3 : Vérification des dépendances
@@ -306,12 +220,12 @@ Si absent : `cd backend && npm install nunjucks`
 
 ## 🔧 SCRIPT DE CONVERSION DES TEMPLATES EXISTANTS
 
+**À exécuter AVANT de déployer le nouveau workflow**
+
 ### Créer : `scripts/convert-templates-to-nunjucks.js`
 
 ```javascript
 const Parse = require('parse/node');
-const fs = require('fs');
-const path = require('path');
 
 // Configuration Parse
 Parse.initialize(
@@ -322,7 +236,7 @@ Parse.initialize(
 Parse.serverURL = process.env.PARSE_SERVER_URL || 'https://dev.api.markidiags.com/api/parse';
 
 // =========================================================================
-// FONCTIONS DE CONVERSION
+// FONCTION DE CONVERSION
 // =========================================================================
 
 function convertTemplate(template) {
@@ -354,98 +268,7 @@ function convertTemplate(template) {
   // 8. Expressions Math : [[Math.round(x)]] -> {{ x | round }}
   result = result.replace(/\\[\\[Math\\.round\(([^)]+)\)\\]\\]/g, '{{ $1 | round }}');
   
-  // 9. Variables dans les URLs
-  result = result.replace(/\\[\\[([a-zA-Z_][a-zA-Z0-9_]*)\\]\\]/g, '{{ $1 }}');
-  
   return result;
-}
-
-// =========================================================================
-// FONCTION PRINCIPALE DE MIGRATION
-// =========================================================================
-
-async function migrateSequence(seq, dryRun = true) {
-  console.log(`\n📋 Séquence: ${seq.id}`);
-  
-  const emails = seq.get('emails') || [];
-  let modified = false;
-  let conversions = 0;
-  
-  const newEmails = emails.map(email => {
-    const newEmail = { ...email };
-    
-    // Convertir les scénarios
-    if (email.scenarios) {
-      newEmail.scenarios = email.scenarios.map(scenario => {
-        const newScenario = { ...scenario };
-        let scenarioModified = false;
-        
-        if (newScenario.objet && newScenario.objet.includes('[[')) {
-          const oldObjet = newScenario.objet;
-          newScenario.objet = convertTemplate(newScenario.objet);
-          if (oldObjet !== newScenario.objet) {
-            console.log(`  → Objet converti: "${oldObjet.substring(0, 50)}..."`);
-            scenarioModified = true;
-            conversions++;
-          }
-        }
-        
-        if (newScenario.corps && newScenario.corps.includes('[[')) {
-          const oldCorps = newScenario.corps;
-          newScenario.corps = convertTemplate(newScenario.corps);
-          if (oldCorps !== newScenario.corps) {
-            console.log(`  → Corps converti (${oldCorps.length} -> ${newScenario.corps.length} chars)`);
-            scenarioModified = true;
-            conversions++;
-          }
-        }
-        
-        return newScenario;
-      });
-      
-      if (newEmail.scenarios.some(s => s !== email.scenarios.find(s2 => s2.format === s.format))) {
-        modified = true;
-      }
-    }
-    // Convertir les champs directs (sans scénarios)
-    else {
-      if (email.objet && email.objet.includes('[[')) {
-        email.objet = convertTemplate(email.objet);
-        modified = true;
-        conversions++;
-        console.log(`  → Objet direct converti`);
-      }
-      
-      if (email.corps && typeof email.corps === 'string' && email.corps.includes('[[')) {
-        email.corps = convertTemplate(email.corps);
-        modified = true;
-        conversions++;
-        console.log(`  → Corps direct converti`);
-      }
-    }
-    
-    return newEmail;
-  });
-  
-  if (!modified) {
-    console.log(`  ℹ️ Aucune conversion nécessaire`);
-    return { success: true, modified: false, conversions: 0 };
-  }
-  
-  if (dryRun) {
-    console.log(`  ✅ ${conversions} conversions identifiées (mode dry-run)`);
-    return { success: true, modified: true, conversions };
-  }
-  
-  try {
-    seq.set('emails', newEmails);
-    await seq.save(null, { useMasterKey: true });
-    console.log(`  ✅ ${conversions} conversions appliquées`);
-    return { success: true, modified: true, conversions };
-  } catch (error) {
-    console.error(`  ❌ Erreur: ${error.message}`);
-    return { success: false, modified: false, conversions: 0, error: error.message };
-  }
 }
 
 // =========================================================================
@@ -458,42 +281,97 @@ async function main() {
   
   console.log(`🚀 Migration des templates vers Nunjucks (dry-run: ${dryRun})\n`);
   
-  if (sequenceId) {
-    // Migration d'une seule séquence
-    const Sequence = Parse.Object.extend('Sequence');
-    const query = new Parse.Query(Sequence);
-    const seq = await query.get(sequenceId, { useMasterKey: true });
-    await migrateSequence(seq, dryRun);
-  } else {
-    // Migration de toutes les séquences
-    const Sequence = Parse.Object.extend('Sequence');
-    const query = new Parse.Query(Sequence);
-    const sequences = await query.find({ useMasterKey: true });
-    
-    console.log(`📊 Trouvé ${sequences.length} séquences`);
-    
-    let totalConversions = 0;
-    let modifiedCount = 0;
-    let errorCount = 0;
-    
-    for (const seq of sequences) {
-      try {
-        const result = await migrateSequence(seq, dryRun);
-        if (result.modified) {
-          modifiedCount++;
+  const Sequence = Parse.Object.extend('Sequence');
+  const query = new Parse.Query(Sequence);
+  const sequences = sequenceId 
+    ? [await query.get(sequenceId, { useMasterKey: true })] 
+    : await query.find({ useMasterKey: true });
+  
+  console.log(`📊 Trouvé ${sequences.length} séquences`);
+  
+  let totalConversions = 0;
+  let modifiedCount = 0;
+  let errorCount = 0;
+  
+  for (const seq of sequences) {
+    try {
+      console.log(`\n📋 Séquence: ${seq.id}`);
+      
+      const emails = seq.get('emails') || [];
+      let modified = false;
+      let conversions = 0;
+      
+      const newEmails = emails.map(email => {
+        const newEmail = { ...email };
+        
+        if (email.scenarios) {
+          newEmail.scenarios = email.scenarios.map(scenario => {
+            const newScenario = { ...scenario };
+            let scenarioModified = false;
+            
+            if (newScenario.objet && newScenario.objet.includes('[[')) {
+              newScenario.objet = convertTemplate(newScenario.objet);
+              console.log(`  → Objet converti`);
+              scenarioModified = true;
+              conversions++;
+            }
+            
+            if (newScenario.corps && newScenario.corps.includes('[[')) {
+              newScenario.corps = convertTemplate(newScenario.corps);
+              console.log(`  → Corps converti`);
+              scenarioModified = true;
+              conversions++;
+            }
+            
+            return newScenario;
+          });
+          
+          if (newEmail.scenarios.some((s, i) => s !== email.scenarios[i])) {
+            modified = true;
+          }
+        } else {
+          if (email.objet && email.objet.includes('[[')) {
+            newEmail.objet = convertTemplate(email.objet);
+            console.log(`  → Objet direct converti`);
+            modified = true;
+            conversions++;
+          }
+          
+          if (email.corps && typeof email.corps === 'string' && email.corps.includes('[[')) {
+            newEmail.corps = convertTemplate(email.corps);
+            console.log(`  → Corps direct converti`);
+            modified = true;
+            conversions++;
+          }
         }
-        totalConversions += result.conversions;
-      } catch (error) {
-        console.error(`❌ Erreur sur ${seq?.id}: ${error.message}`);
-        errorCount++;
+        
+        return newEmail;
+      });
+      
+      if (!modified) {
+        console.log(`  ℹ️ Aucune conversion nécessaire`);
+      } else {
+        totalConversions += conversions;
+        modifiedCount++;
+        
+        if (!dryRun) {
+          seq.set('emails', newEmails);
+          await seq.save(null, { useMasterKey: true });
+          console.log(`  ✅ ${conversions} conversions appliquées`);
+        } else {
+          console.log(`  ✅ ${conversions} conversions identifiées (dry-run)`);
+        }
       }
+    } catch (error) {
+      console.error(`❌ Erreur sur ${seq?.id}: ${error.message}`);
+      errorCount++;
     }
-    
-    console.log(`\n📈 Résumé:`);
-    console.log(`   - Séquences modifiées: ${modifiedCount}/${sequences.length}`);
-    console.log(`   - Conversions totales: ${totalConversions}`);
-    console.log(`   - Erreurs: ${errorCount}`);
   }
+  
+  console.log(`\n📈 Résumé:`);
+  console.log(`   - Séquences modifiées: ${modifiedCount}/${sequences.length}`);
+  console.log(`   - Conversions totales: ${totalConversions}`);
+  console.log(`   - Erreurs: ${errorCount}`);
 }
 
 main().catch(console.error);
@@ -554,25 +432,8 @@ describe('Nunjucks Rendering', () => {
     const result = renderTemplate(template, testData);
     assert.strictEqual(result, 'Hello ');
   });
-
-  it('should convert legacy syntax automatically', () => {
-    const legacyTemplate = 'Bonjour [[payeur_prenom]] [[payeur_nom]]';
-    // Après conversion : Bonjour {{ payeur_prenom }} {{ payeur_nom }}
-    // Puis rendu : Bonjour Jean DUPONT
-    const result = renderTemplate(convertLegacyTemplate(legacyTemplate), testData);
-    assert.strictEqual(result, 'Bonjour Jean DUPONT');
-  });
 });
 ```
-
-### Test 2 : Intégration complète
-
-1. **Test manuel** : Exécuter `03-generateContent.js` avec `USE_NUNJUCKS=true` et `USE_OLLAMA=false`
-   - Vérifier que les emails sont générés avec Nunjucks
-   - Vérifier que les variables sont correctement remplacées
-
-2. **Test avec correction** : Exécuter avec `USE_NUNJUCKS=true` et `USE_OLLAMA_CORRECTION=true`
-   - Vérifier que la correction Ollama ne casse pas les variables Nunjucks
 
 ---
 
@@ -583,24 +444,17 @@ describe('Nunjucks Rendering', () => {
 - [ ] `npm install nunjucks` dans backend
 - [ ] Vérifier `backend/cloud/utils/nunjucks.js` existe et est correct
 - [ ] Modifier `03-generateContent.js` avec le nouveau workflow
-- [ ] Ajouter `USE_NUNJUCKS=true` et `USE_OLLAMA_CORRECTION=false` dans `.env`
+- [ ] **Exécuter le script de conversion** : `node ../scripts/convert-templates-to-nunjucks.js --dry-run`
+- [ ] **Appliquer la conversion** : `node ../scripts/convert-templates-to-nunjucks.js`
 - [ ] Tester avec une séquence en base (1 impayé)
 - [ ] Tester avec une séquence en base (plusieurs impayés)
-- [ ] Tester la conversion automatique des templates legacy
-- [ ] Tester la correction Ollama (optionnelle)
-
-### Frontend
-
-- [ ] Mettre à jour la documentation dans `useSequenceEditor.js`
-- [ ] Mettre à jour les exemples dans `VariablesPicker.vue`
-- [ ] Vérifier les placeholders dans `DrawerLienPaiement.vue`
 
 ### Post-déploiement
 
 - [ ] Surveiller les logs pour erreurs Nunjucks
 - [ ] Vérifier que les emails sont envoyés correctement
 - [ ] Confirmer que le parsing PDF (Ollama) fonctionne toujours
-- [ ] Vérifier les performances (temps de génération)
+- [ ] Confirmer que la correction Ollama est bien appliquée après Nunjucks
 
 ---
 
@@ -609,10 +463,10 @@ describe('Nunjucks Rendering', () => {
 1. **L'appel Ollama pour le parsing de PDF reste INCHANGÉ** dans `server.js`
 2. **Deux appels Ollama distincts** :
    - `server.js` : Parsing PDF → **inchangé**
-   - `03-generateContent.js` : Correction après Nunjucks → **optionnel**
-3. **Pas de coexistence forcée** : Les templates peuvent être en `[[...]]` (auto-convertis) ou directement en `{{ }}`
-4. **Priorité** : Nunjucks d'abord, Ollama en correction seulement
-5. **Rétrocompatibilité** : Le mode legacy (Ollama seul) reste disponible via `USE_NUNJUCKS=false`
+   - `03-generateContent.js` : Correction après Nunjucks → **OBLIGATOIRE**
+3. **Pas de conversion automatique** : Les templates doivent être convertis AVANT le déploiement via le script
+4. **Ordre strict** : Nunjucks d'abord, puis Ollama correction **toujours**
+5. **Pas de flag optionnel** : Dès que `USE_OLLAMA=true`, le workflow Nunjucks + correction est actif
 
 ---
 
@@ -634,11 +488,6 @@ node ../scripts/convert-templates-to-nunjucks.js
 # Lancer les tests
 cd backend
 npm test
-
-# Activer en production
-# Dans backend/.env:
-USE_NUNJUCKS=true
-USE_OLLAMA_CORRECTION=false  # Commencer sans correction, puis tester
 ```
 
 ---
@@ -689,13 +538,13 @@ Veuillez régulariser votre situation via :
 
 ## 🎯 ORDRE DE TRAVAIL RECOMMANDÉ
 
-1. ✅ **Préparation** : Commit initial avec TODO-NUNJUCKS.md (fait)
+1. ✅ **Préparation** : Commit initial avec todo.md (fait)
 2. 🔄 **Backend** : Modifier `03-generateContent.js` avec nouveau workflow
-3. 🔄 **Tests** : Créer et exécuter les tests unitaires
-4. 🔄 **Conversion** : Tester le script de conversion sur 1-2 séquences
-5. 🔄 **Validation** : Vérifier manuellement les emails générés
-6. 🔄 **Frontend** : Mettre à jour la documentation
-7. 🔄 **Migration** : Convertir toutes les séquences (après validation)
+3. 🔄 **Conversion** : Exécuter le script sur 1-2 séquences en dry-run
+4. 🔄 **Migration** : Convertir toutes les séquences
+5. 🔄 **Tests** : Créer et exécuter les tests unitaires
+6. 🔄 **Validation** : Vérifier manuellement les emails générés
+7. 🔄 **Frontend** : Mettre à jour la documentation
 8. 🔄 **Déploiement** : Pousser sur main après tous les tests
 
 ---
