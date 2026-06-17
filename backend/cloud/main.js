@@ -6,7 +6,7 @@ require("./workflows/import-invoice/00-master");
 require("./workflows/generate-relances/00-master");
 require("./workflows/generate-suivi/00-master");
 require("./workflows/send-sequence-test/00-master");
-require("./workflows/test-single/00-master");
+require("./workflows/test-single/00-master.js");
 require("./workflows/verify-paid-invoices/00-master");
 require("./workflows/generate-pdf-links/00-master");
 require("./workflows/generate-contact-token/00-master");
