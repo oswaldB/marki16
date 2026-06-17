@@ -1,5 +1,5 @@
-// backend/cloud/workflows/generate-suivi/00-master.js
-// Orchestrateur du workflow autonome de génération des suivis
+// backend/cloud/workflows/generate-relances/00-master.js
+// Orchestrateur du workflow autonome de génération des relances
 
 // Charger les variables d'environnement depuis .env
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
@@ -25,22 +25,22 @@ function clearLogs() {
                 } catch (err) {
                     warn(
                         `Impossible de supprimer ${filePath}: ${err.message}`,
-                        "generate-suivi",
+                        "generate-relances",
                         "clearLogs",
                     );
                 }
             });
             info(
                 `Répertoire logs vidé: ${files.length} fichiers supprimés`,
-                "generate-suivi",
-                "generateSuivisMaster",
+                "generate-relances",
+                "generateRelancesMaster",
             );
         }
     } catch (err) {
         warn(
             `Impossible de vider le répertoire logs: ${err.message}`,
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
     }
 }
@@ -59,16 +59,17 @@ if (typeof Parse === "undefined") {
 }
 
 // Charger les scripts d'étape
-const createSuivis = require("./01-createSuivis");
+const createRelances = require("./01-createRelances");
 const replaceVariables = require("./01b-replaceVariables");
-const generateSuivis = require("./02-generateSuivis");
+const generateRelances = require("./02-generateRelances");
+const perfectWithOllama = require("./03-perfectWithOllama");
 
 /**
- * Orchestrateur principal du workflow generate-suivi
+ * Orchestrateur principal du workflow generate-relances
  * @param {Object} options - { trigger }
  * @returns {Promise<Object>} { stats }
  */
-async function generateSuivisMaster({ trigger = "cron" } = {}) {
+async function generateRelancesMaster({ trigger = "cron" } = {}) {
     const startedAt = new Date();
 
     // Règle 1: Vider le répertoire logs au début
@@ -79,19 +80,19 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
     // Séparateur visuel
     info(
         "\n═════════════════════════════════════════════════════════════",
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
     );
     info(
-        `🚀 DÉBUT: generate-suivi (trigger: ${trigger})`,
-        "generate-suivi",
-        "generateSuivisMaster",
+        `🚀 DÉBUT: generate-relances (trigger: ${trigger})`,
+        "generate-relances",
+        "generateRelancesMaster",
         { trigger },
     );
     info(
         "═════════════════════════════════════════════════════════════",
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
     );
 
     const stats = {
@@ -104,58 +105,59 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
         etape1: {},
         etape1b: {},
         etape2: {},
+        etape3: {},
     };
 
     try {
-        // ========== ÉTAPE 1: Création des suivis ==========
+        // ========== ÉTAPE 1: Création des relances ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
         info(
-            "📧 ÉTAPE 1/2: Création des suivis...",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "📧 ÉTAPE 1/3: Création des relances...",
+            "generate-relances",
+            "generateRelancesMaster",
             { step: 1 },
         );
-        const result1 = await createSuivis();
+        const result1 = await createRelances();
         stats.etape1 = result1.stats;
         info(
-            `✅ ÉTAPE 1 TERMINÉE: ${result1.stats.suivisCreated || 0} créés, ${result1.stats.suivisUpdated || 0} mis à jour, ${result1.stats.skipped || 0} ignorés`,
-            "generate-suivi",
-            "generateSuivisMaster",
+            `✅ ÉTAPE 1 TERMINÉE: ${result1.stats.relancesCreated || 0} créées, ${result1.stats.relancesUpdated || 0} mises à jour, ${result1.stats.skipped || 0} ignorées`,
+            "generate-relances",
+            "generateRelancesMaster",
             {
                 step: 1,
-                created: result1.stats.suivisCreated || 0,
-                updated: result1.stats.suivisUpdated || 0,
+                created: result1.stats.relancesCreated || 0,
+                updated: result1.stats.relancesUpdated || 0,
                 skipped: result1.stats.skipped || 0,
             },
         );
         info(
             "═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
 
         // ========== ÉTAPE 1b: Remplacement des variables ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
         info(
-            "🏷️  ÉTAPE 1b/2: Remplacement des variables [[...]]...",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "🏷️  ÉTAPE 1b/3: Remplacement des variables [[...]]...",
+            "generate-relances",
+            "generateRelancesMaster",
             { step: 1.5 },
         );
         const result1b = await replaceVariables();
         stats.etape1b = result1b.stats;
         info(
             `✅ ÉTAPE 1b TERMINÉE: ${result1b.stats.processed || 0} traitées, ${result1b.stats.replaced || 0} modifiées, ${result1b.stats.errors.length || 0} erreurs`,
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
             {
                 step: 1.5,
                 processed: result1b.stats.processed || 0,
@@ -165,28 +167,28 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
         );
         info(
             "═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
 
         // ========== ÉTAPE 2: Génération du contenu ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
         info(
-            "📝 ÉTAPE 2/2: Génération du contenu des suivis...",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "📝 ÉTAPE 2/3: Génération du contenu des relances...",
+            "generate-relances",
+            "generateRelancesMaster",
             { step: 2 },
         );
-        const result2 = await generateSuivis();
+        const result2 = await generateRelances();
         stats.etape2 = result2.stats;
         info(
             `✅ ÉTAPE 2 TERMINÉE: ${result2.stats.processed || 0} traités, ${result2.stats.errors.length || 0} erreurs`,
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
             {
                 step: 2,
                 processed: result2.stats.processed || 0,
@@ -195,55 +197,86 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
         );
         info(
             "═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
+        );
+
+        // ========== ÉTAPE 3: Amélioration avec Ollama ==========
+        info(
+            "\n═════════════════════════════════════════════════════════════",
+            "generate-relances",
+            "generateRelancesMaster",
+        );
+        info(
+            "🤖 ÉTAPE 3/3: Amélioration du contenu avec Ollama...",
+            "generate-relances",
+            "generateRelancesMaster",
+            { step: 3 },
+        );
+        const result3 = await perfectWithOllama();
+        stats.etape3 = result3.stats;
+        info(
+            `✅ ÉTAPE 3 TERMINÉE: ${result3.stats.processed || 0} traités, ${result3.stats.improved || 0} améliorés, ${result3.stats.errors.length || 0} erreurs`,
+            "generate-relances",
+            "generateRelancesMaster",
+            {
+                step: 3,
+                processed: result3.stats.processed || 0,
+                improved: result3.stats.improved || 0,
+                errors: result3.stats.errors.length || 0,
+            },
+        );
+        info(
+            "═════════════════════════════════════════════════════════════",
+            "generate-relances",
+            "generateRelancesMaster",
         );
 
         // ========== FIN SUCCESS ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
         info(
             "✅ PROCESSUS TERMINÉ AVEC SUCCÈS",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
             { errorsCount: stats.errors.length },
         );
         info(
             "═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
     } catch (err) {
         info(
             "\n═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
         error(
             `❌ ERREUR DANS LE WORKFLOW: ${err.message}`,
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
             { error: err.message, stack: err.stack?.substring(0, 500) },
         );
         stats.errors.push({
-            step: "generateSuivisMaster",
+            step: "generateRelancesMaster",
             error: err.message,
             stack: err.stack?.substring(0, 500),
         });
 
         warn(
             "❌ PROCESSUS TERMINÉ AVEC ERREUR",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
             { errorsCount: stats.errors.length },
         );
         info(
             "═════════════════════════════════════════════════════════════",
-            "generate-suivi",
-            "generateSuivisMaster",
+            "generate-relances",
+            "generateRelancesMaster",
         );
     }
 
@@ -254,38 +287,38 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
 
     info(
         "\n═════════════════════════════════════════════════════════════",
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
     );
     info(
         `⏱️  DURÉE TOTALE: ${durationSec} secondes`,
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
         { durationMs: stats.total.durationMs, durationSec },
     );
     info(
         "═════════════════════════════════════════════════════════════",
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
     );
 
     info(
         "═════════════════════════════════════════════════════════════",
-        "generate-suivi",
-        "generateSuivisMaster",
+        "generate-relances",
+        "generateRelancesMaster",
     );
 
     return { stats };
 }
 
-module.exports = generateSuivisMaster;
+module.exports = generateRelancesMaster;
 
-// Cloud Function pour déclencher la génération des suivis via Parse
-Parse.Cloud.define("generateSuivis", async (request) => {
+// Cloud Function pour déclencher la génération des relances via Parse
+Parse.Cloud.define("generateRelances", async (request) => {
     info(
-        "🌐 Cloud Function generateSuivis appelée",
-        "generate-suivi",
-        "generateSuivis",
+        "🌐 Cloud Function generateRelances appelée",
+        "generate-relances",
+        "generateRelances",
         { user: request.user?.id, master: request.master },
     );
 
@@ -297,23 +330,23 @@ Parse.Cloud.define("generateSuivis", async (request) => {
 
     info(
         "Cloud Function: exécution autonome - récupération de toutes les données depuis Parse",
-        "generate-suivi",
-        "generateSuivis",
+        "generate-relances",
+        "generateRelances",
     );
 
-    return await generateSuivisMaster({
+    return await generateRelancesMaster({
         trigger: "cloud-function",
     });
 });
 
 // Exécution directe si appelé en CLI
 if (require.main === module) {
-    generateSuivisMaster({ trigger: "cli" })
+    generateRelancesMaster({ trigger: "cli" })
         .then((result) => {
             info(
-                "✅ Workflow generate-suivi terminé via CLI",
-                "generate-suivi",
-                "generateSuivisMaster",
+                "✅ Workflow generate-relances terminé via CLI",
+                "generate-relances",
+                "generateRelancesMaster",
                 {
                     errors: result.stats.errors.length,
                     durationMs: result.stats.total.durationMs,
@@ -323,9 +356,9 @@ if (require.main === module) {
         })
         .catch((error) => {
             error(
-                `❌ Erreur dans generate-suivi/master: ${error.message}`,
-                "generate-suivi",
-                "generateSuivisMaster",
+                `❌ Erreur dans generate-relances/master: ${error.message}`,
+                "generate-relances",
+                "generateRelancesMaster",
                 { error: error.message, stack: error.stack?.substring(0, 500) },
             );
             process.exit(1);

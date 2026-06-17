@@ -303,7 +303,27 @@ async function generateSuivis() {
         // Traiter chaque Suivi
         for (const suivi of suivis) {
             const suiviId = suivi.id;
-            const scenario = suivi.get("scenario");
+            let scenario = suivi.get("scenario");
+
+            // Vérifier si le suivi a déjà des templates pré-remplis (par 01b-replaceVariables)
+            const suiviObjet = suivi.get("objet");
+            const suiviCorps = suivi.get("corps");
+            const isPreFilled = 
+                suiviObjet && 
+                suiviObjet !== "Généré au moment de l'envoi" &&
+                suiviObjet !== "" &&
+                suiviCorps && 
+                suiviCorps !== "Générer au moment de l'envoi" &&
+                suiviCorps !== "";
+            
+            // Utiliser les templates pré-remplis si disponibles
+            if (isPreFilled && scenario) {
+                scenario = {
+                    ...scenario,
+                    objet: suiviObjet,
+                    corps: suiviCorps,
+                };
+            }
 
             info(
                 `Étape 2: Génération du contenu pour Suivi ${suiviId}...`,

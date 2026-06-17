@@ -331,6 +331,24 @@ async function generateRelances() {
                     continue;
                 }
 
+                // Vérifier si la relance a déjà des templates pré-remplis (par 01b-replaceVariables)
+                const relanceObjet = relance.get("objet");
+                const relanceCorps = relance.get("corps");
+                const isPreFilled = 
+                    relanceObjet && 
+                    relanceObjet !== "Généré au moment de l'envoi" &&
+                    relanceObjet !== "" &&
+                    relanceCorps && 
+                    relanceCorps !== "Générer au moment de l'envoi" &&
+                    relanceCorps !== "";
+                
+                // Utiliser les templates pré-remplis si disponibles
+                const scenarioToUse = isPreFilled ? {
+                    ...activeScenario,
+                    objet: relanceObjet,
+                    corps: relanceCorps,
+                } : activeScenario;
+
                 info(
                     `Étape 2: Génération du contenu pour ${relance.id}...`,
                     "generate-relances",
@@ -358,7 +376,7 @@ async function generateRelances() {
                         let success = false;
                         while (!success && retries < MAX_RETRIES) {
                             try {
-                                const prompt = buildPrompt(activeScenario, impayeDetails, history, relance);
+                                const prompt = buildPrompt(scenarioToUse, impayeDetails, history, relance);
                                 const result = await generateEmailContent(prompt);
                                 objet = result.objet;
                                 corps = result.corps;
@@ -371,8 +389,8 @@ async function generateRelances() {
                             }
                         }
                     } else {
-                        objet = activeScenario.objet || "Relance - Facture impayée";
-                        corps = activeScenario.corps || "Veuillez régulariser votre situation.";
+                        objet = scenarioToUse.objet || "Relance - Facture impayée";
+                        corps = scenarioToUse.corps || "Veuillez régulariser votre situation.";
                     }
 
                     hasVariables = hasUnreplacedVariables(objet) || hasUnreplacedVariables(corps);
