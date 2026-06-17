@@ -22,9 +22,9 @@ function replaceBracketVariables(template, vars) {
     
     let result = template;
     for (const [key, value] of Object.entries(vars)) {
-        // Remplacer UNIQUEMENT [[variable]] (pas <%= variable %>)
-        const pattern = new RegExp(\[\s*\[\s*" + key + "\s*\]\s*\], "g");
-        result = result.replace(pattern, value || "");
+        // Remplacer UNIQUEMENT [[variable]] (sans regex)
+        const searchString = `[[${key}]]`;
+        result = result.split(searchString).join(value || "");
     }
     return result;
 }
@@ -32,16 +32,13 @@ function replaceBracketVariables(template, vars) {
 /**
  * Vérifie s'il reste des variables non remplacées dans un texte.
  * @param {string} text - Texte à vérifier.
- * @returns {boolean} - true si des variables non remplacées sont trouvées.
+ * @returns {boolean} - true si des variables [[...]] sont trouvées.
  */
 function hasUnreplacedVariables(text) {
     if (!text) return false;
     
-    // Chercher [[...]] ou <%= ... %>
-    const bracketPattern = /\[\s*\[[^\]]+\]\s*\]/;
-    const erpPattern = /<%=?[^%>]+%>/;
-    
-    return bracketPattern.test(text) || erpPattern.test(text);
+    // Vérifier la présence de [[ (sans regex)
+    return text.includes("[[");
 }
 
 /**
@@ -218,11 +215,11 @@ async function templateProcessing(data) {
             templateVars,
         );
         
-        // Étape 4: Vérifier s'il reste des variables non remplacées
+        // Étape 4: Vérifier s'il reste des variables [[...]] non remplacées
         const hasUnreplaced = hasUnreplacedVariables(newSubject) || hasUnreplacedVariables(newBody);
         
         if (hasUnreplaced && process.env.USE_OLLAMA === "true") {
-            info("Variables non remplacées détectées, appel à Ollama...", "test-single", "02-templateProcessing");
+            info("Variables [[...]] non remplacées détectées, appel à Ollama...", "test-single", "02-templateProcessing");
             
             // DEUXIÈME PASSE: Génération via LLM
             try {
@@ -239,7 +236,7 @@ async function templateProcessing(data) {
                 // Continuer avec le contenu de la première passe
             }
         } else if (hasUnreplaced) {
-            warn("Variables non remplacées détectées mais USE_OLLAMA=false", "test-single", "02-templateProcessing");
+            warn("Variables [[...]] non remplacées détectées mais USE_OLLAMA=false", "test-single", "02-templateProcessing");
         }
         
         // Étape 5: Correction orthographique (si USE_OLLAMA=true)

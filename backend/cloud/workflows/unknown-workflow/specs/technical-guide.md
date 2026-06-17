@@ -1,162 +1,64 @@
-# Technical Guide: unknown-workflow Workflow
+# Objectifs
+- Workflow non implémenté ou placeholder
+- Objectifs non définis
 
-## Overview
-This workflow appears to be a **placeholder or test workflow** with minimal implementation. Based on the directory structure, it contains only a logs directory and no actual workflow files.
+# Start
+## route
+- Not implemented
 
-## Purpose
-Unknown or undefined. This may be:
-- A template for new workflows
-- A test workflow
-- A placeholder for future development
-- An incomplete or abandoned workflow
+## entry data
+- None (workflow not yet implemented)
 
----
+# Process
 
-## Current State
+## node 0: Master Orchestrator (00-master.js)
+### input
+- `trigger`: string (expected: "manual", "cron", or "cloud-function")
 
-**Status**: Empty or placeholder
+### operations
+1. Load environment variables from .env
+2. Initialize Parse SDK
+3. Clear logs directory (unless trigger is "test")
+4. Log workflow start with trigger type
+5. Initialize stats object
+6. Execute unknownWorkflowMaster() function
+7. Register Cloud Function (if applicable)
 
-- Directory exists: `/home/ubuntu/prod/adti/backend/cloud/workflows/unknown-workflow/`
-- Contains only: `logs/` directory (possibly with some log files)
-- No JavaScript files present
-- No master orchestrator
-- No step implementations
-- No clear purpose or functionality
+### output
+- `{ stats }`
 
----
+# end
+## results
+- Workflow not implemented
+- No results produced
 
-## Directory Contents
+# Scenarios to test
 
-```
-unknown-workflow/
-└── logs/  (may contain log files from previous executions)
-```
+## scenario1: Implementation verification
+### input data
+- None (workflow needs to be implemented first)
 
----
+### expecting console log output in the log file
+- Not applicable until implemented
 
-## Analysis
+### todo to run the tests
+1. Investigate the purpose of this workflow by checking:
+   - Git history: `git log -- unknown-workflow/`
+   - References in other files: `grep -r "unknown-workflow" /home/ubuntu/prod/adti/`
+   - Log files in unknown-workflow/logs/
+2. Based on investigation:
+   - If purpose can be determined: rename directory and implement workflow
+   - If no longer needed: remove directory
+   - If template: use as template for new workflow
 
-### Possible Scenarios
+## scenario2: Placeholder cleanup
+### input data
+- None
 
-1. **Template Directory**:
-   - Created as a template for new workflows
-   - Contains only the logs directory structure
-   - No actual implementation
+### expecting console log output in the log file
+- None (directory should be removed)
 
-2. **Test Workflow**:
-   - Created for testing purposes
-   - May have had files that were later removed
-   - Logs directory preserved for debugging
-
-3. **Placeholder**:
-   - Reserved for future development
-   - Name suggests uncertainty about purpose
-   - No implementation started
-
-4. **Abandoned Workflow**:
-   - Started but never completed
-   - Files removed but directory left
-   - Logs may contain information about what was attempted
-
----
-
-## Recommendations
-
-### If This is a Template
-1. **Rename** to reflect actual purpose when implementing
-2. **Add implementation** following the pattern of other workflows:
-   - `00-master.js` - Main orchestrator
-   - Step files (e.g., `01-stepName.js`)
-   - Proper Cloud Function registration
-3. **Remove** if not needed
-
-### If This is a Test Workflow
-1. **Review logs** to understand what was tested
-2. **Document** the purpose and results
-3. **Clean up** if testing is complete
-4. **Remove** if no longer needed
-
-### If This is a Placeholder
-1. **Define purpose** before implementing
-2. **Rename** to reflect intended functionality
-3. **Implement** when ready
-
-### If This is Abandoned
-1. **Review logs** to understand what was attempted
-2. **Recover** any useful code or lessons learned
-3. **Remove** to clean up the codebase
-
----
-
-## Comparison with Other Workflows
-
-| Workflow | Status | Files | Purpose |
-|----------|--------|-------|---------|
-| appliquer-regles-attribution | Implemented | 2 JS files | Sequence assignment |
-| generate-relances | Implemented | 3 JS files | Reminder generation |
-| generate-suivi | Implemented | 4 JS files | Follow-up generation |
-| import-invoice | Implemented | 8+ JS files | Invoice import |
-| send-emails | Implemented | 2 JS files | Email sending |
-| verify-paid-invoices | Implemented | 2 JS files | Payment verification |
-| send-sequence-test | Implemented | 3 JS files | Sequence testing |
-| test-single | Implemented | 2 JS files | Single email testing |
-| sync-contacts | Not implemented | 0 JS files | Contact synchronization |
-| users | Not implemented | 0 JS files | User management |
-| update-dynamic-options | Not implemented | 0 JS files | Dynamic options |
-| **unknown-workflow** | **Not implemented** | **0 JS files** | **Unknown** |
-
----
-
-## Suggested Actions
-
-1. **Investigate**: Check the logs directory for any clues
-   ```bash
-   ls -la /home/ubuntu/prod/adti/backend/cloud/workflows/unknown-workflow/logs/
-   cat /home/ubuntu/prod/adti/backend/cloud/workflows/unknown-workflow/logs/*.log
-   ```
-
-2. **Check Git History**: If using version control, check what files existed before
-   ```bash
-   cd /home/ubuntu/prod/adti
-   git log -- unknown-workflow/
-   git ls-tree HEAD unknown-workflow/
-   ```
-
-3. **Check References**: Search for references to this workflow in other files
-   ```bash
-   grep -r "unknown-workflow" /home/ubuntu/prod/adti/
-   ```
-
-4. **Decision**: Based on investigation:
-   - **Keep and implement** if there's a clear need
-   - **Rename and implement** if purpose can be determined
-   - **Remove** if it's no longer needed
-
----
-
-## File Structure
-
-```
-unknown-workflow/
-├── 00-master.js              # Main orchestrator (MISSING)
-├── ...                       # Step files (MISSING)
-├── logs/                     # Runtime logs (exists)
-└── specs/
-    └── technical-guide.md    # This file
-```
-
----
-
-## Notes
-
-1. This workflow has **no clear purpose or implementation**.
-
-2. The name "unknown-workflow" suggests uncertainty about its role.
-
-3. Without implementation files, it's impossible to determine:
-   - What states it would have
-   - What nodes/steps it would include
-   - What data flow it would follow
-   - What its purpose is
-
-4. **Recommendation**: Investigate and either implement with a clear purpose or remove to clean up the codebase.
+### todo to run the tests
+1. Confirm this is a placeholder and not needed
+2. Remove directory: `rm -rf /home/ubuntu/prod/adti/backend/cloud/workflows/unknown-workflow`
+3. Verify no references exist in other files

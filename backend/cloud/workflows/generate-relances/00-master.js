@@ -59,6 +59,7 @@ if (typeof Parse === "undefined") {
 }
 
 // Charger les scripts d'étape
+const createRelances = require("./00-createRelances");
 const replaceVariables = require("./01-replaceVariables");
 const generateRelances = require("./02-generateRelances");
 
@@ -100,11 +101,43 @@ async function generateRelancesMaster({ trigger = "cron" } = {}) {
             finishedAt: null,
             durationMs: 0,
         },
+        etape0: {},
         etape1: {},
         etape2: {},
     };
 
     try {
+        // ========== ÉTAPE 0: Création des relances ==========
+        info(
+            "\n═════════════════════════════════════════════════════════════",
+            "generate-relances",
+            "generateRelancesMaster",
+        );
+        info(
+            "📧 ÉTAPE 0/3: Création des relances pour les impayés sans relance...",
+            "generate-relances",
+            "generateRelancesMaster",
+            { step: 0 },
+        );
+        const result0 = await createRelances();
+        stats.etape0 = result0.stats;
+        info(
+            `✅ ÉTAPE 0 TERMINÉE: ${result0.stats.processed || 0} traités, ${result0.stats.created || 0} créées, ${result0.stats.errors || 0} erreurs`,
+            "generate-relances",
+            "generateRelancesMaster",
+            {
+                step: 0,
+                processed: result0.stats.processed || 0,
+                created: result0.stats.created || 0,
+                errors: result0.stats.errors || 0,
+            },
+        );
+        info(
+            "═════════════════════════════════════════════════════════════",
+            "generate-relances",
+            "generateRelancesMaster",
+        );
+
         // ========== ÉTAPE 1: Remplacement des variables ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
@@ -112,7 +145,7 @@ async function generateRelancesMaster({ trigger = "cron" } = {}) {
             "generateRelancesMaster",
         );
         info(
-            "📧 ÉTAPE 1/2: Remplacement des variables...",
+            "📧 ÉTAPE 1/3: Remplacement des variables...",
             "generate-relances",
             "generateRelancesMaster",
             { step: 1 },
@@ -143,7 +176,7 @@ async function generateRelancesMaster({ trigger = "cron" } = {}) {
             "generateRelancesMaster",
         );
         info(
-            "📝 ÉTAPE 2/2: Génération du contenu des relances...",
+            "📝 ÉTAPE 2/3: Génération du contenu des relances...",
             "generate-relances",
             "generateRelancesMaster",
             { step: 2 },

@@ -1,239 +1,150 @@
-# Technical Guide: users Workflow
+# Objectifs
+- Gérer les opérations liées aux utilisateurs
+- Synchroniser les utilisateurs depuis des sources externes
+- Gérer les rôles et permissions des utilisateurs
+- Suivre l'activité des utilisateurs
 
-## Overview
-This workflow is responsible for **user-related operations**. Based on the directory structure, this appears to be a placeholder or work-in-progress workflow with no implementation files currently present.
+# Start
+## route
+- Not implemented (placeholder workflow)
 
-## Purpose
-Manage user data and operations in Parse, potentially including:
-- User synchronization
-- User role management
-- User authentication
-- User activity tracking
+## entry data
+- None (workflow not yet implemented)
 
----
+# Process
 
-## Current State
+## node 0: Master Orchestrator (00-master.js)
+### input
+- `trigger`: string (expected: "manual", "cron", or "cloud-function")
 
-**Status**: Not implemented or placeholder only
+### operations
+1. Load environment variables from .env
+2. Initialize Parse SDK
+3. Clear logs directory (unless trigger is "test")
+4. Log workflow start with trigger type
+5. Initialize stats object
+6. Register Cloud Functions for user operations
+7. Execute usersMaster() function
 
-- Directory exists: `/home/ubuntu/prod/adti/backend/cloud/workflows/users/`
-- Contains only: `logs/` directory
-- No JavaScript files present
-- No master orchestrator
-- No step implementations
+### output
+- `{ stats }`
 
----
+## node 1: User Synchronizer (01-syncUsers.js)
+### input
+- None (queries external source directly)
 
-## Expected Implementation
-
-Based on the pattern of other workflows and the name "users", the expected implementation would include:
-
-### Expected Node Sequence
-
-#### Node 0: Master Orchestrator (00-master.js)
-**Expected File**: `00-master.js`
-
-**Expected Actions**:
-1. **Initialization**:
-   - Load environment variables
-   - Initialize Parse SDK
-   - Clear logs directory
-
-2. **Workflow Orchestration**:
-   - Register Cloud Functions for user operations
-   - Coordinate user-related tasks
-
-3. **Trigger Support**:
-   - Cloud Function triggers
-   - CLI execution
-   - Scheduled triggers (optional)
-
-#### Possible Cloud Functions
-
-Based on common user management needs:
-
-1. **createUser**: Create a new user with specific roles
-2. **updateUser**: Update user information
-3. **deleteUser**: Remove a user
-4. **syncUsers**: Synchronize users from external source
-5. **getUserInfo**: Retrieve user information
-6. **setUserRole**: Change user role/permissions
-
-#### Node 1: User Synchronizer (01-syncUsers.js)
-**Expected File**: `01-syncUsers.js`
-
-**Expected Actions**:
-1. **Fetch Users**:
+### operations
+1. Fetch Users:
    - Query external database for users
    - Or query Parse for existing users
 
-2. **Synchronize**:
+2. Synchronize:
    - Create missing users
    - Update changed users
    - Deactivate removed users
 
-3. **Role Management**:
+3. Role Management:
    - Assign appropriate roles
    - Set permissions
 
----
+### output
+- `{ stats: { created, updated, deactivated, errors } }`
 
-## Expected States
+## node 2: Role Manager (02-manageRoles.js)
+### input
+- `{ userId: string, role: string }` (for role assignment)
 
-### Workflow States
-- **Initializing**: Loading configuration
-- **Processing**: User operations in progress
-- **Completed**: Operations finished successfully
-- **Error**: Operations failed
+### operations
+1. Validate user exists
+2. Validate role exists
+3. Assign role to user
+4. Update permissions
+5. Log role change
 
-### User States
-- **Active**: User can log in and perform actions
-- **Inactive**: User cannot log in
-- **Pending**: User created but not yet activated
-- **Suspended**: User temporarily disabled
+### output
+- `{ success: boolean, message: string, userId: string, role: string }`
 
----
+# end
+## results
+- Users synchronized between external source and Parse
+- Roles and permissions assigned
+- User activity tracked
+- Return: `{ stats: { usersProcessed, created, updated, deactivated, errors } }`
 
-## Relationship to Other Workflows
+# Scenarios to test
 
-This workflow would likely be **used by**:
+## scenario1: Basic user synchronization
+### input data
+- External source with user data (id, username, email, role)
+- Parse with existing users or empty
 
-1. **All workflows**: For authentication and authorization
-2. **import-invoice**: May need user context for imports
-3. **generate-relances**: May need user context for generation
-4. **send-emails**: May need user context for sending
+### expecting console log output in the log file
+- "Étape 1: X utilisateurs récupérés depuis la source externe"
+- "Étape 2: Y utilisateurs créés, Z utilisateurs mis à jour"
 
-**Possible Integration Scenarios**:
+### todo to run the tests
+1. Implement workflow following pattern of other workflows
+2. Set up external user source with test data
+3. Set up test Parse database
+4. Run: `node 00-master.js`
+5. Verify users are created/updated in Parse
 
-1. **Authentication Middleware**: User validation for Cloud Functions
-2. **Audit Logging**: Track which user performed which actions
-3. **Permission Checking**: Verify user has rights to perform operations
-4. **User Context**: Provide user information to other workflows
+## scenario2: Role assignment
+### input data
+- Valid userId and role
 
----
+### expecting console log output in the log file
+- "Rôle [role] attribué à l'utilisateur [userId]"
 
-## Current Implementation Status
+### todo to run the tests
+1. Implement role management functionality
+2. Create test user in Parse
+3. Call role assignment function
+4. Verify role is assigned correctly
 
-**Files Present**:
-```
-users/
-└── logs/  (empty directory)
-```
+## scenario3: No changes needed
+### input data
+- External source with users matching existing Parse users
 
-**Files Missing** (Expected):
-- `00-master.js` - Main orchestrator
-- Cloud Function implementations
-- User management logic
+### expecting console log output in the log file
+- "Étape 1: X utilisateurs récupérés"
+- "Étape 2: 0 utilisateurs créés, 0 utilisateurs mis à jour, X utilisateurs inchangés"
 
----
+### todo to run the tests
+1. Set up external source with users matching Parse
+2. Implement workflow
+3. Run: `node 00-master.js`
+4. Verify no changes are made
 
-## Existing User Management
+## scenario4: New users to add
+### input data
+- External source with new users not in Parse
 
-In the current codebase, user management appears to be handled by:
+### expecting console log output in the log file
+- "Étape 1: X utilisateurs récupérés"
+- "Étape 2: X utilisateurs créés, 0 utilisateurs mis à jour"
 
-1. **Parse User Class**: Built-in Parse user management
-2. **Cloud Function Authentication**: Each Cloud Function checks `request.master` or `request.user`
-3. **Master Key Usage**: Most workflows use master key for operations
+### todo to run the tests
+1. Set up external source with new users
+2. Set up Parse with no matching users
+3. Implement workflow
+4. Run: `node 00-master.js`
+5. Verify new users are created
 
-**Example Authentication Pattern** (from other workflows):
-```javascript
-Parse.Cloud.define("someFunction", async (request) => {
-    if (!request.master && !request.user) {
-        throw new Error("Non autorisé - cette fonction nécessite un utilisateur authentifié ou le master key");
-    }
-    // Function logic
-});
-```
+## scenario5: Cloud Function call
+### input data
+- Valid Parse Cloud Function call with masterKey
 
----
+### expecting console log output in the log file
+- "Début du processus users"
+- Same logs as CLI execution
 
-## Recommendations
-
-1. **Implement the workflow** following the pattern of other workflows:
-   - Create `00-master.js` with Cloud Function registration
-   - Create functions for user operations
-   - Use consistent authentication patterns
-
-2. **Centralize user management**:
-   - Create reusable functions for user operations
-   - Standardize authentication checks
-   - Centralize role/permission management
-
-3. **Consider needs**:
-   - What user operations are needed?
-   - Should users be synchronized from external source?
-   - What roles/permissions are required?
-   - How should user activity be tracked?
-
-4. **Integrate with existing**:
-   - Ensure compatibility with existing authentication patterns
-   - Don't break existing Cloud Functions
-   - Maintain master key functionality
-
----
-
-## Expected Configuration
-
-### Environment Variables
-
-```bash
-# Parse Configuration
-PARSE_APP_ID=
-PARSE_JAVASCRIPT_KEY=
-PARSE_MASTER_KEY=
-PARSE_SERVER_URL=
-
-# User Management
-ADMIN_ROLE_NAME=admin
-USER_ROLE_NAME=user
-DEFAULT_USER_ROLE=user
-
-# External User Source (if applicable)
-EXTERNAL_USER_DB_URI=
-EXTERNAL_USER_DB_TABLE=
-```
-
----
-
-## Expected Dependencies
-
-### Internal
-- `../../utils/logger` - For logging
-
-### External
-- `parse/node` - Parse SDK (includes User class)
-- `dotenv` - Environment variables
-
----
-
-## File Structure
-
-```
-users/
-├── 00-master.js              # Main orchestrator (MISSING)
-├── 01-syncUsers.js           # User synchronizer (MISSING)
-├── 02-manageRoles.js         # Role management (MISSING)
-├── ...                       # Other user-related files
-├── logs/                     # Runtime logs (exists, empty)
-└── specs/
-    └── technical-guide.md    # This file
-```
-
----
-
-## Notes
-
-1. This workflow appears to be **not yet implemented** or is a placeholder.
-
-2. User management in the current system relies on:
-   - Parse's built-in User class
-   - Master key for administrative operations
-   - Individual authentication checks in each Cloud Function
-
-3. This workflow could provide:
-   - Centralized user management
-   - Standardized authentication
-   - User synchronization
-   - Role/permission management
-
-4. Until implemented, user management is handled by Parse's built-in functionality and individual Cloud Function checks.
+### todo to run the tests
+1. Implement Cloud Function registration in 00-master.js
+2. Call from client-side JavaScript:
+   ```javascript
+   Parse.Cloud.run('syncUsers', {}, { useMasterKey: true })
+     .then(result => console.log('Users synced:', result.stats))
+     .catch(error => console.error('Sync error:', error));
+   ```
+3. Verify Cloud Function executes successfully

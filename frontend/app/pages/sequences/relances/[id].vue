@@ -305,27 +305,27 @@ async function lancerAttributionAutomatique() {
 
     const toast = useToast()
     toast.add({
-      title: 'Attribution en cours',
-      description: 'Lancement de la génération des relances...',
+      title: 'Import en cours',
+      description: 'Lancement de l\'import des factures...',
       color: 'blue'
     })
 
-    const result = await $parse.Cloud.run('generateRelances')
+    const result = await $parse.Cloud.run('triggerImportInvoices')
 
-    const created = result.stats?.etape1?.relancesCreated || 0
-    const updated = result.stats?.etape1?.relancesUpdated || 0
+    const imported = result.stats?.etape5?.impayes_created || 0
+    const updated = result.stats?.etape5?.impayes_updated || 0
 
     toast.add({
       title: 'Succès',
-      description: `${created} relances créées, ${updated} mises à jour`,
+      description: `${imported} factures importées, ${updated} mises à jour`,
       color: 'green'
     })
 
     await calculerApercu()
   } catch (error) {
-    console.error('Erreur attribution automatique:', error)
+    console.error('Erreur import factures:', error)
     const toast = useToast()
-    const errorMessage = error.message || 'Échec de l\'attribution automatique'
+    const errorMessage = error.message || 'Échec de l\'import des factures'
 
     toast.add({
       id: 'error-toast-with-copy',

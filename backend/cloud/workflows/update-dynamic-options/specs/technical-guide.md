@@ -1,323 +1,144 @@
-# Technical Guide: update-dynamic-options Workflow
+# Objectifs
+- Gérer les options dynamiques du système
+- Permettre la mise à jour des options sans modification de code
+- Synchroniser les options entre différentes sources
 
-## Overview
-This workflow is responsible for **updating dynamic options** in the system. Based on the directory structure, this appears to be a placeholder or work-in-progress workflow with no implementation files currently present.
+# Start
+## route
+- Not implemented (placeholder workflow)
 
-## Purpose
-Manage dynamic configuration options that can be updated without code changes, potentially including:
-- Dropdown options for various fields
-- Configuration settings
-- Business rules parameters
-- System preferences
+## entry data
+- None (workflow not yet implemented)
 
----
+# Process
 
-## Current State
+## node 0: Master Orchestrator (00-master.js)
+### input
+- `trigger`: string (expected: "manual", "cron", or "cloud-function")
 
-**Status**: Not implemented or placeholder only
+### operations
+1. Load environment variables from .env
+2. Initialize Parse SDK
+3. Clear logs directory (unless trigger is "test")
+4. Log workflow start with trigger type
+5. Initialize stats object
+6. Execute updateDynamicOptionsMaster() function
+7. Register Cloud Function (if applicable)
 
-- Directory exists: `/home/ubuntu/prod/adti/backend/cloud/workflows/update-dynamic-options/`
-- Contains only: `logs/` directory
-- No JavaScript files present
-- No master orchestrator
-- No step implementations
+### output
+- `{ stats }`
 
----
+## node 1: Option Fetcher (01-fetchOptions.js)
+### input
+- None (queries external source directly)
 
-## Expected Implementation
-
-Based on the pattern of other workflows and the name "update-dynamic-options", the expected implementation would include:
-
-### Expected Node Sequence
-
-#### Node 0: Master Orchestrator (00-master.js)
-**Expected File**: `00-master.js`
-
-**Expected Actions**:
-1. **Initialization**:
-   - Load environment variables
-   - Initialize Parse SDK
-   - Clear logs directory
-
-2. **Workflow Orchestration**:
-   - Register Cloud Function (e.g., `updateDynamicOptions`)
-   - Coordinate option update process
-
-3. **Trigger Support**:
-   - Cloud Function trigger
-   - CLI execution
-   - Scheduled trigger (for periodic updates)
-
-#### Node 1: Option Fetcher (01-fetchOptions.js)
-**Expected File**: `01-fetchOptions.js`
-
-**Expected Actions**:
-1. **Fetch from External Source**:
+### operations
+1. Fetch from External Source:
    - Query external database for dynamic options
    - Or read from configuration files
    - Or retrieve from API
 
-2. **Data Transformation**:
+2. Data Transformation:
    - Map external data to Parse format
    - Validate option values
 
-3. **Return**: Dynamic options data
+3. Return: Dynamic options data
 
-#### Node 2: Option Updater (02-updateOptions.js)
-**Expected File**: `02-updateOptions.js`
+### output
+- `{ options: {...} }`
 
-**Expected Actions**:
-1. **For each option**:
-   - Check if option exists in Parse
-   - If exists:
-     - Compare values
-     - Update if changed
-   - If not exists:
-     - Create new option
+## node 2: Option Updater (02-updateOptions.js)
+### input
+- `{ options: {...} }` (from node 1)
 
-2. **Cache Management**:
+### operations
+1. For each option:
+   a. Check if option exists in Parse
+   b. If exists:
+      - Compare values
+      - Update if changed
+   c. If not exists:
+      - Create new option
+
+2. Cache Management:
    - Update application cache
    - Notify dependent systems
 
-3. **Activity Logging**:
+3. Activity Logging:
    - Log option changes
    - Track updated/created counts
 
----
+### output
+- `{ stats: { created, updated, skipped, errors } }`
 
-## Expected States
+# end
+## results
+- Dynamic options synchronized between external source and Parse
+- Options created or updated as needed
+- Cache updated with latest values
+- Return: `{ stats: { optionsCount, created, updated, skipped, errors } }`
 
-### Workflow States
-- **Initializing**: Loading configuration
-- **Fetching**: Retrieving options from source
-- **Updating**: Applying changes to Parse
-- **Completed**: Update finished successfully
-- **Error**: Update failed
+# Scenarios to test
 
-### Option States
-- **Current**: Option value is up-to-date
-- **Updated**: Option value was changed
-- **New**: Option was created
-- **Deprecated**: Option is no longer used
+## scenario1: Basic options update
+### input data
+- External source with dynamic options (e.g., invoice statuses, payment methods)
+- Parse with existing options or empty
 
----
+### expecting console log output in the log file
+- "Étape 1: X options récupérées depuis la source externe"
+- "Étape 2: Y options créées, Z options mises à jour"
 
-## Expected Data Flow
+### todo to run the tests
+1. Set up external source with test options
+2. Set up test Parse database
+3. Implement workflow following pattern of other workflows
+4. Run: `node 00-master.js`
+5. Verify options are created/updated in Parse
 
-```
-Trigger (manual/cron/cloud-function)
-       ↓
-[Master: Clear logs]
-       ↓
-[Master: Initialize stats]
-       ↓
-┌─────────────────────────────────────────────────────────────┐
-│ STEP 1: fetchOptions()                                       │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Fetch options from external source                       │ │
-│ │ - SQLite database                                        │ │
-│ │ - Configuration files                                     │ │
-│ │ - API endpoint                                            │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│         ↓                                                    │
-│ Return: { options: {...} }                                  │
-└─────────────────────────────────────────────────────────────┘
-       ↓
-[Master: Collect etape1 stats]
-       ↓
-┌─────────────────────────────────────────────────────────────┐
-│ STEP 2: updateOptions()                                      │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ For each option:                                         │ │
-│ │   Query Parse for existing option                         │ │
-│ │   IF EXISTS:                                             │ │
-│ │     Compare values                                       │ │
-│ │     Update if changed                                    │ │
-│ │   ELSE:                                                 │ │
-│ │     Create new option                                    │ │
-│ │   Log change                                             │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│         ↓                                                    │
-│ Return: { stats: { created, updated, skipped, errors } }     │
-└─────────────────────────────────────────────────────────────┘
-       ↓
-[Master: Collect etape2 stats]
-       ↓
-[Master: Calculate total duration]
-       ↓
-Return aggregated statistics
-```
+## scenario2: No changes needed
+### input data
+- External source with options that match existing Parse options
 
----
+### expecting console log output in the log file
+- "Étape 1: X options récupérées"
+- "Étape 2: 0 options créées, 0 options mises à jour, X options inchangées"
 
-## Possible Dynamic Options
+### todo to run the tests
+1. Set up external source with options matching Parse
+2. Implement workflow
+3. Run: `node 00-master.js`
+4. Verify no changes are made
 
-Based on the application context (invoice management), possible dynamic options might include:
+## scenario3: New options to add
+### input data
+- External source with new options not in Parse
 
-1. **Invoice Statuses**:
-   - Paid, Unpaid, Partial, Cancelled, etc.
+### expecting console log output in the log file
+- "Étape 1: X options récupérées"
+- "Étape 2: X options créées, 0 options mises à jour"
 
-2. **Payment Methods**:
-   - Credit Card, Bank Transfer, Check, Cash, etc.
+### todo to run the tests
+1. Set up external source with new options
+2. Set up Parse with no matching options
+3. Implement workflow
+4. Run: `node 00-master.js`
+5. Verify new options are created
 
-3. **Sequence Types**:
-   - Relance, Suivi, Notification, etc.
+## scenario4: Cloud Function call
+### input data
+- Valid Parse Cloud Function call with masterKey
 
-4. **Contact Types**:
-   - Client, Supplier, Employee, etc.
+### expecting console log output in the log file
+- "Début du processus update-dynamic-options"
+- Same logs as CLI execution
 
-5. **Priority Levels**:
-   - Low, Medium, High, Urgent
-
-6. **Categories**:
-   - Various categorization options
-
-7. **Templates**:
-   - Email templates
-   - Document templates
-
-8. **System Settings**:
-   - Default values
-   - Thresholds
-   - Timeouts
-
----
-
-## Relationship to Other Workflows
-
-This workflow would likely be **used by**:
-
-1. **All workflows**: For accessing dynamic configuration
-2. **import-invoice**: For invoice status options
-3. **generate-relances**: For sequence configuration
-4. **generate-suivi**: For follow-up configuration
-
-**Possible Integration Scenarios**:
-
-1. **Centralized Configuration**: All workflows read from dynamic options
-2. **Caching**: Options cached for performance
-3. **Hot Reload**: Options updated without restart
-4. **Validation**: Options validated before use
-
----
-
-## Current Implementation Status
-
-**Files Present**:
-```
-update-dynamic-options/
-└── logs/  (empty directory)
-```
-
-**Files Missing** (Expected):
-- `00-master.js` - Main orchestrator
-- `01-fetchOptions.js` - Option fetcher
-- `02-updateOptions.js` - Option updater
-
----
-
-## Existing Dynamic Data
-
-In the current codebase, dynamic options appear to be handled by:
-
-1. **Hardcoded Values**: Some values are hardcoded in workflows
-2. **Database Fields**: Some options stored in Parse classes
-3. **Configuration Files**: Some options in environment variables
-
-**Example from import-invoice workflow**:
-- Statuses are fetched from SQLite (`02-fetchStatuts.js`)
-- Employees are fetched from SQLite (`03-fetchEmployes.js`)
-
----
-
-## Recommendations
-
-1. **Implement the workflow** following the pattern of other workflows:
-   - Create `00-master.js` with Cloud Function registration
-   - Create step files for each phase
-   - Use consistent patterns
-
-2. **Centralize dynamic data**:
-   - Create a dedicated Parse class for dynamic options
-   - Standardize option access
-   - Implement caching for performance
-
-3. **Consider needs**:
-   - What options need to be dynamic?
-   - Where should options be stored?
-   - How often should options be updated?
-   - Who can update options?
-
-4. **Integrate with existing**:
-   - Replace hardcoded values with dynamic options
-   - Ensure backward compatibility
-   - Maintain existing functionality
-
----
-
-## Expected Configuration
-
-### Environment Variables
-
-```bash
-# Parse Configuration
-PARSE_APP_ID=
-PARSE_JAVASCRIPT_KEY=
-PARSE_MASTER_KEY=
-PARSE_SERVER_URL=
-
-# Options Source
-OPTIONS_DB_URI=
-OPTIONS_DB_TABLE=
-OPTIONS_API_ENDPOINT=
-
-# Update Settings
-OPTIONS_UPDATE_INTERVAL=24h  # How often to check for updates
-OPTIONS_CACHE_TTL=1h         # How long to cache options
-```
-
----
-
-## Expected Dependencies
-
-### Internal
-- `../../utils/logger` - For logging
-
-### External
-- `parse/node` - Parse SDK
-- `better-sqlite3` - SQLite operations (if using SQLite)
-- `axios` or similar - API calls (if using API)
-- `dotenv` - Environment variables
-
----
-
-## File Structure
-
-```
-update-dynamic-options/
-├── 00-master.js              # Main orchestrator (MISSING)
-├── 01-fetchOptions.js        # Option fetcher (MISSING)
-├── 02-updateOptions.js       # Option updater (MISSING)
-├── logs/                     # Runtime logs (exists, empty)
-└── specs/
-    └── technical-guide.md    # This file
-```
-
----
-
-## Notes
-
-1. This workflow appears to be **not yet implemented** or is a placeholder.
-
-2. Dynamic options in the current system are:
-   - Fetched on-demand (e.g., statuses, employees in import-invoice)
-   - Hardcoded in workflows
-   - Stored in Parse classes
-
-3. This workflow could provide:
-   - Centralized dynamic option management
-   - Periodic synchronization
-   - Caching for performance
-   - Standardized access patterns
-
-4. Until implemented, dynamic options are handled by individual workflows as needed.
+### todo to run the tests
+1. Implement Cloud Function registration in 00-master.js
+2. Call from client-side JavaScript:
+   ```javascript
+   Parse.Cloud.run('updateDynamicOptions', {}, { useMasterKey: true })
+     .then(result => console.log('Options updated:', result.stats))
+     .catch(error => console.error('Update error:', error));
+   ```
+3. Verify Cloud Function executes successfully

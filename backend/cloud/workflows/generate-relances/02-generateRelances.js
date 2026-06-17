@@ -81,6 +81,7 @@ Quelques règles importantes:
 + Si la date d'échéance est arrivée avant alors il faut accorder les temps en fonction.
 + Si l'email dit que l'on applique les taux de pénalités alors il faut rajouter 40€ au montant TTC.
 + LES BOUCLES [[loop ...]] DOIVENT ETRE TRAITEES AVEC TOUTES LES DONNEES DES IMPAYES. NE PAS OUBLIER AUCUN IMPAYE DANS LES BOUCLES. TOUS les impayés de la liste doivent apparaître dans le tableau généré.
++ Les emails commencent par Bonjour nom d'une personne, parfois on a que le nom de famille parfois, c'est une entreprise, utilise les informations que tu as pour rendre cette introduction normale.
 
 ---
 Voici les informations :
@@ -281,13 +282,17 @@ async function generateRelances() {
                 const Impaye = Parse.Object.extend("Impaye");
                 const impayeQuery = new Parse.Query(Impaye);
                 impayeQuery.containedIn("objectId", impayesIds);
-                const impayeDetails = await impayeQuery.find({ useMasterKey: true });
+                const impayeDetails = await impayeQuery.find({
+                    useMasterKey: true,
+                });
 
                 const Sequence = Parse.Object.extend("Sequence");
                 const sequenceQuery = new Parse.Query(Sequence);
                 sequenceQuery.equalTo("objectId", sequence.id);
                 sequenceQuery.equalTo("type", "relances");
-                const fullSequence = await sequenceQuery.first({ useMasterKey: true });
+                const fullSequence = await sequenceQuery.first({
+                    useMasterKey: true,
+                });
 
                 if (!fullSequence) {
                     warn(
@@ -303,7 +308,9 @@ async function generateRelances() {
                 }
 
                 const scenarios = fullSequence?.get("emails") || [];
-                const matchingScenario = scenarios.find((s) => s.email_index === emailIndex);
+                const matchingScenario = scenarios.find(
+                    (s) => s.email_index === emailIndex,
+                );
                 if (!matchingScenario) {
                     warn(
                         `Relance ${relance.id}: pas de scénario correspondant, skip`,
@@ -317,7 +324,9 @@ async function generateRelances() {
                     continue;
                 }
 
-                const activeScenario = matchingScenario.scenarios?.find((s) => s.active);
+                const activeScenario = matchingScenario.scenarios?.find(
+                    (s) => s.active,
+                );
                 if (!activeScenario) {
                     warn(
                         `Relance ${relance.id}: pas de scénario actif, skip`,
@@ -342,7 +351,10 @@ async function generateRelances() {
                 const MAX_GENERATION_ATTEMPTS = 5;
                 let hasVariables = true;
 
-                while (hasVariables && generationAttempts < MAX_GENERATION_ATTEMPTS) {
+                while (
+                    hasVariables &&
+                    generationAttempts < MAX_GENERATION_ATTEMPTS
+                ) {
                     generationAttempts++;
                     if (generationAttempts > 1) {
                         info(
@@ -358,24 +370,40 @@ async function generateRelances() {
                         let success = false;
                         while (!success && retries < MAX_RETRIES) {
                             try {
-                                const prompt = buildPrompt(activeScenario, impayeDetails, history, relance);
-                                const result = await generateEmailContent(prompt);
+                                const prompt = buildPrompt(
+                                    activeScenario,
+                                    impayeDetails,
+                                    history,
+                                    relance,
+                                );
+                                const result =
+                                    await generateEmailContent(prompt);
                                 objet = result.objet;
                                 corps = result.corps;
                                 success = true;
                             } catch (llmError) {
                                 retries++;
-                                warn(`LLM tentative ${retries} pour ${relance.id}: ${llmError.message}`);
-                                if (retries < MAX_RETRIES) await new Promise(resolve => setTimeout(resolve, 1000));
+                                warn(
+                                    `LLM tentative ${retries} pour ${relance.id}: ${llmError.message}`,
+                                );
+                                if (retries < MAX_RETRIES)
+                                    await new Promise((resolve) =>
+                                        setTimeout(resolve, 1000),
+                                    );
                                 else throw llmError;
                             }
                         }
                     } else {
-                        objet = activeScenario.objet || "Relance - Facture impayée";
-                        corps = activeScenario.corps || "Veuillez régulariser votre situation.";
+                        objet =
+                            activeScenario.objet || "Relance - Facture impayée";
+                        corps =
+                            activeScenario.corps ||
+                            "Veuillez régulariser votre situation.";
                     }
 
-                    hasVariables = hasUnreplacedVariables(objet) || hasUnreplacedVariables(corps);
+                    hasVariables =
+                        hasUnreplacedVariables(objet) ||
+                        hasUnreplacedVariables(corps);
                 }
 
                 if (USE_OLLAMA && !hasVariables) {
@@ -385,7 +413,9 @@ async function generateRelances() {
                         objet = objetCorrige;
                         corps = corpsCorrige;
                     } catch (orthoError) {
-                        warn(`Échec correction orthographique pour ${relance.id}: ${orthoError.message}`);
+                        warn(
+                            `Échec correction orthographique pour ${relance.id}: ${orthoError.message}`,
+                        );
                     }
                 }
 
@@ -397,13 +427,18 @@ async function generateRelances() {
             } catch (err) {
                 error(`Erreur pour relance ${relance.id}: ${err.message}`);
                 stats.errors++;
-                stats.erreurs.push({ relanceId: relance.id, erreur: err.message });
+                stats.erreurs.push({
+                    relanceId: relance.id,
+                    erreur: err.message,
+                });
             }
         }
 
         info(`Étape 2: ${stats.processed} réussis | ${stats.errors} erreurs`);
         const parseStats = await getRelancesStats();
-        info(`Parse check: ${parseStats.totalRelances} en attente | ${parseStats.pretPourEnvoi} prêts`);
+        info(
+            `Parse check: ${parseStats.totalRelances} en attente | ${parseStats.pretPourEnvoi} prêts`,
+        );
         return { stats };
     } catch (err) {
         error(`Erreur Étape 2: ${err.message}`);
