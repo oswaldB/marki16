@@ -1,16 +1,21 @@
 # Technical Guide: test-single Workflow
 
 ## Overview
-This workflow provides a **Cloud Function** for testing a single email by sending it to a specified recipient. It is similar to `send-sequence-test` but focuses on testing individual emails rather than entire sequences.
+This workflow provides a **Cloud Function** (`testSingleEmail`) for testing a single email by sending it to a specified recipient. It is similar to `send-sequence-test` but focuses on testing **individual emails** rather than entire sequences.
 
 ## Purpose
 Send a single test email to verify:
-- Email template content
-- Variable replacement
-- Email delivery
-- Attachments (if any)
+- Email template content (from sequence emails).
+- Variable replacement (using preloaded `payeurData` from frontend).
+- Email delivery (via SMTP).
+- Attachments (if any, though not currently implemented in this workflow).
 
-This is useful for quick testing of email configurations without going through the full sequence workflow.
+This is useful for **quick testing of email configurations** directly from the sequence page (`/sequences/relances/[id]`), without going through the full sequence workflow.
+
+**Key Difference from `send-sequence-test`**:
+- Tests **one email at a time** (selected via `emailIndex`).
+- Uses **real payer data** (preloaded from frontend) instead of test data.
+- Triggered from the **SingleEmailTestSlideover** component.
 
 ---
 
@@ -18,10 +23,13 @@ This is useful for quick testing of email configurations without going through t
 
 ### 1. Cloud Function Trigger (Primary Method)
 **Endpoint**: `Parse.Cloud.run("testSingleEmail")`
+**Triggered from**: `SingleEmailTestSlideover.vue` (frontend component).
 
 **How to Call** (depuis le frontend - SingleEmailTestSlideover.vue):
 ```javascript
 // Appel réel depuis le frontend
+// Note: Les paramètres userId, userEmail, userName sont extraits automatiquement depuis currentUser.
+// payeurData est préchargé depuis la liste des payeurs avec impayés actifs.
 Parse.Cloud.run('testSingleEmail', {
   sequenceId: 'sequence123',
   testEmail: 'developer@example.com',
@@ -46,21 +54,21 @@ Parse.Cloud.run('testSingleEmail', {
 ```
 
 **Authentication**:
-- No `masterKey` required in client call (Cloud Function uses `Parse.Cloud.useMasterKey()`)
-- Requires authenticated user session
-- Throws: Error if neither is present
+- No `masterKey` required in client call (Cloud Function uses `Parse.Cloud.useMasterKey()` in 00-master.js).
+- Requires **authenticated user session** (user data is extracted automatically via `currentUser`).
+- Throws: Error if user session is invalid or missing.
 
 **Parameters** (all required except user info):
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `sequenceId` | string | **Yes** | ID of the sequence containing the email to test |
-| `testEmail` | string | **Yes** | Recipient email address for the test |
-| `payeurId` | string | **Yes** | Contact ID of the payer to use for data |
-| `payeurData` | object | **Yes** | Payer data object with nom, email, impayesCount, impayesAmount |
-| `emailIndex` | number | **Yes** | Index of the email in the sequence to test |
-| `userId` | string | No | Current user ID (for logging) |
-| `userEmail` | string | No | Current user email (for logging) |
-| `userName` | string | No | Current user name (for logging) |
+| `sequenceId` | string | **Yes** | ID of the sequence containing the email to test. Source: `props.sequence.id` in frontend. |
+| `testEmail` | string | **Yes** | Recipient email address for the test. Entered manually by user in the slideover. |
+| `payeurId` | string | **Yes** | Contact ID of the payer to use for data. Selected from the list of payeurs with active impayés. |
+| `payeurData` | object | **Yes** | Payer data object **preloaded from frontend** with: `nom`, `email`, `impayesCount`, `impayesAmount`. |
+| `emailIndex` | number | **Yes** | Index of the email in the sequence to test. Source: `props.emailIndex` in frontend. |
+| `userId` | string | No | Current user ID (extracted from `currentUser.id` in frontend, for logging). |
+| `userEmail` | string | No | Current user email (extracted from `currentUser.get('email')` in frontend, for logging). |
+| `userName` | string | No | Current user name (extracted from `currentUser.get('username')` in frontend, for logging). |
 
 ---
 
@@ -160,11 +168,7 @@ testSingleEmail(request)
 │  │     Get emails from sequence.emails[emailIndex]                      │   │
 │  │     IF emailIndex >= emails.length:                  │   │   │
 │  │         Throw: "emailIndex hors limites"                               │   │
-│  │     Query Contact (payeur) by ID:                                      │   │
-│  │       - Class: Contact                                             │   │   │
-│  │       - where: { objectId: payeurId }                                  │   │
-│  │     Query Impaye for payeur:                                          │   │
-│  │       - where: { payeur: payeur, facture_soldee: false }                     │   │   │
+│  │     Use payeurData from request (NO DB QUERY for Contact/Impaye)      │   │                     │   │   │
 │  │        └─────────────────────────────────────────────────────────┘   │   │                                   │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                     │
@@ -175,8 +179,7 @@ testSingleEmail(request)
 │  │       scenarioActif = emailToTest.activeScenario || "single"           │   │
 │  │       scenario = emailToTest.scenarios.find(s => s.format === scenarioActif)│   │
 │  │     Build template variables from:                                    │   │
-│  │       - payeur data (nom, email, telephone, adresse)                  │   │
-│  │       - impaye data (nfacture, date_piece, montant_ttc, etc.)          │   │
+│  │       - payeur data (nom, email, impayesCount, impayesAmount)          │   │
 │  │       - user data (nom, email)                                        │   │
 │  │       - sequence data (nom)                                           │   │
 │  │       - current date                                                  │   │
@@ -184,35 +187,35 @@ testSingleEmail(request)
 │         │                                                                     │
 │         ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 5. Replace variables in subject and body:                             │   │
+│  │ 5. FIRST PASS: Replace [[variable]] syntax only                        │   │
 │  │     Uses custom replaceVariables() function                           │   │
-│  │     Replaces [[variable]] and <%= variable %> syntax                   │   │
+│  │     Replaces ONLY [[variable]] syntax (NOT <%= variable %>)           │   │
 │  │     Processes both subject (objet) and body (corps)                   │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                     │
 │         ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 7. Check for unreplaced variables:                                    │   │
+│  │ 6. Check for remaining [[variable]] or <%= variable %>:               │   │
 │  │     IF USE_OLLAMA = true AND hasUnreplacedVariables(newSubject || newBody):│   │
-│  │        Try:                                                           │   │
-│  │          prompt = buildPrompt(activeScenario, data.impayes, [], {})   │   │
-│  │          result = await generateEmailContent(prompt)                   │   │
-│  │          newSubject = result.objet                                     │   │
-│  │          newBody = result.corps                                        │   │
-│  │        Catch (error):                                                 │   │
-│  │          Log warning: "Génération LLM échouée"                          │   │
+│  │        Proceed to LLM generation (Phase 4)                           │   │
 │  │     ELSE:                                                             │   │
-│  │        Use newSubject and newBody as-is                                │   │
+│  │        Skip LLM, proceed to orthographic correction (if enabled)      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│         │                                                                     │
+│         ▼                                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ 7. LLM GENERATION (if unreplaced variables remain):                  │   │
+│  │     Builds prompt with context (payeur, sequence, user data)          │   │
+│  │     Calls Ollama API to generate complete content                     │   │
+│  │     Replaces BOTH [[variable]] AND <%= variable %> syntax              │   │
+│  │     IF LLM fails: Log warning, use content from first pass            │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                     │
 │         ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │ 8. Apply orthographic correction (if USE_OLLAMA = true):             │   │
-│  │      Try:                                                             │   │
-│  │        newSubject = await correctOrthographe(newSubject)              │   │
-│  │        newBody = await correctOrthographe(newBody)                      │   │
-│  │      Catch (error):                                                   │   │
-│  │        Log warning: "Correction orthographique échouée"                │   │
+│  │     Calls correctOrthographe() for subject and body                  │   │
+│  │     IF correction fails: Log warning, use uncorrected content        │                │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                     │
 │         ▼                                                                     │
@@ -297,16 +300,17 @@ testSingleEmail(request)
 
 2. **Cloud Function Registration**:
    - Registers `testSingleEmail` Cloud Function with Parse
+   - Uses `Parse.Cloud.useMasterKey()` to allow client calls without explicit master key.
    - Logs registration success
 
 3. **Module Export**:
    - Exports `testSingleEmail` function for external use
 
 **Key Characteristics**:
-- This is a **passive** workflow - it only registers the Cloud Function
-- The actual logic is in `01-testSingleEmail.js`
-- No automatic execution - must be triggered via Cloud Function call
-- **Important**: Uses `Parse.Cloud.useMasterKey()` so client calls don't need `useMasterKey: true`
+- This is a **passive** workflow - it only registers the Cloud Function.
+- The actual logic is in `01-testSingleEmail.js`.
+- No automatic execution - must be triggered via Cloud Function call from frontend (`SingleEmailTestSlideover.vue`).
+- **Important**: Client calls (from frontend) do **not** need `useMasterKey: true` because it is already set in this file.
 
 ---
 
@@ -318,86 +322,108 @@ testSingleEmail(request)
 #### Phase 1: Input Validation
 1. **Request Validation**:
    - Validates all required parameters are present:
-     - `sequenceId` (required)
-     - `testEmail` (required)
-     - `payeurId` (required)
-     - `emailIndex` (required)
+     - `sequenceId` (required, from frontend `props.sequence.id`).
+     - `testEmail` (required, entered manually by user).
+     - `payeurId` (required, selected from payeurs list).
+     - `emailIndex` (required, from frontend `props.emailIndex`).
+     - `payeurData` (required, preloaded from frontend).
 
 2. **Authentication Check**:
-   - Relies on Parse Cloud Function authentication (master key already set in 00-master.js)
-   - Requires authenticated user session
+   - Relies on Parse Cloud Function authentication (master key already set in 00-master.js).
+   - Requires authenticated user session (user data is passed from frontend).
 
 #### Phase 2: Data Retrieval
 3. **Fetch Sequence**:
-   - Queries `Sequence` class by sequenceId
-   - Gets all emails from sequence
-   - Validates emailIndex is within bounds
+   - Queries `Sequence` class by `sequenceId` (from `request.sequenceId`).
+   - Gets all emails from sequence.
+   - Validates `emailIndex` is within bounds (throws error if `emailIndex >= emails.length`).
 
-4. **Fetch Payer Data**:
-   - Queries `Contact` class by payeurId
-   - Gets payer information (nom, email, telephone, adresse)
+4. **Use Preloaded Payer Data**:
+   - **Does not query `Contact` or `Impaye` classes** (unlike backend workflows).
+   - Uses `payeurData` **preloaded from frontend** (via `chargerPayeursAvecImpayes()` in `SingleEmailTestSlideover.vue`).
+   - `payeurData` includes: `nom`, `email`, `impayesCount`, `impayesAmount`.
 
-5. **Fetch Impaye Data**:
-   - Queries `Impaye` class for payer
-   - Filters by `facture_soldee: false`
-   - Gets first active impaye for variable replacement
-
-6. **Get Email Template**:
-   - Extracts email at emailIndex from sequence
-   - Gets active scenario from email
-   - Validates scenario exists
-   - If sequenceId provided:
-     - Queries `Sequence` class
-     - Gets sequence by ID
-     - Includes: `["emails"]`
-   
-   - If emailIndex provided:
-     - Gets specific email template from sequence
-     - Uses template's objet and corps if not overridden
+5. **Get Email Template**:
+   - Extracts email at `emailIndex` from sequence.
+   - Gets active scenario from email (`email.activeScenario || 'single'`).
+   - Validates scenario exists in `email.scenarios`.
 
 #### Phase 3: Variable Replacement
 5. **Prepare Template Variables**:
-   - Creates templateVars object with:
-     - Payer variables: `payeur_nom`, `payeur_email`, `payeur_telephone`, `payeur_adresse`
-     - Impaye variables: `nfacture`, `date_piece`, `date_echeance`, `montant_ttc`, `reste_a_payer`
-     - User variables: `user_nom`, `user_email`
-     - Sequence variables: `sequence_nom`
-     - Date variable: `date_du_jour`
+   - Creates `templateVars` object with:
+     - Payer variables: `payeur_nom`, `payeur_email` (from `payeurData.nom` and `payeurData.email`).
+     - Impaye variables: `impayesCount` (from `payeurData.impayesCount`), `impayesAmount` (from `payeurData.impayesAmount`).
+     - User variables: `user_nom`, `user_email` (from `request.userName` and `request.userEmail`).
+     - Sequence variables: `sequence_nom` (from fetched sequence).
+     - Date variable: `date_du_jour` (current date).
 
-6. **Replace Variables**:
-   - Uses custom `replaceVariables()` function
-   - Replaces `[[variable]]` and `<%= variable %>` syntax
-   - Processes both subject (objet) and body (corps)
+6. **First Pass: Replace [[variable]] Syntax**:
+   - Uses custom `replaceVariables()` function.
+   - **Only replaces `[[variable]]` syntax** in this first pass.
+   - Processes both subject (`objet`) and body (`corps`).
+   - **Note**: `<%= variable %>` syntax is **intentionally left untouched** for now.
 
-#### Phase 4: Content Generation
-7. **Check for Unreplaced Variables**:
-   - If `USE_OLLAMA=true` and unreplaced variables exist:
-     - Builds prompt for LLM
-     - Calls Ollama API to replace remaining variables
-     - Validates output
-   
-   - If no unreplaced variables or LLM disabled:
-     - Uses content as-is
+7. **Check for Remaining Variables**:
+   - After the first pass, checks if any `[[variable]]` or `<%= variable %>` remain in the template.
+   - If **no unreplaced variables** remain:
+     - Proceeds directly to **Phase 5: Orthographic Correction** (if `USE_OLLAMA=true`).
+   - If **unreplaced variables** remain:
+     - Proceeds to **Phase 4: LLM Content Generation**.
 
-8. **Orthographic Correction**:
-   - If `USE_OLLAMA=true`:
-     - Applies spelling/grammar correction
+#### Phase 4: LLM Content Generation (Second Pass)
+8. **Generate Content with LLM**:
+   - **Only executed if `USE_OLLAMA=true` AND unreplaced variables remain** after Phase 3.
+   - Builds a **detailed prompt** for the LLM including:
+     - Payer context: `payeur_nom`, `payeur_email`, `impayesCount`, `impayesAmount`.
+     - Sequence context: `sequence_nom`, `emailIndex`.
+     - User context: `user_nom`, `user_email`.
+     - Original template content (subject and body).
+   - Calls **Ollama API** (`/generate` endpoint) with:
+     - `model`: `process.env.OLLAMA_MODEL` (default: `mistral`).
+     - `prompt`: Structured request to complete the email content.
+   - **Expected LLM Output Format**:
+     ```
+     Objet: [completed subject]
+     
+     Corps:
+     [completed body]
+     ```
+   - Replaces **both subject and body** with the LLM-generated content.
+   - **Note**: The LLM is expected to handle **both `[[variable]]` and `<%= variable %>`** syntax in this pass.
 
-#### Phase 5: Email Sending
-9. **Email Construction**:
+9. **Fallback if LLM Fails**:
+   - If LLM generation fails (network error, API error, etc.):
+     - Logs a warning: `"Génération LLM échouée"`.
+     - **Uses the content from Phase 3** (with unreplaced variables).
+
+#### Phase 5: Orthographic Correction
+10. **Apply Orthographic Correction**:
+    - If `USE_OLLAMA=true`:
+      - Calls `correctOrthographe()` for both subject and body.
+      - Uses the same Ollama API endpoint with a **spelling/grammar correction prompt**.
+    - If correction fails:
+      - Logs a warning: `"Correction orthographique échouée"`.
+      - Uses the uncorrected content.
+
+#### Phase 6: Email Sending
+11. **Email Construction**:
    - Sets email options:
-     - `from`: Test sender address (from SMTP_FROM)
-     - `to`: Recipient email (from params.email or contact)
-     - `subject`: Processed subject
-     - `html`: Processed body
-     - `replyTo`: Optional reply-to address
+     - `from`: Test sender address (from `SMTP_FROM`)
+     - `to`: Recipient email (from `request.testEmail`)
+     - `subject`: Processed subject (from Phase 4 or Phase 3)
+     - `html`: Processed body (from Phase 4 or Phase 3)
+     - `replyTo`: Optional reply-to address (from `REPLY_TO_EMAIL`)
 
-10. **SMTP Configuration**:
+12. **SMTP Configuration**:
     - Uses same SMTP settings as send-emails workflow
-    - Creates Nodemailer transporter
+    - Creates Nodemailer transporter with:
+      - `host`: `SMTP_HOST`
+      - `port`: `SMTP_PORT`
+      - `secure`: `SMTP_SECURE`
+      - `auth`: `{ user: SMTP_USER, pass: SMTP_PASS }`
 
-11. **Send Email**:
-    - Calls `transporter.sendMail()`
+13. **Send Email**:
+    - Calls `transporter.sendMail(emailOptions)`
     - Handles success:
       - Logs success with email details
       - Returns success response with preview info
@@ -417,56 +443,51 @@ Cloud Function Call: testSingleEmail
 ┌─────────────────────────────────────────────────────────────┐
 │ testSingleEmail(request)                                     │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Validate request params                                  │ │
-│ │ - relanceId OR suiviId OR (email + subject + body)       │ │
-│ │ - sequenceId (optional)                                   │ │
-│ │ - emailIndex (optional)                                  │ │
+│ │ PHASE 1: Validate request params                         │ │
+│ │ - sequenceId (required)                                  │ │
+│ │ - testEmail (required)                                  │ │
+│ │ - payeurId (required)                                   │ │
+│ │ - emailIndex (required)                                 │ │
+│ │ - payeurData (required)                                 │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Check authentication (master key or user)               │ │
+│ │ PHASE 2: Fetch sequence and email template               │ │
+│ │ - Query Sequence by ID                                  │ │
+│ │ - Get email at emailIndex                               │ │
+│ │ - Use payeurData from request (NO DB QUERY)              │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ IF relanceId:                                           │ │
-│ │   Query Relance by ID                                    │ │
-│ │   Include: [contact, sequence, impayes]                   │ │
-│ │ ELSE IF suiviId:                                        │ │
-│ │   Query Suivi by ID                                      │ │
-│ │   Include: [contact, sequence, impaye]                    │ │
-│ │ ELSE:                                                   │ │
-│ │   Use provided email, subject, body                      │ │
+│ │ PHASE 3: First Pass - Replace [[variable]] syntax         │ │
+│ │ - Build templateVars from payeurData, userData, etc.     │ │
+│ │ - Replace ONLY [[variable]] in subject and body          │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ IF sequenceId:                                          │ │
-│ │   Query Sequence by ID                                   │ │
-│ │   Include: [emails]                                      │ │
-│ │ IF emailIndex:                                          │ │
-│ │   Get specific email from sequence                       │ │
+│ │ PHASE 4: Check for remaining variables                   │ │
+│ │ - If USE_OLLAMA=true AND unreplaced variables exist:     │ │
+│ │   → LLM Content Generation (Second Pass)               │ │
+│ │ - Else: Skip LLM                                        │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Prepare data for variable replacement                    │ │
-│ │ Replace variables in subject and body                     │ │
+│ │ PHASE 5: LLM Content Generation (if needed)             │ │
+│ │ - Build prompt with context (payeur, sequence, user)     │ │
+│ │ - Call Ollama API to generate complete content            │ │
+│ │ - Replace BOTH [[variable]] AND <%= variable %>           │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ IF USE_OLLAMA && unreplaced variables:                   │ │
-│ │   Generate content via LLM                               │ │
+│ │ PHASE 6: Orthographic Correction (if USE_OLLAMA=true)     │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ IF USE_OLLAMA:                                           │ │
-│ │   Apply orthographic correction                          │ │
+│ │ PHASE 7: Build email: from, to, subject, html              | │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Build email: from, to, subject, html                      │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│         ↓                                                    │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Send email via Nodemailer                                │ │
+│ │ PHASE 8: Send email via Nodemailer                       │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │         ↓                                                    │
 │ Return: { success, message, to, subject, preview, timestamp }│
@@ -488,18 +509,19 @@ Response to Cloud Function caller
 ## Error Handling
 
 ### Validation Errors
-- **Missing parameters**: Returns error response with details
-- **Invalid relanceId**: Returns error response
-- **Invalid suiviId**: Returns error response
-- **No email provided**: Returns error response
+- **Missing sequenceId**: Throws error "sequenceId est requis"
+- **Missing testEmail**: Throws error "testEmail est requis"
+- **Missing payeurId**: Throws error "payeurId est requis"
+- **Missing emailIndex**: Throws error "emailIndex est requis"
+- **Invalid emailIndex**: Throws error if emailIndex >= emails.length
 
 ### Authentication Errors
-- **Unauthorized**: Throws error if no master key or authenticated user
+- **Unauthorized**: Relies on Parse authentication (master key set in 00-master.js)
 
 ### Data Fetching Errors
-- **Relance not found**: Returns error response
-- **Suivi not found**: Returns error response
-- **Sequence not found**: Uses provided content or returns warning
+- **Sequence not found**: Throws error "Séquence introuvable"
+- **Payeur not found**: Throws error when Contact query fails
+- **No active impaye**: Warning logged but continues with available data
 
 ### Email Sending Errors
 - **SMTP errors**: Caught and returned in response
@@ -559,20 +581,22 @@ REPLY_TO_EMAIL=reply@adti.com
 ### Test Specific Email in Sequence (Frontend Call)
 ```javascript
 // Appel réel depuis SingleEmailTestSlideover.vue
+// Note: payeurData est préchargé via chargerPayeursAvecImpayes()
+//       userId/userEmail/userName sont extraits de currentUser
 Parse.Cloud.run('testSingleEmail', {
-  sequenceId: 'sequence123',
-  testEmail: 'developer@example.com',
-  payeurId: 'contact456',
-  payeurData: {
+  sequenceId: 'sequence123',          // props.sequence.id
+  testEmail: 'developer@example.com', // Champ saisi par l'utilisateur
+  payeurId: 'contact456',             // selectedPayeur.value
+  payeurData: {                      // selectedPayeurData.value (préchargé)
     nom: 'Jean Dupont',
     email: 'jean@exemple.com',
-    impayesCount: 3,
-    impayesAmount: 1500
+    impayesCount: 3,                 // Nombre d'impayés actifs
+    impayesAmount: 1500              // Montant total des impayés (en euros)
   },
-  emailIndex: 0,  // Premier email de la séquence
-  userId: 'user789',
-  userEmail: 'admin@adti.com',
-  userName: 'Administrateur'
+  emailIndex: 0,                     // props.emailIndex (index dans la séquence)
+  userId: 'user789',                 // currentUser.id (automatique)
+  userEmail: 'admin@adti.com',      // currentUser.get('email') (automatique)
+  userName: 'Administrateur'        // currentUser.get('username') (automatique)
 }).then(result => {
   console.log('Test email sent:', result);
 }).catch(error => {
@@ -586,7 +610,12 @@ Parse.Cloud.run('testSingleEmail', {
   sequenceId: 'sequence123',
   testEmail: 'test@example.com',
   payeurId: 'contact789',
-  payeurData: { nom: 'Marie Martin', email: 'marie@test.com' },
+  payeurData: { 
+    nom: 'Marie Martin', 
+    email: 'marie@test.com',
+    impayesCount: 2,
+    impayesAmount: 2500 
+  },
   emailIndex: 1  // Deuxième email de la séquence
 }).then(...);
 ```
@@ -596,11 +625,17 @@ Parse.Cloud.run('testSingleEmail', {
 const { testSingleEmail } = require('./test-single/00-master');
 
 // Request object with all required parameters
+// Note: payeurData doit inclure impayesCount et impayesAmount pour un test réaliste
 const request = {
   sequenceId: 'sequence123',
   testEmail: 'test@example.com',
   payeurId: 'contact456',
-  payeurData: { nom: 'Test Payeur', email: 'test@exemple.com' },
+  payeurData: { 
+    nom: 'Test Payeur', 
+    email: 'test@exemple.com',
+    impayesCount: 1,
+    impayesAmount: 1000 
+  },
   emailIndex: 0
 };
 
@@ -611,14 +646,16 @@ testSingleEmail(request).then(...);
 
 ## Testing Notes
 
-- Use `testEmail` parameter to specify recipient address
-- Use `emailIndex` to select which email in the sequence to test
-- Select a `payeurId` with active impayés for realistic data
-- Set `USE_OLLAMA=false` to avoid LLM API calls (not currently used in this workflow)
-- Mock SMTP server for development testing
-- Test with various email indices in the sequence
-- Verify variable replacement works with payer and impaye data
-- Test error scenarios (invalid sequenceId, payeurId, emailIndex out of bounds)
+- Use `testEmail` parameter to specify recipient address (entered manually in the slideover).
+- Use `emailIndex` to select which email in the sequence to test (passed from the sequence page).
+- Select a `payeurId` with active impayés for realistic data (preloaded from `chargerPayeursAvecImpayes()`).
+- **Frontend Flow**: The slideover automatically loads payeurs with active impayés on open (via `chargerPayeursAvecImpayes()`).
+- **User Data**: `userId`, `userEmail`, and `userName` are automatically extracted from the current user session.
+- Set `USE_OLLAMA=false` to avoid LLM API calls (not currently used in this workflow).
+- Mock SMTP server for development testing.
+- Test with various email indices in the sequence.
+- Verify variable replacement works with `payeurData` (nom, email, impayesCount, impayesAmount).
+- Test error scenarios (invalid sequenceId, payeurId, emailIndex out of bounds).
 
 ---
 
@@ -626,13 +663,15 @@ testSingleEmail(request).then(...);
 
 | Feature | send-sequence-test | test-single |
 |---------|-------------------|-------------|
-| Purpose | Test entire sequence | Test single email |
-| Input | sequenceId + emailIndex | sequenceId + emailIndex + payeurId + testEmail |
-| Template Source | Sequence templates | Sequence email templates |
-| Data Source | Uses test data | Uses real payer and impaye data |
-| Flexibility | Sequence-level | Single email with real data |
-| Use Case | Testing sequence flow | Testing individual emails with real payer context |
-| Frontend Component | SequenceTestSlideover | SingleEmailTestSlideover |
+| **Purpose** | Test entire sequence | Test single email |
+| **Input** | `sequenceId` + `emailIndex` | `sequenceId` + `emailIndex` + `payeurId` + `testEmail` + `payeurData` |
+| **Template Source** | Sequence templates | Sequence email templates |
+| **Data Source** | Uses test data (manually entered) | Uses **real payer data** (preloaded from frontend via `chargerPayeursAvecImpayes()`) |
+| **Flexibility** | Sequence-level (tests all emails) | Single email with real payer context |
+| **Use Case** | Testing sequence flow (e.g., delays, order) | Testing individual emails with **realistic payer data** (e.g., variable replacement, content) |
+| **Frontend Component** | `SequenceTestSlideover` | `SingleEmailTestSlideover` |
+| **User Data** | Manual input | **Automatically extracted** from `currentUser` |
+| **Payer Data** | Manual input | **Preloaded** from active impayés list |
 
 ---
 
@@ -653,11 +692,19 @@ test-single/
 
 1. This workflow is designed for **testing individual emails** rather than full sequences.
 
-2. It uses real payer and impaye data for realistic testing:
-   - Fetches actual payer information from Contact class
-   - Uses real impaye data for variable replacement
-   - Tests with actual email templates from sequences
+2. **Data Flow**:
+   - The frontend (`SingleEmailTestSlideover.vue`) **preloads payeurs with active impayés** via `chargerPayeursAvecImpayes()`.
+   - The selected `payeurData` (including `impayesCount` and `impayesAmount`) is passed directly to the Cloud Function.
+   - **No additional queries** are made for `Contact` or `Impaye` in the backend (unlike other workflows).
 
-3. The workflow currently uses a custom variable replacement function (not LLM-based).
+3. **User Context**:
+   - `userId`, `userEmail`, and `userName` are **automatically extracted** from the current user session in the frontend.
 
-4. No database modifications are made - this is purely for testing email delivery.
+4. The workflow uses a **custom variable replacement function** (not LLM-based by default).
+   - If `USE_OLLAMA=true`, unreplaced variables are handled by LLM (see Phase 4 in the flow).
+
+5. **No database modifications** are made - this is purely for testing email delivery.
+
+6. **Frontend Integration**:
+   - Triggered from the **"Tester cet email"** button on `/sequences/relances/[id]`.
+   - Requires an **authenticated user** to extract user data.

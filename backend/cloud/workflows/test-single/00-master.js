@@ -1,5 +1,6 @@
 // backend/cloud/workflows/test-single/00-master.js
 // Cloud Function: Test single email workflow
+// Enregistre la Cloud Function "testSingleEmail" pour tester un email individuel
 
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 
@@ -53,7 +54,7 @@ if (typeof Parse === "undefined") {
         process.env.PARSE_MASTER_KEY,
     );
     Parse.serverURL = process.env.PARSE_SERVER_URL;
-    Parse.Cloud.useMasterKey();
+    Parse.Cloud.useMasterKey(); // Permet aux appels clients de ne pas nécessiter useMasterKey: true
     global.Parse = Parse;
 }
 
@@ -74,6 +75,7 @@ info(
     "master",
 );
 
+// Importer la fonction principale (qui orchestrer les 3 noeuds)
 const testSingleEmail = require("./01-testSingleEmail");
 
 // Enregistrement de la Cloud Function Parse
@@ -85,19 +87,37 @@ info(
 Parse.Cloud.define("testSingleEmail", testSingleEmail);
 
 info(
-    "\n═════════════════════════════════════════════════════════════",
-    "test-single",
-    "master",
-);
-info(
     "✅ Cloud Function testSingleEmail enregistrée avec succès",
     "test-single",
     "master",
 );
+info(
+    "📌 Workflow structuré en 3 noeuds:",
+    "test-single",
+    "master",
+);
+info(
+    "   1. 01-validateAndFetch.js    - Validation + récupération de la séquence",
+    "test-single",
+    "master",
+);
+info(
+    "   2. 02-templateProcessing.js - Traitement du template (2 passes: [[variable]] → LLM)",
+    "test-single",
+    "master",
+);
+info(
+    "   3. 03-sendEmail.js          - Envoi de l'email via Nodemailer",
+    "test-single",
+    "master",
+);
+
+// Séparateur visuel
 info(
     "═════════════════════════════════════════════════════════════",
     "test-single",
     "master",
 );
 
+// Exporter la fonction pour une utilisation externe (ex: tests unitaires)
 module.exports = { testSingleEmail };
