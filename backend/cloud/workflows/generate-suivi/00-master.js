@@ -60,7 +60,8 @@ if (typeof Parse === "undefined") {
 
 // Charger les scripts d'étape
 const createSuivis = require("./01-createSuivis");
-const generateSuivis = require("./02-generateSuivis");
+const replaceVariables = require("./02-replaceVariables");
+const generateSuivis = require("./03-generateSuivis");
 
 /**
  * Orchestrateur principal du workflow generate-suivi
@@ -112,7 +113,7 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
             "generateSuivisMaster",
         );
         info(
-            "📧 ÉTAPE 1/2: Création des suivis...",
+            "📧 ÉTAPE 1/3: Création des suivis...",
             "generate-suivi",
             "generateSuivisMaster",
             { step: 1 },
@@ -136,28 +137,76 @@ async function generateSuivisMaster({ trigger = "cron" } = {}) {
             "generateSuivisMaster",
         );
 
-        // ========== ÉTAPE 2: Génération du contenu ==========
+        // ========== ÉTAPE 2: Remplacement des variables ==========
         info(
             "\n═════════════════════════════════════════════════════════════",
             "generate-suivi",
             "generateSuivisMaster",
         );
         info(
-            "📝 ÉTAPE 2/2: Génération du contenu des suivis...",
+            "📝 ÉTAPE 2/3: Remplacement des variables...",
             "generate-suivi",
             "generateSuivisMaster",
             { step: 2 },
         );
-        const result2 = await generateSuivis();
+        const result2 = await replaceVariables();
         stats.etape2 = result2.stats;
         info(
-            `✅ ÉTAPE 2 TERMINÉE: ${result2.stats.processed || 0} traités, ${result2.stats.errors.length || 0} erreurs`,
+            `✅ ÉTAPE 2 TERMINÉE: ${result2.stats.processed || 0} traités, ${result2.stats.updated || 0} mis à jour, ${result2.stats.errors.length || 0} erreurs`,
             "generate-suivi",
             "generateSuivisMaster",
             {
                 step: 2,
                 processed: result2.stats.processed || 0,
+                updated: result2.stats.updated || 0,
                 errors: result2.stats.errors.length || 0,
+            },
+        );
+        info(
+            "═════════════════════════════════════════════════════════════",
+            "generate-suivi",
+            "generateSuivisMaster",
+        );
+
+        // ========== ÉTAPE 3: Génération du contenu ==========
+        info(
+            "\n═════════════════════════════════════════════════════════════",
+            "generate-suivi",
+            "generateSuivisMaster",
+        );
+        info(
+            "📝 ÉTAPE 3/3: Génération du contenu des suivis...",
+            "generate-suivi",
+            "generateSuivisMaster",
+            { step: 3 },
+        );
+        const result3 = await generateSuivis();
+        stats.etape3 = result3.stats;
+        info(
+            `✅ ÉTAPE 2 TERMINÉE: ${result2.stats.processed || 0} traités, ${result2.stats.updated || 0} mis à jour, ${result2.stats.errors.length || 0} erreurs`,
+            "generate-suivi",
+            "generateSuivisMaster",
+            {
+                step: 2,
+                processed: result2.stats.processed || 0,
+                updated: result2.stats.updated || 0,
+                errors: result2.stats.errors.length || 0,
+            },
+        );
+        info(
+            "═════════════════════════════════════════════════════════════",
+            "generate-suivi",
+            "generateSuivisMaster",
+        );
+
+        info(
+            `✅ ÉTAPE 3 TERMINÉE: ${result3.stats.processed || 0} traités, ${result3.stats.errors.length || 0} erreurs`,
+            "generate-suivi",
+            "generateSuivisMaster",
+            {
+                step: 3,
+                processed: result3.stats.processed || 0,
+                errors: result3.stats.errors.length || 0,
             },
         );
         info(
