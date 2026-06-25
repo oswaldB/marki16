@@ -228,75 +228,80 @@ async function chargerPayeursAvecImpayes() {
 }
 
 // Sélectionner un payeur
-function selectPayeur(payeur) {
+async function selectPayeur(payeur) {
   selectedPayeur.value = payeur.value
-  selectedPayeurData.value = payeur
+  
+  // Récupérer les impayés complets pour ce payeur
+  try {
+    const Impaye = $parse.Object.extend('Impaye')
+    const impayeQuery = new $parse.Query(Impaye)
+    impayeQuery.equalTo('facture_soldee', false)
+    impayeQuery.greaterThan('reste_a_payer', 0)
+    impayeQuery.equalTo('payeur', { __type: 'Pointer', className: 'Contact', objectId: payeur.value })
+    impayeQuery.descending('date_piece')
+    impayeQuery.limit(100)
+    
+    const impayesResults = await impayeQuery.find()
+    
+    // Construire l'objet payeurData avec les impayés complets
+    selectedPayeurData.value = {
+      objectId: payeur.value,
+      nom: payeur.nom,
+      email: payeur.email,
+      impayesCount: payeur.impayesCount,
+      impayesAmount: payeur.impayesAmount,
+      impayes: impayesResults.map(imp => ({
+        objectId: imp.id,
+        nfacture: imp.get('nfacture'),
+        reference: imp.get('reference'),
+        date_piece: imp.get('date_piece'),
+        date_echeance: imp.get('date_echeance'),
+        total_ht: imp.get('total_ht'),
+        total_ttc: imp.get('total_ttc'),
+        montant_total: imp.get('montant_total'),
+        reste_a_payer: imp.get('reste_a_payer'),
+        url_pdf: imp.get('url_pdf')
+      }))
+    }
+  } catch (error) {
+    console.error('Erreur récupération impayés:', error)
+    // Fallback: utiliser les données de base sans impayés détaillés
+    selectedPayeurData.value = payeur
+  }
 }
 
 // Envoyer le test
-async function envoyerTest() {
+function envoyerTest() {
   if (!testEmail.value || !selectedPayeur.value) {
     toast.add({ title: 'Erreur', description: 'Veuillez remplir tous les champs', color: 'red' })
     return
   }
 
-  try {
-    sendingTest.value = true
+  // Afficher immédiatement le message de confirmation et fermer
+  emit('test-sent')
+  isOpen.value = false
 
-    const currentUser = await $parse.User.current()
-
+  // Lancer l'envoi en arrière-plan sans attendre la réponse
+  $parse.User.current().then((currentUser) => {
     // Préparer les données pour l'envoi
+    // Utiliser l'email_index de l'email choisi (stocké dans l'objet email)
+    const selectedEmail = props.emailIndex !== null ? props.emails[props.emailIndex] : null
     const requestData = {
       sequenceId: props.sequence.id,
       testEmail: testEmail.value,
       payeurId: selectedPayeur.value,
       payeurData: selectedPayeurData.value,
-      emailIndex: props.emailIndex,
+      emailIndex: selectedEmail?.email_index || null,
       userId: currentUser ? currentUser.id : null,
       userEmail: currentUser ? currentUser.get('email') : null,
       userName: currentUser ? currentUser.get('username') : null
     }
 
-    const result = await $parse.Cloud.run('testSingleEmail', requestData)
-
-    console.log('Résultat cloud function:', result)
-
-    if (result.success) {
-      toast.add({
-        title: 'Test envoyé',
-        description: `1 email de test a été envoyé à ${testEmail.value}`,
-        color: 'green'
-      })
-    } else {
-      toast.add({
-        title: 'Erreur',
-        description: result.message || 'Échec de l\'envoi du test',
-        color: 'red'
-      })
-    }
-
-    emit('test-sent')
-    isOpen.value = false
-  } catch (error) {
-    console.error('Erreur envoi test:', error)
-
-    let errorMessage = 'Impossible d\'envoyer le test'
-    if (error && error.message) {
-      errorMessage = error.message
-    }
-    if (error && error.code) {
-      errorMessage += ` (Code: ${error.code})`
-    }
-
-    toast.add({
-      title: 'Erreur',
-      description: errorMessage,
-      color: 'red',
-      timeout: 0
+    // Fire and forget - on n'attend pas la réponse
+    $parse.Cloud.run('sendTestSingleEmail', requestData).catch((error) => {
+      console.error('Erreur envoi test (arrière-plan):', error)
     })
-  } finally {
-    sendingTest.value = false
-  }
+  })
 }
 
 // Charger les payeurs avec impayés automatiquement à l'ouverture

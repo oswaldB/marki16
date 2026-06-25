@@ -44,15 +44,6 @@
           Lancer attribution auto
         </UButton>
         <UButton
-          icon="i-heroicons-beaker"
-          color="orange"
-          @click="showTestModal = true"
-          size="sm"
-          class="md:size-auto"
-        >
-          Tester la séquence
-        </UButton>
-        <UButton
           icon="i-heroicons-arrow-path"
           color="primary"
           :loading="regenerating"
@@ -128,13 +119,6 @@
       @updated="chargerLiensPaiement"
     />
 
-    <SequenceTestSlideover
-      v-model="showTestModal"
-      :sequence="sequence"
-      :emails="emails"
-      @test-sent="onTestSent"
-    />
-
     <SingleEmailTestSlideover
       v-model="showSingleEmailTestModal"
       :sequence="sequence"
@@ -178,7 +162,6 @@ import DrawerLienPaiement from '~/components/DrawerLienPaiement.vue'
 import ModalIaSequence from '~/components/ModalIaSequence.vue'
 import ModalChatGptEmail from '~/components/ModalChatGptEmail.vue'
 import SmtpDrawer from '~/components/SmtpDrawer.vue'
-import SequenceTestSlideover from '~/components/SequenceTestSlideover.vue'
 import SingleEmailTestSlideover from '~/components/SingleEmailTestSlideover.vue'
 import SlideoverRegenererRelances from '~/components/SlideoverRegenererRelances.vue'
 import { useSequenceEditor, updateCorps, VARIABLES, getCurrentCorps, editorOptions } from '~/composables/useSequenceEditor'
@@ -255,7 +238,6 @@ const {
 
 // ── State local ────────────────────────────────────────────────
 const runningAutoAssign = ref(false)
-const showTestModal = ref(false)
 const showSingleEmailTestModal = ref(false)
 const showRegenererSlideover = ref(false)
 const regenerating = ref(false)

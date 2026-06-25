@@ -7,7 +7,7 @@
         <h1 class="text-xl font-semibold text-gray-900">Factures à régler</h1>
       </div>
       <p class="text-sm text-gray-500">
-        Voici l.historique de vos factures.
+        Voici vos factures en attente de paiement.
       </p>
     </div>
 
@@ -66,28 +66,15 @@
         </div>
       </div>
 
-      <!-- Tableau : Factures réglées -->
-      <div v-if="impayesRegles.length > 0" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-4 border-b border-gray-200 bg-green-50">
-          <h2 class="font-medium text-green-700 flex items-center gap-2">
-            <UIcon name="i-heroicons-check-circle" class="size-5" />
-            Factures réglées ({{ impayesRegles.length }})
-          </h2>
-        </div>
-        <div class="divide-y divide-gray-200">
-          <ImpayeCard
-            v-for="impaye in impayesRegles"
-            :key="impaye.id"
-            :impaye="impaye"
-            :show-pdf-link="true"
-            :show-payment-link="true"
-            class="p-4"
-          />
-        </div>
+      <!-- Message si aucune facture à régler -->
+      <div v-else class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <UIcon name="i-heroicons-check-circle" class="size-12 text-green-500 mb-4 mx-auto" />
+        <h2 class="text-lg font-medium text-gray-900 mb-2">Aucune facture à régler</h2>
+        <p class="text-gray-500">Vous n'avez actuellement aucune facture en attente de paiement.</p>
       </div>
 
       <!-- Message si aucune facture -->
-      <div v-if="impayesNonRegles.length === 0 && impayesRegles.length === 0" class="text-center py-12">
+      <div v-if="impayesNonRegles.length === 0 && !currentImpaye" class="text-center py-12">
         <UIcon name="i-heroicons-document-text" class="size-12 text-gray-300 mb-4 mx-auto" />
         <p class="text-gray-500">Aucune facture trouvée pour votre compte.</p>
       </div>
@@ -107,15 +94,17 @@ const expires = computed(() => route.query.expires)
 const loading = ref(true)
 const erreur = ref(null)
 const impayes = ref([])
-const currentImpaye = ref(null)
 
-// Impayés filtrés
+// Impayés filtrés - uniquement les factures non payées
 const impayesNonRegles = computed(() =>
   impayes.value.filter(i => !i.facture_soldee && (i.reste_a_payer || 0) > 0)
 )
-const impayesRegles = computed(() =>
-  impayes.value.filter(i => i.facture_soldee || (i.reste_a_payer || 0) === 0)
-)
+
+// Facture courante sélectionnée
+const currentImpaye = computed(() => {
+  if (!impayeId.value) return null
+  return impayes.value.find(i => i.id === impayeId.value) || null
+})
 
 // Vérifier le token dès le chargement
 watch(() => [sig.value, expires.value], () => {
@@ -140,19 +129,23 @@ watch(() => [sig.value, expires.value], () => {
 async function loadImpayes() {
   try {
     const result = await $parse.Cloud.run('getContactImpayes', {
-      contactId: contactId.value
+      contactId: contactId.value,
+      sig: sig.value,
+      expires: expires.value
     })
 
     if (result && result.impayes) {
       impayes.value = result.impayes
-
-      // Trouver l'impayé courant si impayeId est spécifié
-      if (impayeId.value) {
-        currentImpaye.value = impayes.value.find(i => i.id === impayeId.value) || null
-      }
     }
   } catch (err) {
     console.error('❌ [ESPACE/CONTACT/IMPAYE] Erreur:', err)
+    console.log('=== DEBUG ERREUR ===')
+    console.log('err:', err)
+    console.log('err.message:', err?.message)
+    console.log('err.code:', err?.code)
+    console.log('err.details:', err?.details)
+    console.log('JSON.stringify(err):', JSON.stringify(err, Object.getOwnPropertyNames(err)))
+    console.log('===================')
     erreur.value = err.message || 'Impossible de charger les factures'
   } finally {
     loading.value = false

@@ -336,14 +336,6 @@
                     {{ positionRelanceCourante }} / {{ relancesAValider.length }}
                   </span>
                   <UButton
-                    color="neutral"
-                    variant="outline"
-                    @click="passerRelanceWorkflow"
-                    :disabled="!peutPasser"
-                  >
-                    Passer
-                  </UButton>
-                  <UButton
                     color="primary"
                     :loading="validantWorkflow"
                     @click="validerRelanceWorkflow"
@@ -351,16 +343,24 @@
                   >
                     Valider
                   </UButton>
-                  <UButton
-                    color="neutral"
-                    variant="outline"
-                    class="border-gray-300 hover:bg-gray-50"
-                    :loading="blacklistStore.loading"
-                    @click="blacklistEtSupprimerRelances"
-                    :disabled="!relanceCourante"
+                  <UDropdownMenu
+                    :items="[
+                      [
+                        { label: 'Passer', icon: 'i-heroicons-forward', click: passerRelanceWorkflow, disabled: !peutPasser },
+                        { label: 'Blacklister et supprimer relances', icon: 'i-heroicons-no-symbol', click: blacklistEtSupprimerRelances, disabled: !relanceCourante || blacklistStore.loading },
+                        { label: 'Supprimer relance', icon: 'i-heroicons-trash', click: supprimerRelance, disabled: !relanceCourante || supprimantRelance }
+                      ]
+                    ]"
                   >
-                    Blacklister et supprimer relances
-                  </UButton>
+                    <UButton
+                      color="neutral"
+                      variant="outline"
+                      trailing-icon="i-heroicons-chevron-down"
+                      :loading="blacklistStore.loading || supprimantRelance"
+                    >
+                      Actions
+                    </UButton>
+                  </UDropdownMenu>
                 </div>
               </div>
             </template>
@@ -583,7 +583,7 @@
 
 <script setup>
 import { h } from 'vue'
-import { UButton, UCheckbox } from '#components'
+import { UButton, UCheckbox, UDropdownMenu } from '#components'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
@@ -666,6 +666,9 @@ const validationSearch = ref('')
 // Validation en masse
 const selectedRelancesForBulk = ref([])
 const bulkValidating = ref(false)
+
+// Suppression de relance
+const supprimantRelance = ref(false)
 
 function isSelectedBulk(relanceId) {
   return selectedRelancesForBulk.value?.includes(relanceId) ?? false
@@ -1015,7 +1018,9 @@ async function charger() {
     }
 
     const results = await q.find()
-    relances.value = results.map(parseRelance)
+    const toutes = results.map(parseRelance)
+    // Filtrer les relances qui n'ont pas d'email destinataire résolu
+    relances.value = toutes.filter(r => r.to && r.to.trim() !== '')
     // Générer les liens PDF signés pour chaque impayé unique
     await generatePdfLinks()
   } catch (err) {
@@ -1026,14 +1031,15 @@ async function charger() {
 }
 
 // Générer des liens PDF signés (expire en 3 min) pour tous les impayés uniques
-async function generatePdfLinks() {
-  const uniqueImpayeIds = [...new Set(relances.value.flatMap(r => [r.impaye?.id, ...(r.impayes || []).map(i => i.id)].filter(Boolean)))]
+async function generatePdfLinks(impayeIds = null) {
+  // Si des IDs spécifiques sont fournis, les utiliser, sinon chercher dans toutes les relances
+  const uniqueImpayeIds = impayeIds || [...new Set(relances.value.flatMap(r => [r.impaye?.id, ...(r.impayes || []).map(i => i.id)].filter(Boolean)))]
 
   for (const impayeId of uniqueImpayeIds) {
     if (pdfLinks.value[impayeId]) continue // déjà généré
 
     try {
-      const response = await $parse.Cloud.run('generatePdfLink', { impayelId })
+      const response = await $parse.Cloud.run('generatePdfLink', { impayelId: impayeId })
       pdfLinks.value[impayeId] = response.url
     } catch (err) {
       console.error(`Erreur génération lien PDF pour ${impayeId}:`, err)
@@ -1411,10 +1417,42 @@ async function blacklistEtSupprimerRelances() {
   }
 }
 
+async function supprimerRelance() {
+  if (!relanceCourante.value) return
+
+  supprimantRelance.value = true
+  try {
+    await relanceCourante.value._parse.destroy()
+    toast.add({ title: 'Succès', description: 'Relance supprimée avec succès', color: 'green' })
+
+    // Rafraîchir la liste des relances
+    await charger()
+
+    // Si la relance courante a été supprimée, passer à la première disponible
+    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
+      relanceCourante.value = relancesAValider.value[0] || null
+    }
+  } catch (error) {
+    toast.add({ title: 'Erreur', description: error.message || 'Impossible de supprimer la relance', color: 'red' })
+  } finally {
+    supprimantRelance.value = false
+  }
+}
+
 // Auto-sélectionner la première relance quand on arrive sur la vue validation
 watch(vue, (newVue) => {
   if (newVue === 'validation' && relancesAValider.value.length > 0) {
     relanceCourante.value = relancesAValider.value[0]
+  }
+})
+
+// Générer les liens PDF quand on change de relance courante
+watch(relanceCourante, async (newRelance) => {
+  if (newRelance?.impayes?.length > 0) {
+    const impayeIds = newRelance.impayes.map(imp => imp.id).filter(Boolean)
+    if (impayeIds.length > 0) {
+      await generatePdfLinks(impayeIds)
+    }
   }
 })
 

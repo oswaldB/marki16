@@ -1,5 +1,5 @@
-// backend/cloud/workflows/test-single/00-master.js
-// Workflow d'envoi d'email de test unique avec traitement de template
+// backend/cloud/workflows/test-single-suivi/00-master.js
+// Workflow d'envoi d'email de test unique pour le suivi
 
 // Charger les variables d'environnement depuis .env
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
@@ -30,8 +30,9 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral-large-3:675b-cloud";
 const USE_OLLAMA = process.env.USE_OLLAMA !== "false" && !!OLLAMA_API_KEY;
 const MAX_RETRIES = 3;
 
-// Chemin du fichier de prompt
-const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt"
+// Chemin du fichier de prompt (utiliser un prompt spécifique au suivi si disponible)
+const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/suivi-email-prompt.txt";
+const FALLBACK_PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt";
 
 // URL Frontend
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
@@ -42,7 +43,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
  * @returns {Object} Objet avec objet et corps
  */
 function parseLLMResponse(content) {
-    // Extraire le bloc YAML de la réponse
     const yamlMatch =
         content.match(/---\n([\s\S]*?)\n---/) ||
         content.match(/```yaml\n([\s\S]*?)```/) ||
@@ -53,11 +53,8 @@ function parseLLMResponse(content) {
     }
 
     const yamlContent = yamlMatch[1] || content;
-
-    // Parser le YAML en objet JavaScript
     const parsed = yaml.load(yamlContent);
 
-    // Vérifier la structure attendue
     if (!parsed.objet || !parsed.corps) {
         throw new Error(
             "La réponse doit contenir les champs 'objet' et 'corps'",
@@ -104,11 +101,10 @@ async function generateContentWithRetry(prompt, retries = 0) {
             throw new Error("No response from Ollama API");
         }
 
-        // Parser la réponse YAML
         const content = data.response.trim();
         info(
             `Réponse Ollama reçue (${content.length} caractères)`,
-            "test-single",
+            "test-single-suivi",
             "generateContentWithRetry",
         );
 
@@ -117,7 +113,7 @@ async function generateContentWithRetry(prompt, retries = 0) {
         if (retries < MAX_RETRIES) {
             warn(
                 `LLM échoué (attempt ${retries + 1}/${MAX_RETRIES}), retry... Error: ${err.message}`,
-                "test-single",
+                "test-single-suivi",
                 "generateContentWithRetry",
                 { attempt: retries + 1, error: err.message },
             );
@@ -135,8 +131,7 @@ async function generateContentWithRetry(prompt, retries = 0) {
  * @param {Object} scenarioActif - Scénario actif (ou null)
  * @param {Array} impayes - Liste des impayés
  * @param {Object} contact - Contact (payeur)
- * @param {number} emailIndex - Index de l'email dans la séquence
- * @param {string} scenarioType - Type de scénario (single/multiple)
+ * @param {string} scenarioType - Type de scénario (single/multiple/both/broker)
  * @returns {string} Prompt complet
  */
 function buildPrompt(
@@ -144,18 +139,23 @@ function buildPrompt(
     scenarioActif,
     impayes,
     contact,
-    emailIndex,
     scenarioType,
 ) {
     const impayesJson = JSON.stringify(impayes);
     const contactJson = JSON.stringify(contact);
-    const historyJson = JSON.stringify([]); // Pas d'historique pour un test
+    const historyJson = JSON.stringify([]);
 
     const objetTemplate = scenarioActif?.objet || emailConfig.objet || "";
     const corpsTemplate = scenarioActif?.corps || emailConfig.corps || "";
 
     // Charger le prompt depuis le fichier de configuration
-    let promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+    let promptTemplate;
+    try {
+        promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+    } catch (e) {
+        // Fallback sur le prompt de relance
+        promptTemplate = fs.readFileSync(FALLBACK_PROMPT_FILE, "utf-8");
+    }
 
     // Remplacer les variables dans le template
     return promptTemplate
@@ -163,7 +163,6 @@ function buildPrompt(
         .replace(/{{corpsTemplate}}/g, corpsTemplate)
         .replace(/{{impayesJson}}/g, impayesJson)
         .replace(/{{historyJson}}/g, historyJson)
-        .replace(/{{emailIndex}}/g, emailIndex)
         .replace(/{{contactJson}}/g, contactJson)
         .replace(/{{scenarioType}}/g, scenarioType);
 }
@@ -208,45 +207,45 @@ async function createSmtpTransport(smtpId) {
 }
 
 /**
- * Workflow principal d'envoi d'email de test
+ * Workflow principal d'envoi d'email de suivi de test
  * @param {Object} options - Options
  * @param {string} options.sequenceId - ID de la séquence
  * @param {string} options.testEmail - Email de destination pour le test
  * @param {string} options.payeurId - ID du payeur (contact)
- * @param {number} options.emailIndex - Index de l'email dans la séquence
+ * @param {number} options.emailIndex - Index de l'email dans la séquence (toujours 0 pour le suivi)
  * @param {string} options.userId - ID de l'utilisateur (optionnel)
  * @param {string} options.userEmail - Email de l'utilisateur (optionnel)
  * @param {string} options.userName - Nom de l'utilisateur (optionnel)
  * @returns {Promise<Object>} Résultat de l'envoi
  */
-async function testSingleMaster(options = {}) {
+async function testSingleSuiviMaster(options = {}) {
     const startedAt = new Date();
     const {
         sequenceId,
         testEmail,
         payeurId,
-        emailIndex,
+        emailIndex = 0,
         userId,
         userEmail,
         userName,
     } = options;
 
     info(
-        `[test-single/master] Début du workflow d'envoi d'email de test`,
-        "test-single",
-        "testSingleMaster",
-        { sequenceId, testEmail, payeurId, emailIndex, userId },
+        `[test-single-suivi/master] Début du workflow d'envoi d'email de suivi de test`,
+        "test-single-suivi",
+        "testSingleSuiviMaster",
+        { sequenceId, testEmail, payeurId, userId },
     );
 
     // Validation des paramètres requis
-    if (!sequenceId || !testEmail || !payeurId || emailIndex === undefined) {
+    if (!sequenceId || !testEmail || !payeurId) {
         throw new Error(
-            "Paramètres requis manquants: sequenceId, testEmail, payeurId, emailIndex",
+            "Paramètres requis manquants: sequenceId, testEmail, payeurId",
         );
     }
 
     const result = {
-        status: "error",
+        success: false,
         emailSent: false,
         preview: null,
         metadata: {
@@ -266,8 +265,8 @@ async function testSingleMaster(options = {}) {
         // ═══════════════════════════════════════════════════════════════
         info(
             "Nœud 1/3: Validation et récupération des données...",
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
         );
 
         // Récupérer la séquence
@@ -281,20 +280,30 @@ async function testSingleMaster(options = {}) {
             throw new Error(`Séquence ${sequenceId} introuvable`);
         }
 
-        // Extraire l'email à tester par emailIndex
+        // Vérifier que c'est une séquence de type suivi
+        const typeSequence = sequence.get("type");
+        if (typeSequence !== "suivi") {
+            warn(
+                `La séquence ${sequenceId} n'est pas de type 'suivi' (type: ${typeSequence})`,
+                "test-single-suivi",
+                "testSingleSuiviMaster",
+            );
+        }
+
+        // Extraire l'email de suivi (toujours le premier pour le suivi)
         const emails = sequence.get("emails") || [];
         const emailConfig = emails[emailIndex];
 
         if (!emailConfig) {
             throw new Error(
-                `Email à l'index ${emailIndex} introuvable dans la séquence`,
+                `Email de suivi introuvable dans la séquence`,
             );
         }
 
         info(
-            `Séquence récupérée: ${sequence.get("nom")} - Email index ${emailIndex}`,
-            "test-single",
-            "testSingleMaster",
+            `Séquence récupérée: ${sequence.get("nom")} - Email de suivi`,
+            "test-single-suivi",
+            "testSingleSuiviMaster",
             {
                 sequenceName: sequence.get("nom"),
                 emailSubject: emailConfig.objet,
@@ -326,8 +335,8 @@ async function testSingleMaster(options = {}) {
 
         info(
             `Contact récupéré: ${contactData.nom} ${contactData.prenom || ""}`,
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
             { contactId: contact.id },
         );
 
@@ -344,8 +353,8 @@ async function testSingleMaster(options = {}) {
 
         info(
             `${impayes.length} impayés récupérés pour le contact`,
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
             { impayesCount: impayes.length },
         );
 
@@ -372,23 +381,25 @@ async function testSingleMaster(options = {}) {
         // ═══════════════════════════════════════════════════════════════
         info(
             "Nœud 2/3: Traitement du template...",
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
         );
 
-        // Déterminer le scénario (single ou multiple)
-        const scenarioType = impayes.length > 1 ? "multiple" : "single";
-
-        // Trouver le scénario actif
+        // Déterminer le scénario (single, multiple, both, broker)
         const scenarios = emailConfig.scenarios || [];
+        
+        // Pour le suivi, on utilise activeScenario ou 'single' par défaut
+        const scenarioType = emailConfig.activeScenario || 'single';
+        
+        // Trouver le scénario actif
         const scenarioActif = scenarios.find(
-            (s) => s.format === scenarioType && s.active,
+            (s) => s.format === scenarioType && s.active !== false,
         );
 
         info(
             `Scénario actif: ${scenarioType} - ${scenarioActif ? "trouvé" : "non trouvé (utilisation du template par défaut)"}`,
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
         );
 
         // Templates initiaux
@@ -403,27 +414,25 @@ async function testSingleMaster(options = {}) {
                     scenarioActif,
                     impayesData,
                     contactData,
-                    emailIndex,
                     scenarioType,
                 );
 
                 info(
                     `Envoi du prompt à Ollama (${prompt.length} caractères)`,
-                    "test-single",
-                    "testSingleMaster",
+                    "test-single-suivi",
+                    "testSingleSuiviMaster",
                 );
 
-                // Logger le prompt complet pour debug
                 info(
                     "=== PROMPT OLLAMA (début) ===",
-                    "test-single",
-                    "testSingleMaster",
+                    "test-single-suivi",
+                    "testSingleSuiviMaster",
                 );
-                info(prompt, "test-single", "testSingleMaster");
+                info(prompt, "test-single-suivi", "testSingleSuiviMaster");
                 info(
                     "=== PROMPT OLLAMA (fin) ===",
-                    "test-single",
-                    "testSingleMaster",
+                    "test-single-suivi",
+                    "testSingleSuiviMaster",
                 );
 
                 const generated = await generateContentWithRetry(prompt);
@@ -432,17 +441,16 @@ async function testSingleMaster(options = {}) {
 
                 info(
                     "Contenu généré par Ollama avec succès",
-                    "test-single",
-                    "testSingleMaster",
+                    "test-single-suivi",
+                    "testSingleSuiviMaster",
                 );
             } catch (ollamaErr) {
                 warn(
                     `Erreur Ollama, utilisation des templates bruts: ${ollamaErr.message}`,
-                    "test-single",
-                    "testSingleMaster",
+                    "test-single-suivi",
+                    "testSingleSuiviMaster",
                     { error: ollamaErr.message },
                 );
-                // Continue avec les templates bruts
             }
         }
 
@@ -453,8 +461,8 @@ async function testSingleMaster(options = {}) {
             corpsFinal = corpsFinal.split("[[lien_pdf]]").join(lienPdf);
             info(
                 `Lien PDF remplacé: ${lienPdf}`,
-                "test-single",
-                "testSingleMaster",
+                "test-single-suivi",
+                "testSingleSuiviMaster",
             );
         }
 
@@ -462,10 +470,21 @@ async function testSingleMaster(options = {}) {
         objetFinal = objetFinal.split("[[lien_espace]]").join(lienEspace);
         corpsFinal = corpsFinal.split("[[lien_espace]]").join(lienEspace);
 
+        // Remplacement des variables de contact
+        objetFinal = objetFinal
+            .split("[[payeur_nom]]").join(payeurData.nom || "")
+            .split("[[payeur_prenom]]").join(payeurData.prenom || "")
+            .split("[[payeur_email]]").join(payeurData.email || "");
+        
+        corpsFinal = corpsFinal
+            .split("[[payeur_nom]]").join(payeurData.nom || "")
+            .split("[[payeur_prenom]]").join(payeurData.prenom || "")
+            .split("[[payeur_email]]").join(payeurData.email || "");
+
         info(
             `Lien espace client remplacé: ${lienEspace}`,
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
         );
 
         // ═══════════════════════════════════════════════════════════════
@@ -473,8 +492,8 @@ async function testSingleMaster(options = {}) {
         // ═══════════════════════════════════════════════════════════════
         info(
             "Nœud 3/3: Envoi de l'email...",
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
         );
 
         // Déterminer le profil SMTP
@@ -500,16 +519,16 @@ async function testSingleMaster(options = {}) {
             smtpProfile.get("email_from") || smtpProfile.get("username");
 
         // Construire l'email
-        const fromName = userName ? `${userName} (Test)` : "Test ADTI";
+        const fromName = userName ? `${userName} (Test Suivi)` : "Test Suivi ADTI";
         const mailOptions = {
             from: `"${fromName}" <${fromEmail}>`,
             to: testEmail,
-            subject: `[TEST] ${objetFinal}`,
+            subject: `[TEST SUIVI] ${objetFinal}`,
             html: corpsFinal,
             headers: {
                 "X-Test-Email": "true",
                 "X-Sequence-Id": sequenceId,
-                "X-Email-Index": String(emailIndex),
+                "X-Sequence-Type": "suivi",
                 "X-User-Id": userId || "system",
             },
         };
@@ -521,14 +540,14 @@ async function testSingleMaster(options = {}) {
         const durationMs = finishedAt - startedAt;
 
         info(
-            `Email envoyé avec succès à ${testEmail}`,
-            "test-single",
-            "testSingleMaster",
+            `Email de suivi envoyé avec succès à ${testEmail}`,
+            "test-single-suivi",
+            "testSingleSuiviMaster",
             { messageId: sendResult.messageId, durationMs },
         );
 
         // Mettre à jour le résultat
-        result.status = "success";
+        result.success = true;
         result.emailSent = true;
         result.preview = {
             objet: objetFinal,
@@ -549,41 +568,41 @@ async function testSingleMaster(options = {}) {
             messageId: sendResult.messageId,
             impayesCount: impayes.length,
             scenarioType,
+            sequenceType: "suivi",
         };
     } catch (err) {
         const errorMessage = err.message || "Erreur inconnue";
         error(
             `Erreur dans le workflow: ${errorMessage}`,
-            "test-single",
-            "testSingleMaster",
+            "test-single-suivi",
+            "testSingleSuiviMaster",
             { stack: err.stack?.substring(0, 500) },
         );
         result.errors.push(errorMessage);
-        result.status = "error";
     }
 
     const finishedAt = new Date();
     result.metadata.durationMs = finishedAt - startedAt;
 
     info(
-        `[test-single/master] Workflow terminé en ${result.metadata.durationMs}ms - Status: ${result.status}`,
-        "test-single",
-        "testSingleMaster",
+        `[test-single-suivi/master] Workflow terminé en ${result.metadata.durationMs}ms - Status: ${result.success ? "success" : "error"}`,
+        "test-single-suivi",
+        "testSingleSuiviMaster",
     );
 
     return result;
 }
 
-module.exports = testSingleMaster;
+module.exports = testSingleSuiviMaster;
 
 // ═══════════════════════════════════════════════════════════════════════
-// Cloud Function pour déclencher l'envoi de test
+// Cloud Function pour déclencher l'envoi de test du suivi
 // ═══════════════════════════════════════════════════════════════════════
-Parse.Cloud.define("sendTestSingleEmail", async (request) => {
+Parse.Cloud.define("sendTestSingleSuivi", async (request) => {
     info(
-        "Cloud Function sendTestSingleEmail appelée",
-        "test-single",
-        "sendTestSingleEmail",
+        "Cloud Function sendTestSingleSuivi appelée",
+        "test-single-suivi",
+        "sendTestSingleSuivi",
         { params: request.params },
     );
 
@@ -594,9 +613,9 @@ Parse.Cloud.define("sendTestSingleEmail", async (request) => {
 
     const { sequenceId, testEmail, payeurId, emailIndex } = request.params;
 
-    if (!sequenceId || !testEmail || !payeurId || emailIndex === undefined) {
+    if (!sequenceId || !testEmail || !payeurId) {
         throw new Error(
-            "Paramètres requis: sequenceId, testEmail, payeurId, emailIndex",
+            "Paramètres requis: sequenceId, testEmail, payeurId",
         );
     }
 
@@ -604,13 +623,13 @@ Parse.Cloud.define("sendTestSingleEmail", async (request) => {
         sequenceId,
         testEmail,
         payeurId,
-        emailIndex,
+        emailIndex: emailIndex || 0,
         userId: request.user?.id || null,
         userEmail: request.user?.get?.("email") || null,
         userName: request.user?.get?.("username") || null,
     };
 
-    return await testSingleMaster(options);
+    return await testSingleSuiviMaster(options);
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -619,9 +638,9 @@ Parse.Cloud.define("sendTestSingleEmail", async (request) => {
 if (require.main === module) {
     const args = process.argv.slice(2);
 
-    if (args.length < 4) {
+    if (args.length < 3) {
         console.error(
-            "Usage: node 00-master.js <sequenceId> <testEmail> <payeurId> <emailIndex>",
+            "Usage: node 00-master.js <sequenceId> <testEmail> <payeurId> [emailIndex]",
         );
         console.error(
             "Exemple: node 00-master.js abc123 test@example.com def456 0",
@@ -629,9 +648,9 @@ if (require.main === module) {
         process.exit(1);
     }
 
-    const [sequenceId, testEmail, payeurId, emailIndex] = args;
+    const [sequenceId, testEmail, payeurId, emailIndex = "0"] = args;
 
-    testSingleMaster({
+    testSingleSuiviMaster({
         sequenceId,
         testEmail,
         payeurId,
@@ -639,20 +658,20 @@ if (require.main === module) {
     })
         .then((result) => {
             info(
-                "Workflow test-single terminé via CLI",
-                "test-single",
-                "testSingleMaster",
-                { status: result.status },
+                "Workflow test-single-suivi terminé via CLI",
+                "test-single-suivi",
+                "testSingleSuiviMaster",
+                { status: result.success },
             );
             console.log("\n=== RÉSULTAT ===");
             console.log(JSON.stringify(result, null, 2));
-            process.exit(result.status === "success" ? 0 : 1);
+            process.exit(result.success ? 0 : 1);
         })
         .catch((err) => {
             error(
-                `Erreur dans test-single/master: ${err.message}`,
-                "test-single",
-                "testSingleMaster",
+                `Erreur dans test-single-suivi/master: ${err.message}`,
+                "test-single-suivi",
+                "testSingleSuiviMaster",
                 { error: err.message, stack: err.stack?.substring(0, 500) },
             );
             console.error("Erreur:", err.message);

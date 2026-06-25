@@ -22,7 +22,7 @@ if (typeof Parse === "undefined") {
 const importInvoicesMaster = require("./cloud/workflows/import-invoice/00-master");
 const sendEmailsMaster = require("./cloud/workflows/send-emails/00-master");
 const verifyPaidInvoicesMaster = require("./cloud/workflows/verify-paid-invoices/00-master");
-const generateSuivisMaster = require("./cloud/workflows/generate-suivi/00-master");
+const generateSuivisMaster = require("./cloud/workflows/generate-suivi/index");
 
 // Utilitaires pour le nettoyage des fichiers temporaires
 const fs = require("fs");

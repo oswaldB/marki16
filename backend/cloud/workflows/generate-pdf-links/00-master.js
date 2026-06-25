@@ -5,6 +5,7 @@
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 
 const { info, warn, error } = require("../../utils/logger");
+const crypto = require("crypto");
 
 // Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
@@ -78,7 +79,88 @@ async function generatePdfLinksMaster(options = {}) {
 
 module.exports = generatePdfLinksMaster;
 
-// Cloud Function pour déclencher la génération des liens PDF via Parse
+// Clé secrète pour signer les URLs PDF (même que dans server.js)
+const PDF_SIGNING_SECRET =
+    process.env.PDF_SIGNING_SECRET || "marki16-default-pdf-secret-change-me";
+
+const API_BASE_URL =
+    process.env.API_BASE_URL ||
+    process.env.PARSE_SERVER_URL?.replace("/parse", "") ||
+    "https://dev.api.markidiags.com:8444";
+
+/**
+ * Génère un lien signé pour accéder au PDF d'un impayé
+ * @param {Object} options - Options
+ * @param {string} options.impayelId - ID de l'impayé
+ * @returns {Promise<Object>} URL signée
+ */
+async function generatePdfLinkMaster(options = {}) {
+    const { impayelId } = options;
+
+    if (!impayelId) {
+        throw new Error("impayelId est requis");
+    }
+
+    info(
+        `[generate-pdf-links/generatePdfLink] Génération du lien pour impayé: ${impayelId}`,
+        "generate-pdf-links",
+        "generatePdfLink",
+        { impayelId }
+    );
+
+    // Vérifier que l'impayé existe
+    try {
+        const Impaye = Parse.Object.extend("Impaye");
+        const query = new Parse.Query(Impaye);
+        await query.get(impayelId, { useMasterKey: true });
+    } catch (err) {
+        throw new Error("Impayé introuvable");
+    }
+
+    // Générer l'expiration (24 heures)
+    const expires = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+
+    // Créer la signature
+    const dataToSign = `${impayelId}:${expires}:${PDF_SIGNING_SECRET}`;
+    const sig = crypto
+        .createHmac("sha256", PDF_SIGNING_SECRET)
+        .update(dataToSign)
+        .digest("hex");
+
+    // Construire l'URL complète vers l'API
+    const url = `${API_BASE_URL}/api/pdf/${impayelId}?sig=${sig}&expires=${expires}`;
+
+    info(
+        `[generate-pdf-links/generatePdfLink] Lien généré avec succès`,
+        "generate-pdf-links",
+        "generatePdfLink",
+        { impayelId, expires }
+    );
+
+    return { url, expires };
+}
+
+// Cloud Function publique pour générer un lien PDF (appelée depuis redirect-pdf)
+Parse.Cloud.define("generatePdfLink", async (request) => {
+    info(
+        "Cloud Function generatePdfLink appelée",
+        "generate-pdf-links",
+        "generatePdfLink",
+        { impayelId: request.params.impayelId }
+    );
+
+    // Cette fonction est publique (pas d'authentification requise)
+    // car elle est appelée depuis un lien email par un client non connecté
+    const { impayelId } = request.params;
+
+    if (!impayelId) {
+        throw new Error("impayelId est requis");
+    }
+
+    return await generatePdfLinkMaster({ impayelId });
+});
+
+// Cloud Function pour déclencher la génération des liens PDF via Parse (batch)
 Parse.Cloud.define("generatePdfLinks", async (request) => {
     info(
         "Cloud Function generatePdfLinks appelée",

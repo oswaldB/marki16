@@ -32,24 +32,6 @@
         <UButton icon="i-heroicons-floppy-disk" :loading="saving" @click="sauvegarder(editorRefs)" size="sm" class="md:size-auto">
           Enregistrer
         </UButton>
-        <UButton
-          icon="i-heroicons-beaker"
-          color="orange"
-          @click="showTestModal = true"
-          size="sm"
-          class="md:size-auto"
-        >
-          Tester la séquence
-        </UButton>
-        <UButton
-          icon="i-heroicons-folder"
-          color="neutral"
-          @click="navigateToRelances"
-          size="sm"
-          class="md:size-auto"
-        >
-          Voir Relances
-        </UButton>
       </div>
     </div>
 
@@ -111,6 +93,7 @@
           @update:scenario="(newScenario) => switchScenario(email, newScenario, editorRefs)"
           @delete="supprimerEmail(email._key)"
           @toggle="toggleEmailVisibility(email._key)"
+          @test="showSuiviTestSlideover = true"
         >
           <template #editor>
             <ToastuiEditor
@@ -137,13 +120,6 @@
       @updated="chargerLiensPaiement"
     />
 
-    <SequenceTestSlideover
-      v-model="showTestModal"
-      :sequence="sequence"
-      :emails="emails"
-      @test-sent="onTestSent"
-    />
-
     <ModalIaSequence
       v-model:open="showIaModal"
       v-model="iaResponse"
@@ -162,6 +138,16 @@
 
     <SmtpDrawer v-model="showSmtpModal" :mode-edition="false" @saved="onSmtpSaved" />
 
+    <!-- Slideover de test pour le suivi -->
+    <SuiviTestSlideover
+      v-model="showSuiviTestSlideover"
+      :sequence="sequence"
+      :emails="emails"
+      :groupes-regles="groupesRegles"
+      :attribution-automatique="attributionAutomatique"
+      @test-sent="onTestSent"
+    />
+
   </div>
 </template>
 
@@ -173,7 +159,7 @@ import DrawerLienPaiement from '~/components/DrawerLienPaiement.vue'
 import ModalIaSequence from '~/components/ModalIaSequence.vue'
 import ModalChatGptEmail from '~/components/ModalChatGptEmail.vue'
 import SmtpDrawer from '~/components/SmtpDrawer.vue'
-import SequenceTestSlideover from '~/components/SequenceTestSlideover.vue'
+import SuiviTestSlideover from '~/components/SuiviTestSlideover.vue'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
 import { useSequenceEditor, updateCorps, switchScenario, VARIABLES, SCENARIO_FORMATS, getCurrentCorps, editorOptions } from '~/composables/useSequenceEditor'
 import { useSequenceRules } from '~/composables/useSequenceRules'
@@ -246,12 +232,7 @@ const {
 } = useIaSequence(emails, allVariables, editorRefs, 'suivi')
 
 // ── State local ────────────────────────────────────────────────
-const showTestModal = ref(false)
-
-// ── Navigation vers relances ─────────────────────────────────────
-function navigateToRelances() {
-  router.push(`/sequences/relances/${router.currentRoute.value.params.id}`)
-}
+const showSuiviTestSlideover = ref(false)
 
 // Fonction pour ajouter un email de suivi (sans délai)
 function ajouterEmailSuivi() {

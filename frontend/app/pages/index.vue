@@ -79,7 +79,7 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Relances du jour</p>
-                <UTooltip text="Nombre de relances avec statut 'pending' dont la date d'envoi est aujourd'hui">
+                <UTooltip text="Nombre de relances avec statut 'pret pour envoi' dont la date d'envoi est aujourd'hui">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
@@ -103,24 +103,6 @@
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.taux_recouvrement }}%</p>
               <p class="text-xs text-gray-400">des échus payés (12 mois)</p>
-            </div>
-          </div>
-        </UCard>
-
-        <UCard>
-          <div class="flex items-start gap-3">
-            <div class="p-2 rounded-lg bg-teal-50">
-              <UIcon name="i-heroicons-users" class="size-5 text-teal-500" />
-            </div>
-            <div>
-              <div class="flex items-center gap-1">
-                <p class="text-xs text-gray-500 font-medium">Contacts avec email</p>
-                <UTooltip text="Nombre total de contacts qui ont une adresse email">
-                  <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
-                </UTooltip>
-              </div>
-              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ contactsAvecEmailCount }}</p>
-              <p class="text-xs text-gray-400">adresses email valides</p>
             </div>
           </div>
         </UCard>
@@ -254,7 +236,7 @@
             </div>
           </template>
           <div v-if="relancesJour.length === 0" class="text-sm text-gray-400 py-4 text-center">
-            Aucune relance prévue aujourd'hui
+            Aucune relance validée prévue aujourd'hui
           </div>
           <div v-else class="divide-y divide-gray-100">
             <div
@@ -263,9 +245,9 @@
               class="flex items-center justify-between py-2.5"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ rel.payeur_nom }}</p>
-                <p class="text-xs text-gray-500">{{ rel.nfacture }} · {{ rel.sequence_nom }}</p>
-                <p class="text-xs text-gray-400">{{ rel.date }} · {{ rel.heure }} · Relance {{ rel.numero }}</p>
+                <p class="text-sm font-medium text-gray-900 truncate">F°{{ rel.nfacture }} · D°{{ rel.dossier }}</p>
+                <p class="text-xs text-gray-500">{{ rel.payeur_nom }}</p>
+                <p class="text-xs text-gray-400">relance {{ rel.numero }}</p>
               </div>
             </div>
           </div>
@@ -289,9 +271,9 @@
               class="flex items-center justify-between py-2.5"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ rel.payeur_nom }}</p>
-                <p class="text-xs text-gray-500">{{ rel.nfacture }} · {{ rel.sequence_nom }}</p>
-                <p class="text-xs text-gray-400">{{ rel.date }} · Relance {{ rel.numero }}</p>
+                <p class="text-sm font-medium text-gray-900 truncate">F°{{ rel.nfacture }} · D°{{ rel.dossier }}</p>
+                <p class="text-xs text-gray-500">{{ rel.payeur_nom }}</p>
+                <p class="text-xs text-gray-400">relance {{ rel.numero }}</p>
               </div>
             </div>
           </div>
@@ -340,7 +322,7 @@
               class="flex items-center justify-between py-2.5"
             >
               <div class="min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ imp.payeur_nom }}</p>
+                <p class="text-sm font-medium text-gray-900 truncate">{{ imp.payeur_nom }}<UBadge v-if="getJoursEcheance(imp.date_echeance) !== null" class="ml-1 text-xs">{{ getJoursEcheance(imp.date_echeance) > 0 ? '+' : '' }}{{ getJoursEcheance(imp.date_echeance) }}j</UBadge></p>
                 <p class="text-xs text-gray-500 font-mono">{{ imp.nfacture }}</p>
               </div>
               <div class="flex items-center gap-2 shrink-0 ml-2">
@@ -391,7 +373,6 @@ const relancesJour = ref([])
 const impayes_recents = ref([])
 const relancesAValider = ref([])
 const contactsSansEmail = ref([])
-const contactsAvecEmailCount = ref(0)
 
 // ── Chargement ────────────────────────────────────────────────
 onMounted(async () => {
@@ -404,7 +385,7 @@ onMounted(async () => {
       chargerImpayes(),
       chargerRelancesAValider(),
       chargerContactsSansEmail(),
-      chargerContactsAvecEmailCount(),
+
     ])
   } finally {
     loading.value = false
@@ -445,12 +426,17 @@ async function chargerKpi() {
   const actifsResult = await qEchusActifs.find()
   const actifs = [...new Set(actifsResult.map(i => i.get('nfacture')))].length
 
+  const tomorrow = new Date(startOfDay())
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
   const [echusResults, payeResults, relances] = await Promise.all([
     qEchus.find(),
     qEchusPayes.find(),
     new $parse.Query('Relance')
-      .equalTo('statut', 'pending')
-      .lessThanOrEqualTo('dateEnvoi', today)
+      .equalTo('statut', 'pret pour envoi')
+      .greaterThanOrEqualTo('dateEnvoi', startOfDay())
+      .equalTo('valide', true)
+      .lessThan('dateEnvoi', tomorrow)
       .count(),
   ])
 
@@ -623,25 +609,34 @@ async function chargerMontantsMois() {
 
 async function chargerRelancesJour() {
   if (!$parse.User.current()) return
+  const today = startOfDay()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
   const q = new $parse.Query('Relance')
-  q.equalTo('statut', 'pending')
-  q.lessThanOrEqualTo('dateEnvoi', endOfDay())
-  q.include('impaye')
-  q.include('sequence')
+  q.equalTo('statut', 'pret pour envoi')
+  q.equalTo('valide', true)
+  q.greaterThanOrEqualTo('dateEnvoi', today)
+  q.lessThan('dateEnvoi', tomorrow)
+  q.include('contact')
+  q.include('impayes')
   q.ascending('dateEnvoi')
   q.limit(5)
   const results = await q.find()
+
+
   relancesJour.value = results.map(r => {
-    const imp = r.get('impaye')
-    const seq = r.get('sequence')
+    const impayes = r.get('impayes') || []
     const d = r.get('dateEnvoi')
+    const firstImpaye = impayes[0] || null
+
     return {
       id:           r.id,
-      payeur_nom:   imp ? imp.get('payeur_nom') || '—' : '—',
-      nfacture:     imp ? imp.get('nfacture') || '—' : '—',
-      sequence_nom: seq ? seq.get('nom') || '—' : '—',
-      heure:        d ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—',
+      payeur_nom:   firstImpaye ? firstImpaye.get('payeur_nom') || '—' : '—',
+      nfacture:     firstImpaye ? firstImpaye.get('nfacture') || '—' : '—',
+      dossier:      firstImpaye ? firstImpaye.get('numero_dossier') || '—' : '—',
       date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
+      numero:       r.get('email_index') || '—',
     }
   })
 }
@@ -658,6 +653,7 @@ async function chargerImpayes() {
     nfacture:     r.get('nfacture') || '—',
     payeur_nom:   r.get('payeur_nom') || '—',
     reste_a_payer: r.get('reste_a_payer'),
+    date_echeance: r.get('date_echeance'),
   }))
 }
 
@@ -667,39 +663,28 @@ async function chargerRelancesAValider() {
   q.equalTo('valide', false)
   q.notEqualTo('manuel', true)
   q.include('contact')
-  q.include('sequence')
+  q.include('impayes')
   q.ascending('dateEnvoi')
   q.limit(5)
+
   const results = await q.find()
 
-  relancesAValider.value = await Promise.all(
-    results.map(async (r) => {
-      const impayesIds = r.get('impayes') || []
-      const impayes = []
-
-      if (impayesIds.length > 0) {
-        const impayeQuery = new $parse.Query('Impaye')
-        impayeQuery.containedIn('objectId', impayesIds)
-        const impayeResults = await impayeQuery.find()
-        impayes.push(...impayeResults)
-      }
-
-      const seq = r.get('sequence')
-      const contact = r.get('contact')
-      const d = r.get('dateEnvoi') || r.get('date_envoi_prevue')
-      return {
-        id:           r.id,
-        payeur_nom:   impayes[0] ? impayes[0].get('payeur_nom') || '—' : '—',
-        nfacture:     impayes[0] ? impayes[0].get('nfacture') || '—' : '—',
-        sequence_nom: seq ? seq.get('nom') || '—' : '—',
-        heure:        d ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—',
-        date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
-        numero:       r.get('numero') || '—',
-      }
-    })
-  )
+  relancesAValider.value = results.map(r => {
+    const impayes = r.get('impayes') || []
+    const contact = r.get('contact')
+    const d = r.get('dateEnvoi') || r.get('date_envoi_prevue')
+    const firstImpaye = impayes[0] || null
+    
+    return {
+      id:           r.id,
+      payeur_nom:   firstImpaye ? firstImpaye.get('payeur_nom') || '—' : '—',
+      nfacture:     firstImpaye ? firstImpaye.get('nfacture') || '—' : '—',
+      dossier:      firstImpaye ? firstImpaye.get('numero_dossier') || '—' : '—',
+      date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
+      numero:       r.get('email_index') || '—',
+    }
+  })
 }
-
 async function chargerContactsSansEmail() {
   if (!$parse.User.current()) return
   const q = new $parse.Query('Contact')
@@ -714,21 +699,30 @@ async function chargerContactsSansEmail() {
   }))
 }
 
-async function chargerContactsAvecEmailCount() {
-  if (!$parse.User.current()) return
-  const q = new $parse.Query('Contact')
-  q.exists('email')
-  q.notEqualTo('email', '')
-  q.limit(10000)
-  const results = await q.find()
-  contactsAvecEmailCount.value = results.length
-}
+
 
 // ── Helpers ────────────────────────────────────────────────────
+function startOfDay() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 function endOfDay() {
   const d = new Date()
   d.setHours(23, 59, 59, 999)
   return d
+}
+
+function getJoursEcheance(dateEcheance) {
+  if (!dateEcheance) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const echeance = new Date(dateEcheance)
+  echeance.setHours(0, 0, 0, 0)
+  const diffTime = echeance.getTime() - today.getTime()
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
 }
 
 function formatMontant(val) {

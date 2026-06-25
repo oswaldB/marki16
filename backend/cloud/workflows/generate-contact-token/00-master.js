@@ -5,6 +5,7 @@
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 
 const { info, warn, error } = require("../../utils/logger");
+const crypto = require("crypto");
 
 // Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
@@ -19,97 +20,108 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
+const CONTACT_SIGNING_SECRET =
+    process.env.CONTACT_SIGNING_SECRET ||
+    process.env.PDF_SIGNING_SECRET ||
+    "marki16-default-contact-secret-change-me";
+
+const FRONTEND_URL =
+    process.env.FRONTEND_URL || "https://dev.markidiags.com";
+
 /**
- * Orchestrateur principal du workflow generate-contact-token
+ * Génère un token signé pour l'accès à l'espace client
  * @param {Object} options - Options de configuration
- * @returns {Promise<Object>} Statistiques
+ * @param {string} options.contactId - ID du contact
+ * @returns {Promise<Object>} URL signée
  */
 async function generateContactTokenMaster(options = {}) {
     const startedAt = new Date();
-    const stats = {
-        generated: 0,
-        errors: [],
-        total: {
-            startedAt,
-            finishedAt: null,
-            durationMs: 0,
-        },
-    };
+    const { contactId } = options;
 
     info(
-        `[generate-contact-token/master] Début du processus de génération des tokens de contact (trigger: ${options.trigger || "manual"})`,
+        `[generate-contact-token/master] Génération du token pour contact: ${contactId}`,
         "generate-contact-token",
         "generateContactTokenMaster",
+        { contactId }
     );
 
-    try {
-        // TODO: Implémenter la logique de génération des tokens de contact
-        info(
-            `[generate-contact-token/master] Workflow generate-contact-token non encore implémenté`,
-            "generate-contact-token",
-            "generateContactTokenMaster",
-        );
-        
-        stats.generated = 0;
-    } catch (err) {
-        error(
-            `[generate-contact-token/master] Erreur: ${err.message}`,
-            "generate-contact-token",
-            "generateContactTokenMaster",
-        );
-        stats.errors.push({
-            error: err.message,
-            stack: err.stack?.substring(0, 500),
-        });
+    if (!contactId) {
+        throw new Error("contactId est requis");
     }
 
-    const finishedAt = new Date();
-    stats.total.finishedAt = finishedAt;
-    stats.total.durationMs = finishedAt - startedAt;
+    // Vérifier que le contact existe
+    try {
+        const Contact = Parse.Object.extend("Contact");
+        const query = new Parse.Query(Contact);
+        await query.get(contactId, { useMasterKey: true });
+    } catch (err) {
+        throw new Error("Contact introuvable");
+    }
 
+    // Générer l'expiration (3 minutes)
+    const expires = Math.floor(Date.now() / 1000) + 3 * 60;
+
+    // Créer la signature
+    const dataToSign = `${contactId}:${expires}:${CONTACT_SIGNING_SECRET}`;
+    const sig = crypto
+        .createHmac("sha256", CONTACT_SIGNING_SECRET)
+        .update(dataToSign)
+        .digest("hex");
+
+    // Construire l'URL complète
+    const url = `${FRONTEND_URL}/espace/${contactId}/impaye?sig=${sig}&expires=${expires}`;
+
+    const finishedAt = new Date();
     info(
-        `[generate-contact-token/master] Durée totale: ${(finishedAt - startedAt) / 1000} secondes`,
+        `[generate-contact-token/master] Token généré en ${finishedAt - startedAt}ms`,
         "generate-contact-token",
         "generateContactTokenMaster",
+        { contactId, expires }
     );
 
-    return stats;
+    return { url, expires };
 }
 
 module.exports = generateContactTokenMaster;
 
-// Cloud Function pour déclencher la génération des tokens de contact via Parse
+// Cloud Function pour générer un token d'accès à l'espace client
 Parse.Cloud.define("generateContactToken", async (request) => {
     info(
         "Cloud Function generateContactToken appelée",
         "generate-contact-token",
         "generateContactToken",
-        { user: request.user?.id, master: request.master },
+        { contactId: request.params.contactId, master: request.master },
     );
 
-    if (!request.master && !request.user) {
-        throw new Error(
-            "Non autorisé - cette fonction nécessite un utilisateur authentifié ou le master key",
-        );
+    // Cette fonction est publique (pas d'authentification requise)
+    // car elle est appelée depuis un lien email par un client non connecté
+    const { contactId } = request.params;
+
+    if (!contactId) {
+        throw new Error("contactId est requis");
     }
 
-    return await generateContactTokenMaster({ trigger: "cloud-function" });
+    return await generateContactTokenMaster({ contactId });
 });
 
-// Exécution directe si appelé en CLI
+// Exécution directe si appelé en CLI (nécessite un contactId en argument)
 if (require.main === module) {
-    generateContactTokenMaster({ trigger: "cli" })
-        .then((stats) => {
+    const contactId = process.argv[2];
+    if (!contactId) {
+        console.error("Usage: node 00-master.js <contactId>");
+        process.exit(1);
+    }
+    
+    generateContactTokenMaster({ contactId })
+        .then((result) => {
             info(
                 "Workflow generate-contact-token terminé via CLI",
                 "generate-contact-token",
                 "generateContactTokenMaster",
-                {
-                    errors: stats.errors.length,
-                    durationMs: stats.total.durationMs,
-                },
+                { url: result.url }
             );
-            process.exit(stats.errors.length > 0 ? 1 : 0);
+            console.log("URL générée:", result.url);
+            process.exit(0);
         })
         .catch((error) => {
             error(
@@ -118,6 +130,7 @@ if (require.main === module) {
                 "generateContactTokenMaster",
                 { error: error.message, stack: error.stack?.substring(0, 500) },
             );
+            console.error("Erreur:", error.message);
             process.exit(1);
         });
 }

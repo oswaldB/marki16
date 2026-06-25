@@ -18,6 +18,14 @@
           />
           <UButton
             v-if="props.email"
+            icon="i-heroicons-beaker"
+            color="primary"
+            variant="ghost"
+            size="xs"
+            @click="tester"
+          />
+          <UButton
+            v-if="props.email"
             icon="i-heroicons-trash"
             color="red"
             variant="ghost"
@@ -220,7 +228,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:to', 'update:cc', 'update:smtp', 'update:objet', 'update:scenario', 'delete', 'toggle', 'create'])
+const emit = defineEmits(['update:to', 'update:cc', 'update:smtp', 'update:objet', 'update:scenario', 'delete', 'toggle', 'create', 'test'])
 
 // Fréquence options
 const frequenceOptions = [
@@ -308,6 +316,10 @@ function updateScenario(newScenario) {
 
 function supprimer() {
   emit('delete')
+}
+
+function tester() {
+  emit('test')
 }
 
 function toggle() {

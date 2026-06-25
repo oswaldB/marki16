@@ -5,6 +5,7 @@
 require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 
 const { info, warn, error } = require("../../utils/logger");
+const crypto = require("crypto");
 
 // Initialiser Parse si nécessaire
 if (typeof Parse === "undefined") {
@@ -19,97 +20,152 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
+const CONTACT_SIGNING_SECRET =
+    process.env.CONTACT_SIGNING_SECRET ||
+    process.env.PDF_SIGNING_SECRET ||
+    "marki16-default-contact-secret-change-me";
+
 /**
- * Orchestrateur principal du workflow get-contact-impayes
+ * Récupère les impayés d'un contact avec vérification de signature
  * @param {Object} options - Options de configuration
- * @returns {Promise<Object>} Statistiques
+ * @param {string} options.contactId - ID du contact
+ * @param {string} options.sig - Signature
+ * @param {string} options.expires - Timestamp d'expiration
+ * @returns {Promise<Object>} Liste des impayés
  */
 async function getContactImpayesMaster(options = {}) {
-    const startedAt = new Date();
-    const stats = {
-        retrieved: 0,
-        errors: [],
-        total: {
-            startedAt,
-            finishedAt: null,
-            durationMs: 0,
-        },
-    };
+    const { contactId, sig, expires } = options;
 
     info(
-        `[get-contact-impayes/master] Début du processus de récupération des impayés par contact (trigger: ${options.trigger || "manual"})`,
+        `[get-contact-impayes/master] Récupération des impayés pour contact: ${contactId}`,
         "get-contact-impayes",
         "getContactImpayesMaster",
+        { contactId }
     );
 
+    if (!contactId) {
+        throw new Error("contactId est requis");
+    }
+
+    if (!sig || !expires) {
+        throw new Error("Signature ou expiration manquante");
+    }
+
+    // Vérifier l'expiration
+    const now = Math.floor(Date.now() / 1000);
+    if (parseInt(expires) < now) {
+        throw new Error("Lien expiré");
+    }
+
+    // Vérifier la signature
+    const dataToSign = `${contactId}:${expires}:${CONTACT_SIGNING_SECRET}`;
+    const expectedSig = crypto
+        .createHmac("sha256", CONTACT_SIGNING_SECRET)
+        .update(dataToSign)
+        .digest("hex");
+
+    if (sig !== expectedSig) {
+        throw new Error("Lien invalide");
+    }
+
+    // Récupérer les impayés du contact (uniquement en tant que payeur)
     try {
-        // TODO: Implémenter la logique de récupération des impayés par contact
+        const Impaye = Parse.Object.extend("Impaye");
+        
+        // Query uniquement pour payeur avec reste à payer > 0
+        const query = new Parse.Query(Impaye);
+        query.equalTo("payeur", { __type: "Pointer", className: "Contact", objectId: contactId });
+        query.notEqualTo("facture_soldee", true);
+        query.greaterThan("reste_a_payer", 0);
+        query.descending("createdAt");
+        query.limit(1000);
+        
+        const impayes = await query.find({ useMasterKey: true });
+        
+        const result = impayes.map(impaye => ({
+            id: impaye.id,
+            nfacture: impaye.get("nfacture"),
+            ref_piece: impaye.get("ref_piece"),
+            reference_facture: impaye.get("reference_facture"),
+            date_piece: impaye.get("date_piece"),
+            date_facture: impaye.get("date_facture"),
+            montant_total: impaye.get("total_ttc"),
+            montant_total_facture: impaye.get("montant_total_facture"),
+            reste_a_payer: impaye.get("reste_a_payer"),
+            facture_soldee: impaye.get("facture_soldee"),
+            date_echeance: impaye.get("date_echeance"),
+            date_derniere_relance: impaye.get("date_derniere_relance"),
+            nombre_relances: impaye.get("nombre_relances"),
+            sequence_id: impaye.get("sequence_id"),
+            source: impaye.get("source"),
+            pdf_local_path: impaye.get("pdf_local_path"),
+            numero_dossier: impaye.get("numero_dossier"),
+            adresse_bien: impaye.get("adresse_bien"),
+            code_postal: impaye.get("code_postal"),
+            ville: impaye.get("ville"),
+            commentaire_piece: impaye.get("commentaire_piece"),
+            createdAt: impaye.createdAt,
+            updatedAt: impaye.updatedAt,
+        }));
+
         info(
-            `[get-contact-impayes/master] Workflow get-contact-impayes non encore implémenté`,
+            `[get-contact-impayes/master] ${result.length} impayés trouvés`,
             "get-contact-impayes",
             "getContactImpayesMaster",
+            { count: result.length }
         );
-        
-        stats.retrieved = 0;
+
+        return { impayes: result };
     } catch (err) {
         error(
             `[get-contact-impayes/master] Erreur: ${err.message}`,
             "get-contact-impayes",
             "getContactImpayesMaster",
+            { error: err.message }
         );
-        stats.errors.push({
-            error: err.message,
-            stack: err.stack?.substring(0, 500),
-        });
+        throw new Error("Impossible de récupérer les impayés");
     }
-
-    const finishedAt = new Date();
-    stats.total.finishedAt = finishedAt;
-    stats.total.durationMs = finishedAt - startedAt;
-
-    info(
-        `[get-contact-impayes/master] Durée totale: ${(finishedAt - startedAt) / 1000} secondes`,
-        "get-contact-impayes",
-        "getContactImpayesMaster",
-    );
-
-    return stats;
 }
 
 module.exports = getContactImpayesMaster;
 
-// Cloud Function pour déclencher la récupération des impayés par contact via Parse
+// Cloud Function pour récupérer les impayés d'un contact (publique avec vérification de signature)
 Parse.Cloud.define("getContactImpayes", async (request) => {
     info(
         "Cloud Function getContactImpayes appelée",
         "get-contact-impayes",
         "getContactImpayes",
-        { user: request.user?.id, master: request.master },
+        { contactId: request.params.contactId },
     );
 
-    if (!request.master && !request.user) {
-        throw new Error(
-            "Non autorisé - cette fonction nécessite un utilisateur authentifié ou le master key",
-        );
-    }
+    // Cette fonction est publique mais protégée par signature
+    const { contactId, sig, expires } = request.params;
 
-    return await getContactImpayesMaster({ trigger: "cloud-function" });
+    return await getContactImpayesMaster({ contactId, sig, expires });
 });
 
 // Exécution directe si appelé en CLI
+// Usage: node 00-master.js <contactId> <sig> <expires>
 if (require.main === module) {
-    getContactImpayesMaster({ trigger: "cli" })
-        .then((stats) => {
+    const contactId = process.argv[2];
+    const sig = process.argv[3];
+    const expires = process.argv[4];
+    
+    if (!contactId || !sig || !expires) {
+        console.error("Usage: node 00-master.js <contactId> <sig> <expires>");
+        process.exit(1);
+    }
+    
+    getContactImpayesMaster({ contactId, sig, expires })
+        .then((result) => {
             info(
                 "Workflow get-contact-impayes terminé via CLI",
                 "get-contact-impayes",
                 "getContactImpayesMaster",
-                {
-                    errors: stats.errors.length,
-                    durationMs: stats.total.durationMs,
-                },
+                { count: result.impayes.length }
             );
-            process.exit(stats.errors.length > 0 ? 1 : 0);
+            console.log(JSON.stringify(result, null, 2));
+            process.exit(0);
         })
         .catch((error) => {
             error(
@@ -118,6 +174,7 @@ if (require.main === module) {
                 "getContactImpayesMaster",
                 { error: error.message, stack: error.stack?.substring(0, 500) },
             );
+            console.error("Erreur:", error.message);
             process.exit(1);
         });
 }

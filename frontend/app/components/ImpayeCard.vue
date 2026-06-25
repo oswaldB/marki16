@@ -18,13 +18,31 @@
           </div>
         </div>
 
-        <!-- Description -->
-        <div v-if="impaye.commentaire_piece || impaye.adresse_bien" class="mt-2 text-sm text-gray-600">
-          <p v-if="impaye.adresse_bien">
-            {{ impaye.adresse_bien }}, {{ impaye.code_postal }} {{ impaye.ville }}
+        <!-- Adresses / Dossiers -->
+        <div v-if="hasAdresses" class="mt-3">
+          <!-- Sous-tableau si plusieurs adresses -->
+          <div v-if="adressesList.length > 1" class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-100 text-gray-700">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">Dossier</th>
+                  <th class="px-3 py-2 text-left font-medium">Adresse</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="(adr, idx) in adressesList" :key="idx" class="hover:bg-gray-100">
+                  <td class="px-3 py-2 text-gray-900 font-medium">{{ adr.dossier || 'N/A' }}</td>
+                  <td class="px-3 py-2 text-gray-600">{{ adr.adresse }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Affichage simple si une seule adresse -->
+          <p v-else class="text-sm text-gray-600">
+            {{ adressesList[0]?.adresse }}
           </p>
-          <p v-if="impaye.commentaire_piece" class="mt-1">{{ truncate(impaye.commentaire_piece, 100) }}</p>
         </div>
+
       </div>
 
       <!-- Montants -->
@@ -82,6 +100,59 @@ const props = defineProps({
     default: true
   }
 })
+
+// Computed pour gérer la liste des adresses
+const adressesList = computed(() => {
+  const list = []
+
+  // Si on a un tableau de dossiers
+  if (props.impaye.dossiers && Array.isArray(props.impaye.dossiers)) {
+    props.impaye.dossiers.forEach(d => {
+      const adresse = formatAdresse(d.adresse_bien || d.adresse, d.code_postal, d.ville)
+      if (adresse) {
+        list.push({
+          dossier: d.numero_dossier || d.code || d.id || 'N/A',
+          adresse: adresse
+        })
+      }
+    })
+  }
+  // Si on a un tableau d'adresses direct
+  else if (props.impaye.adresses && Array.isArray(props.impaye.adresses)) {
+    props.impaye.adresses.forEach(a => {
+      const adresse = formatAdresse(a.adresse_bien || a.adresse, a.code_postal, a.ville)
+      if (adresse) {
+        list.push({
+          dossier: a.numero_dossier || a.dossier || a.code || 'N/A',
+          adresse: adresse
+        })
+      }
+    })
+  }
+  // Fallback sur l'adresse unique
+  else if (props.impaye.adresse_bien) {
+    const adresse = formatAdresse(props.impaye.adresse_bien, props.impaye.code_postal, props.impaye.ville)
+    if (adresse) {
+      list.push({
+        dossier: props.impaye.numero_dossier || 'N/A',
+        adresse: adresse
+      })
+    }
+  }
+
+  return list
+})
+
+const hasAdresses = computed(() => adressesList.value.length > 0)
+
+// Formatter une adresse complète
+function formatAdresse(adresse, cp, ville) {
+  if (!adresse) return ''
+  let result = adresse
+  if (cp) result += `, ${cp}`
+  if (ville) result += ` ${ville}`
+  return result.trim()
+}
 
 // Formater une date au format DD/MM/YYYY
 function formatDate(dateString) {

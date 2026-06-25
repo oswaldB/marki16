@@ -1,187 +1,262 @@
-# Objectifs
-- Vérifier quelles factures ont été payées dans la base de données externe (SQLite)
-- Mettre à jour la base de données Parse en conséquence
-- Nettoyer les relances pour les factures nouvellement payées
-- Déclencher la génération de nouvelles relances pour les factures impayées restantes
+# Spécification Technique - Workflow Verify Paid Invoices
 
-# Start
-## route
+## Sommaire
+1. [Vue d'ensemble](#vue-densemble)
+2. [Modèles de Données](#modèles-de-données)
+3. [Étapes du Workflow](#étapes-du-workflow)
+4. [Scénarios de Test](#scénarios-de-test)
+
+---
+
+## Vue d'ensemble
+
+**Objectif** : Vérifier et synchroniser le statut de paiement des factures entre la base de données externe SQLite et Parse, puis nettoyer les relances associées.
+
+**Différenciation** : Ce workflow est autonome et ne nécessite pas de données d'entrée. Il :
+- Interroge directement la base SQLite pour identifier les factures payées
+- Met à jour les objets `Impaye` dans Parse en fonction des données SQLite
+- Nettoie automatiquement les relances pour les factures nouvellement soldées
+
+**Entrée** : Aucune (workflow autonome)
+
+**Requiert** : `masterKey` OU utilisateur authentifié
+
+**Sortie** : Objet JSON avec `{ result, cleanup, generation, errors, total }`
+
+**Routes d'exécution** :
 - Cloud Function: `Parse.Cloud.run("verifyPaidInvoicesNow")`
-- CLI: `node 00-master.js`
-- Programmatic: `require('./verify-paid-invoices/00-master')`
+- CLI: `node verify-paid-invoices/00-master.js`
+- Programmation: `require('./verify-paid-invoices/00-master')`
 
-## entry data
-- None (autonomous workflow)
-- Requires: `masterKey` OR authenticated `user`
+---
 
-# Process
+## Modèles de Données
 
-## node 0: Master Orchestrator (00-master.js)
-### input
-- `trigger`: string (default: "manual")
+### Commandes cURL de référence
 
-### operations
-1. Load environment variables from .env
-2. Initialize Parse SDK
-3. Clear logs directory (unless trigger is "test")
-4. Log workflow start
-5. Initialize stats object
-6. Execute verifyPaidInvoicesMaster() function
-7. Register Cloud Function: `Parse.Cloud.define("verifyPaidInvoicesNow")`
+```bash
+# Récupération des schémas Parse
+curl -X GET "https://dev.markidiags.com/api/parse/schemas" \
+  -H "X-Parse-Application-Id: adti-marki" \
+  -H "X-Parse-Master-Key: ${PARSE_MASTER_KEY}"
 
-### output
-- `{ result, cleanup, generation, errors, total }`
+# Vérifier les factures impayées
+curl -X GET "https://dev.markidiags.com/api/parse/classes/Impaye" \
+  -H "X-Parse-Application-Id: adti-marki" \
+  -H "X-Parse-Master-Key: ${PARSE_MASTER_KEY}" \
+  -d '{"where":{"facture_soldee":false}}'
 
-## node 1: Invoice Verification Engine (01-verifyPaidInvoices.js)
-### input
-- `trigger`: string (from master)
+# Vérifier les relances
+curl -X GET "https://dev.markidiags.com/api/parse/classes/Relance" \
+  -H "X-Parse-Application-Id: adti-marki" \
+  -H "X-Parse-Master-Key: ${PARSE_MASTER_KEY}"
+```
 
-### operations
-1. Initialize:
-   - Ensure Parse SDK is available
-   - Determine DB path (test or production)
-   - Initialize stats object
+### 1. Classe `Impaye` (Parse)
 
-2. Open SQLite database with retry logic (max 3 retries, 1-minute delay)
+```javascript
+{
+  "objectId": String,
+  "externe_id": String,         // Référence vers nfacture dans SQLite
+  "nfacture": String,           // Numéro de facture
+  "reference": String,
+  "date_piece": Date,
+  "date_echeance": Date,
+  "total_ht": Number,
+  "total_ttc": Number,
+  "montant_total": Number,
+  "reste_a_payer": Number,
+  "url_pdf": String,
+  "facture_soldee": Boolean,    // Statut de paiement dans Parse
+  "solde": Boolean,             // Statut soldé global
+  "solde_le": Date,             // Date de soldage
+  "payeur": Pointer(Contact),   // Référence au payeur
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
 
-3. Query Parse for unpaid invoices:
-   - Class: `Impaye`
-   - where: `{ facture_soldee: false }`
-   - limit: 10000
+### 2. Classe `Relance` (Parse)
 
-4. Extract `externe_id` from each impaye
+```javascript
+{
+  "objectId": String,
+  "impaye": Pointer(Impaye),    // Référence à la facture impayée
+  "statut": String,             // "En attente de génération", "pret pour envoi", "Envoyée", "Annulée - facture payée"
+  "date_envoi": Date,
+  "email": String,
+  "objet": String,
+  "corps": String,
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
 
-5. Build SQL query for paid invoices:
+### 3. Classe `Activite` (Parse)
+
+```javascript
+{
+  "objectId": String,
+  "type": String,               // "payment", "error", etc.
+  "operation": String,          // Description de l'opération
+  "details": String,
+  "impaye": Pointer(Impaye),   // Référence optionnelle
+  "user": Pointer(User),        // Utilisateur ayant déclenché l'action
+  "createdAt": Date
+}
+```
+
+### 4. Table SQLite `_GCO__GcoPiece`
+
+```sql
+-- Structure de la table des factures dans la base SQLite externe
+CREATE TABLE _GCO__GcoPiece (
+    nfacture TEXT PRIMARY KEY,      -- Numéro de facture (correspond à externe_id dans Impaye)
+    facturesoldee INTEGER,          -- 1 = payée, 0 = non payée
+    resteapayer REAL,              -- Montant restant à payer (0 = soldée)
+    -- autres champs...
+);
+```
+
+---
+
+## Étapes du Workflow
+
+### Orchestrateur Principal
+
+**Entrée** :
+- `trigger`: string (valeur par défaut: "manual")
+
+**Opérations** :
+1. Charger les variables d'environnement depuis `.env`
+2. Initialiser le SDK Parse
+3. Nettoyer le répertoire `logs/` (sauf si `trigger === "test"`)
+4. Logger le démarrage du workflow
+5. Initialiser l'objet `stats` pour le suivi
+6. Exécuter la fonction `verifyPaidInvoicesMaster()`
+7. Enregistrer la Cloud Function: `Parse.Cloud.define("verifyPaidInvoicesNow")`
+
+**Sortie** :
+```javascript
+{
+  result: {...},      // Résultats de la vérification
+  cleanup: {...},     // Résultats du nettoyage
+  generation: {...},  // Résultats de la génération
+  errors: [...],      // Liste des erreurs
+  total: {...}        // Statistiques globales
+}
+```
+
+### Vérification des Factures Payées
+
+**Entrée** :
+- `trigger`: string (hérité de l'orchestrateur principal)
+
+**Opérations** :
+
+1. **Initialisation** :
+   - Vérifier la disponibilité du SDK Parse
+   - Déterminer le chemin de la base SQLite (test ou production)
+   - Initialiser l'objet `stats`
+
+2. **Connexion SQLite** :
+   - Ouvrir la base SQLite avec logique de réessai (3 tentatives max, délai de 1 minute)
+
+3. **Récupération des factures impayées depuis Parse** :
+   ```javascript
+   // Requête Parse
+   const unpaidQuery = new Parse.Query('Impaye');
+   unpaidQuery.greaterThan("reste_a_payer", 0);
+   unpaidQuery.limit(10000);
+   const unpaidInvoices = await unpaidQuery.find();
+   ```
+
+4. **Extraction des identifiants externes** :
+   - Extraire `externe_id` de chaque `Impaye` +> non on veut les nfacture ici.
+
+5. **Construction de la requête SQL** :
    ```sql
    SELECT p.nfacture, p.facturesoldee, p.resteapayer
    FROM _GCO__GcoPiece p
-   WHERE p.facturesoldee = 1 AND p.resteapayer = 0
-   AND p.nfacture IN (comma-separated-externe_ids)
+   WHERE p.facturesoldee = 1 
+     AND p.resteapayer = 0
+     AND p.nfacture IN (liste-des-externe_ids)
    ```
 
-6. Execute SQL query
+6. **Exécution de la requête SQL**
 
-7. For each paid invoice row from SQLite:
-   a. Add to stats.invoiceNumbers
-   b. Query Parse for matching unpaid Impaye
-   c. If impaye NOT FOUND: log warning, increment stats.skipped
-   d. If impaye FOUND:
-      - Update impaye: `facture_soldee = true`, `solde = true`, `solde_le = new Date()`
-      - Save to Parse
-      - Increment stats.updated
-      - Create Activite log for payment
-   e. If ERROR during update: add to stats.errors, create Activite log with operation: "error"
+7. **Traitement des factures payées** :
+   Pour chaque ligne de résultat SQLite :
+   
+   a. Ajouter `nfacture` à `stats.invoiceNumbers`
+   
+   b. Rechercher l'`Impaye` correspondant dans Parse par `externe_id`
+   
+   c. **Si Impaye non trouvé** :
+      - Logger un avertissement
+      - Incrémenter `stats.skipped`
+   
+   d. **Si Impaye trouvé** :
+      ```javascript
+      impaye.set('facture_soldee', true);
+      impaye.set('solde', true);
+      impaye.set('solde_le', new Date());
+      impaye.set('reste_a_payer', 0);
+      await impaye.save(null, { useMasterKey: true });
+      ```
+      - Incrémenter `stats.updated`
+      - Créer une entrée `Activite` pour tracer le paiement
+   
+   e. **Si erreur lors de la mise à jour** :
+      - Ajouter à `stats.errors`
+      - Créer une entrée `Activite` avec `operation: "error"`
 
-### output
-- `{ updated: number, errors: [...], skipped: number, invoiceNumbers: [...] }`
+**Sortie** :
+```javascript
+{
+  updated: Number,        // Nombre de factures mises à jour
+  errors: Array,          // Liste des erreurs
+  skipped: Number,        // Nombre de factures ignorées
+  invoiceNumbers: Array   // Liste des numéros de facture traités
+}
+```
 
-## node 2: Cleanup Paid Invoices Relances
-### input
-- `trigger`: string (from master)
+### Nettoyage des Relances
 
-### operations
-1. Query Parse for recently paid invoices:
-   - Class: `Impaye`
-   - where: `{ facture_soldee: true, solde: true }`
-   - where: `{ solde_le: >= workflow start time }`
+**Entrée** :
+- `trigger`: string (hérité de l'orchestrateur principal)
 
-2. For each paid impaye:
-   a. Query Relance for this impaye
-   b. For each related relance:
-      - If relance.statut === "En attente de génération" OR "pret pour envoi": delete relance, increment stats.deleted
-      - Else if relance.statut === "Envoyée": update relance statut to "Annulée - facture payée", increment stats.updated
-      - Else: increment stats.skipped
+**Opérations** :
 
-### output
-- `{ deleted: number, updated: number, skipped: number }`
-
-## node 3: Generate Reminders (External Call)
-### input
-- `trigger`: string (from master)
-
-### operations
-1. Call `generateRelancesMaster()` from external workflow
-2. Handle result:
-   - If SUCCESS: stats.generation = generationResult.stats
-   - If ERROR: catch error and add to stats.errors
-
-### output
-- `stats.generation = { ... }` (from generateRelancesMaster)
-
-# end
-## results
-- All unpaid invoices in Parse checked against SQLite
-- Paid invoices updated in Parse
-- Reminders for paid invoices cleaned up
-- New reminders generated for remaining unpaid invoices
-- Return: `{ result, cleanup, generation, errors, total }`
-
-# Scenarios to test
-
-## scenario1: Basic verification with paid invoices
-### input data
-- SQLite DB with some invoices marked as paid (facturesoldee=1, resteapayer=0)
-- Parse with corresponding Impaye objects marked as unpaid (facture_soldee=false)
-
-### expecting console log output in the log file
-- "Connexion DB SQLite réussie"
-- "Trouvé X facture(s) payée(s) à vérifier"
-- "Facture [nfacture] marquée comme payée"
-- "Étape 1 terminée: X mises à jour, Y ignorées, Z erreurs"
-- "Étape 2 terminée: A supprimées, B mises à jour, C ignorées"
-- "Étape 3 terminée: D créées, E générées"
-
-### todo to run the tests
-1. Set up test SQLite database with known paid invoices
-2. Set up test Parse database with corresponding unpaid Impaye objects
-3. Set NODE_ENV=test and TEST_DB_PATH environment variables
-4. Run: `node 00-master.js`
-5. Verify logs in logs/ directory
-6. Verify Parse database updates
-
-## scenario2: No paid invoices to verify
-### input data
-- SQLite DB with no paid invoices
-- Parse with some unpaid Impaye objects
-
-### expecting console log output in the log file
-- "Connexion DB SQLite réussie"
-- "Aucune facture payée trouvée à vérifier"
-- "Étape 1 terminée: 0 mises à jour, 0 ignorées, 0 erreurs"
-
-### todo to run the tests
-1. Set up test SQLite database with no paid invoices
-2. Set up test Parse database with unpaid Impaye objects
-3. Run: `node 00-master.js`
-4. Verify no updates were made to Parse
-
-## scenario3: Database connection failure
-### input data
-- SQLite DB path is invalid or database is corrupted
-
-### expecting console log output in the log file
-- "Erreur de connexion à la base de données SQLite"
-- "Tentative X de reconnexion..."
-- After 3 attempts: "Échec de la connexion après X tentatives"
-
-### todo to run the tests
-1. Set TEST_DB_PATH to an invalid path
-2. Run: `node 00-master.js`
-3. Verify error handling and retry logic
-
-## scenario4: Cloud Function call
-### input data
-- Valid Parse Cloud Function call with masterKey
-
-### expecting console log output in the log file
-- "Début du processus de vérification des factures payées"
-- Same logs as CLI execution
-
-### todo to run the tests
-1. Call from client-side JavaScript:
+1. **Recherche des factures récemment payées** :
    ```javascript
-   Parse.Cloud.run('verifyPaidInvoicesNow', {}, { useMasterKey: true })
-     .then(result => console.log('Verification completed:', result.stats))
-     .catch(error => console.error('Verification error:', error));
+   const paidQuery = new Parse.Query('Impaye');
+   paidQuery.equalTo('facture_soldee', true);
+   paidQuery.equalTo('solde', true);
+   paidQuery.greaterThanOrEqualTo('solde_le', workflowStartTime);
    ```
-2. Verify Cloud Function executes successfully
+
+2. **Nettoyage des relances** :
+   Pour chaque `Impaye` payé :
+   
+   a. Rechercher les `Relance` associées :
+   ```javascript
+   const relanceQuery = new Parse.Query('Relance');
+   relanceQuery.equalTo('impaye', paidImpaye);
+   const relances = await relanceQuery.find();
+   ```
+   
+   b. Pour chaque relance trouvée :
+      - **Si `statut === "En attente de génération"` OU `"pret pour envoi"`** :
+        Supprimer la relance, incrémenter `stats.deleted`
+      - **Autre statut** :
+        Incrémenter `stats.skipped`
+
+**Sortie** :
+```javascript
+{
+  deleted: Number,   // Nombre de relances supprimées
+  updated: Number,   // Nombre de relances mises à jour
+  skipped: Number    // Nombre de relances ignorées
+}
+```
