@@ -21,22 +21,58 @@
 ## Contact
 - `objectId`: string - Identifiant unique
 - `email`: string - Adresse email du contact
+- `isBlacklisted`: boolean - Indique si le contact est blacklisté (ne doit pas recevoir d'emails)
+
+## Impaye
+- `objectId`: string - Identifiant unique
+- `isBlacklisted`: boolean - Indique si l'impayé est blacklisté (ne doit pas faire l'objet de relances)
 
 ## SmtpProfil
 - `objectId`: string - Identifiant unique
 - `host`: string - Hôte SMTP
 - `port`: number - Port SMTP
 - `secure`: boolean - Utilise TLS/SSL
-- `user`: string - Utilisateur SMTP
-- `pass`: string - Mot de passe SMTP
+- `username`: string - Utilisateur SMTP
+- `password`: string - Mot de passe SMTP
 - `fromEmail`: string - Adresse email de l'expéditeur
 - `replyToEmail`: string - Adresse email pour la réponse
+- `signature_html`: string - Signature HTML (optionnelle) à ajouter automatiquement en bas de chaque email envoyé via ce profil
 
 # Start
+
+## Cron
+Le workflow est exécuté automatiquement tous les jours à **19h** (Europe/Paris) via `backend/cron.js`.
+
+```javascript
+// Configuration dans cron.js
+cron.schedule("0 19 * * *", () => {
+    sendEmailsMaster({ trigger: "cron" });
+}, { timezone: "Europe/Paris" });
+```
+
 ## route
 - CLI: `node 00-master.js`
 - Programmatic: `require('./send-emails/00-master')`
 - With specific relance IDs: `sendEmailsMaster({ trigger: 'manual', relanceIds: ['relance1', 'relance2', ...] })`
+- Cloud Function: `POST /functions/sendEmails`
+
+### cURL
+```bash
+# Envoyer toutes les relances du jour
+curl -X POST \
+  -H "X-Parse-Application-Id: $PARSE_APP_ID" \
+  -H "X-Parse-Master-Key: $PARSE_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  "$PARSE_SERVER_URL/functions/sendEmails"
+
+# Envoyer des relances spécifiques
+curl -X POST \
+  -H "X-Parse-Application-Id: $PARSE_APP_ID" \
+  -H "X-Parse-Master-Key: $PARSE_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"relanceIds": ["abc123", "def456"]}' \
+  "$PARSE_SERVER_URL/functions/sendEmails"
+```
 
 ## entry data
 - Optional parameters:
@@ -91,14 +127,41 @@
          - Get impayes = relance.get("impayes") || []
          - IF !contact OR !contactEmail: log warning, add to result.erreurs, increment result.relancesErreurs, continue
          - IF impayes.length === 0: log warning, add to result.erreurs, increment result.relancesErreurs, continue
+         
+      - Blacklist Check (AVANT tout envoi):
+         - IF contact.get("isBlacklisted") === true: 
+           - Log: "Contact {contact.id} blacklisté - envoi annulé"
+           - Update relance: statut = "Contact blacklisté", lastError = "Contact blacklisté"
+           - Save to Parse
+           - Add to result.erreurs: { relanceId, erreur: "Contact blacklisté" }
+           - Increment result.relancesErreurs
+           - CONTINUE (skip to next relance)
+         - FOR EACH impaye IN impayes:
+           - IF impaye.get("isBlacklisted") === true:
+             - Log: "Impayé {impaye.id} blacklisté - envoi annulé"
+             - Update relance: statut = "Impayé blacklisté", lastError = "Impayé blacklisté"
+             - Save to Parse
+             - Add to result.erreurs: { relanceId, erreur: "Impayé blacklisté" }
+             - Increment result.relancesErreurs
+             - CONTINUE (skip to next relance)
       
       - Get SMTP profile and prepare email data:
          - smtpProfil = relance.get("smtpProfil")
-         - from = smtpProfil.get("fromEmail") || smtpProfil.get("user")
+         - from = smtpProfil.get("fromEmail") || smtpProfil.get("username")
          - to = contactEmail
          - subject = relance.get("objet") || "Relance d'impayé"
-         - html = relance.get("corps") || "<p>Contenu...</p>"
+         - baseHtml = relance.get("corps") || "<p>Contenu...</p>"
+         - signatureHtml = smtpProfil.get("signature_html") || null
          - replyTo = smtpProfil.get("replyToEmail") || null
+         
+      - Build final HTML with signature:
+        ```javascript
+        // Concatenate body with signature if exists
+        html = baseHtml
+        if (signatureHtml && signatureHtml.trim()) {
+          html = baseHtml + "<br><br>" + signatureHtml
+        }
+        ```
       
       - Initialize Nodemailer transporter for this relance:
         ```javascript
@@ -107,8 +170,8 @@
           port: smtpProfil.get("port"),
           secure: smtpProfil.get("secure") === true,
           auth: {
-            user: smtpProfil.get("user"),
-            pass: smtpProfil.get("pass")
+            user: smtpProfil.get("username"),
+            pass: smtpProfil.get("password")
           }
         })
         ```
@@ -152,7 +215,7 @@
 # end
 ## results
 - All relances with statut="pret pour envoi" have been processed
-- relancesEnvoyees emails sent successfully
+- relancesEnvoyees emails sent successfully (with signature appended from smtpProfil.signature if exists)
 - relancesErreurs emails failed (marked as "Erreur d'envoi")
 - Temporary files cleaned up
 - Return: `{ result: { relancesEnvoyees, relancesErreurs, erreurs }, errors, total }`

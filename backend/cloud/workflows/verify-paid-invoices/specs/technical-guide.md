@@ -172,7 +172,7 @@ CREATE TABLE _GCO__GcoPiece (
    ```
 
 4. **Extraction des identifiants externes** :
-   - Extraire `externe_id` de chaque `Impaye` +> non on veut les nfacture ici.
+   - Extraire `nfacture` de chaque `Impaye`
 
 5. **Construction de la requête SQL** :
    ```sql
@@ -233,7 +233,8 @@ CREATE TABLE _GCO__GcoPiece (
    const paidQuery = new Parse.Query('Impaye');
    paidQuery.equalTo('facture_soldee', true);
    paidQuery.equalTo('solde', true);
-   paidQuery.greaterThanOrEqualTo('solde_le', workflowStartTime);
+   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+   paidQuery.greaterThanOrEqualTo('solde_le', twentyFourHoursAgo);
    ```
 
 2. **Nettoyage des relances** :

@@ -1,0 +1,195 @@
+<!-- Mockup: dashboard - nominal -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ADTI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <div class="text-xl font-bold text-blue-600">ADTI</div>
+        <div class="flex gap-6 text-sm">
+          <a href="#" class="text-blue-600 font-medium">Dashboard</a>
+          <a href="#" class="text-slate-600 hover:text-slate-900">Factures</a>
+          <a href="#" class="text-slate-600 hover:text-slate-900">Clients</a>
+          <a href="#" class="text-slate-600 hover:text-slate-900">Importer</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Importer</button>
+        <div class="w-8 h-8 bg-slate-300 rounded-full"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-6">
+    <h1 class="text-2xl font-bold text-slate-900 mb-6">Tableau de bord</h1>
+    
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <p class="text-sm text-slate-500 mb-1">Taux d'impayé</p>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-bold text-slate-900">12.4%</span>
+          <span class="text-sm text-emerald-600 font-medium">↓ 2.1%</span>
+        </div>
+        <div class="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full w-[12%] bg-emerald-500 rounded-full"></div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <p class="text-sm text-slate-500 mb-1">DSO moyen</p>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-bold text-slate-900">42</span>
+          <span class="text-sm text-slate-500">jours</span>
+        </div>
+        <div class="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full w-[42%] bg-amber-500 rounded-full"></div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <p class="text-sm text-slate-500 mb-1">Montant impayé</p>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-bold text-slate-900">124.5k€</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Sur 1.2M€ encours</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <p class="text-sm text-slate-500 mb-1">Alertes risque</p>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-bold text-red-600">8</span>
+          <span class="text-sm text-slate-500">clients</span>
+        </div>
+        <button class="mt-2 text-sm text-blue-600 hover:underline">Voir les alertes →</button>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Main Chart -->
+      <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-slate-900">Évolution des impayés</h3>
+          <select class="text-sm border border-slate-300 rounded-lg px-3 py-1">
+            <option>12 derniers mois</option>
+            <option>6 derniers mois</option>
+          </select>
+        </div>
+        <div class="h-64 flex items-end gap-2">
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 30%"></div>
+            <div class="text-xs text-center text-slate-500">Jan</div>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 45%"></div>
+            <div class="text-xs text-center text-slate-500">Fév</div>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 35%"></div>
+            <div class="text-xs text-center text-slate-500">Mar</div>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 50%"></div>
+            <div class="text-xs text-center text-slate-500">Avr</div>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 40%"></div>
+            <div class="text-xs text-center text-slate-500">Mai</div>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <div class="bg-blue-100 rounded-t" style="height: 55%"></div>
+            <div class="text-xs text-center text-slate-500">Juin</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Debtors -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h3 class="text-lg font-semibold text-slate-900 mb-4">Top 5 débiteurs</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-slate-900">SARL Dupont Construction</p>
+              <p class="text-sm text-slate-500">3 factures</p>
+            </div>
+            <span class="font-semibold text-red-600">24.8k€</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-slate-900">Tech Solutions SAS</p>
+              <p class="text-sm text-slate-500">5 factures</p>
+            </div>
+            <span class="font-semibold text-red-600">18.2k€</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-slate-900">Menuiserie Martin</p>
+              <p class="text-sm text-slate-500">2 factures</p>
+            </div>
+            <span class="font-semibold text-red-600">12.5k€</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-slate-900">Electricité Leroy</p>
+              <p class="text-sm text-slate-500">4 factures</p>
+            </div>
+            <span class="font-semibold text-red-600">9.8k€</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-slate-900">Peinture Dubois</p>
+              <p class="text-sm text-slate-500">1 facture</p>
+            </div>
+            <span class="font-semibold text-red-600">8.4k€</span>
+          </div>
+        </div>
+        
+        <button class="mt-4 text-sm text-blue-600 hover:underline">Voir tout →</button>
+      </div>
+    </div>
+
+    <!-- Alerts Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-900">Alertes clients à risque</h3>
+        <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">8 actives</span>
+      </div>
+      
+      <div class="space-y-3">
+        <div class="flex items-center gap-4 p-4 bg-red-50 border border-red-100 rounded-lg">
+          <span class="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full"></span>
+          <div class="flex-1">
+            <p class="font-medium text-slate-900">SARL Dupont Construction</span>
+            <p class="text-sm text-slate-600">Retard > 90 jours • Montant: 24.8k€ • Score: D</p>
+          </div>
+          <button class="text-sm text-slate-500 hover:text-slate-700">Ignorer</button>
+          <button class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">Relancer</button>
+        </div>
+        
+        <div class="flex items-center gap-4 p-4 bg-amber-50 border border-amber-100 rounded-lg">
+          <span class="flex-shrink-0 w-2 h-2 bg-amber-500 rounded-full"></span>
+          <div class="flex-1">
+            <p class="font-medium text-slate-900">Tech Solutions SAS</span>
+            <p class="text-sm text-slate-600">DSO > 60 jours • Montant: 18.2k€ • Score: C</p>
+          </div>
+          <button class="text-sm text-slate-500 hover:text-slate-700">Ignorer</button>
+          <button class="px-3 py-1.5 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700">Relancer</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

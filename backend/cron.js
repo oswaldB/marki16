@@ -21,8 +21,10 @@ if (typeof Parse === "undefined") {
 // Charger les masters des workflows
 const importInvoicesMaster = require("./cloud/workflows/import-invoice/00-master");
 const sendEmailsMaster = require("./cloud/workflows/send-emails/00-master");
+const sendSuivisMaster = require("./cloud/workflows/send-suivi/00-master").sendSuivisMaster;
 const verifyPaidInvoicesMaster = require("./cloud/workflows/verify-paid-invoices/00-master");
 const generateSuivisMaster = require("./cloud/workflows/generate-suivi/index");
+const cleanupRelancesBlacklistMaster = require("./cloud/workflows/cleanup-relances-contact-blackliste/index");
 
 // Utilitaires pour le nettoyage des fichiers temporaires
 const fs = require("fs");
@@ -84,15 +86,29 @@ cron.schedule(
     { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// 2. SEND EMAILS : Tous les jours à 18h
+// 2. SEND EMAILS : Tous les jours à 19h
 cron.schedule(
-    "0 18 * * *",
+    "0 19 * * *",
     () => {
-        console.log("⏰ [CRON] Déclenchement: send-emails (18h)");
+        console.log("⏰ [CRON] Déclenchement: send-emails (19h)");
         sendEmailsMaster({ trigger: "cron" })
             .then(() => console.log("✅ [CRON] send-emails terminé"))
             .catch((error) =>
                 console.error("❌ [CRON] Erreur send-emails:", error.message),
+            );
+    },
+    { scheduled: true, timezone: "Europe/Paris" },
+);
+
+// 2b. SEND SUIVIS : Tous les jours à 19h30 (après send-emails)
+cron.schedule(
+    "30 19 * * *",
+    () => {
+        console.log("⏰ [CRON] Déclenchement: send-suivi (19h30)");
+        sendSuivisMaster({ trigger: "cron" })
+            .then(() => console.log("✅ [CRON] send-suivi terminé"))
+            .catch((error) =>
+                console.error("❌ [CRON] Erreur send-suivi:", error.message),
             );
     },
     { scheduled: true, timezone: "Europe/Paris" },
@@ -132,7 +148,28 @@ cron.schedule(
     { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// 5. CLEANUP TEMP FILES : Tous les jours à 2h
+// 5. CLEANUP RELANCES BLACKLIST : Toutes les heures au début de l'heure
+cron.schedule(
+    "0 * * * *",
+    () => {
+        console.log("⏰ [CRON] Déclenchement: cleanup-relances-contact-blackliste (toutes les heures)");
+        cleanupRelancesBlacklistMaster({ trigger: "cron" })
+            .then((result) =>
+                console.log(
+                    `✅ [CRON] cleanup-relances-contact-blackliste terminé: ${result.deletedCount} relances supprimées`,
+                ),
+            )
+            .catch((error) =>
+                console.error(
+                    "❌ [CRON] Erreur cleanup-relances-contact-blackliste:",
+                    error.message,
+                ),
+            );
+    },
+    { scheduled: true, timezone: "Europe/Paris" },
+);
+
+// 6. CLEANUP TEMP FILES : Tous les jours à 2h
 cron.schedule(
     "0 2 * * *",
     () => {

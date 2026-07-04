@@ -11,6 +11,7 @@ require("./workflows/verify-paid-invoices/00-master");
 require("./workflows/generate-pdf-links/00-master");
 require("./workflows/generate-contact-token/00-master");
 require("./workflows/get-contact-impayes/00-master");
+require("./workflows/cleanup-relances-contact-blackliste/index");
 
 // Importer les workflows utilitaires
 require("./workflows/appliquer-regles-attribution/00-master");
@@ -30,5 +31,5 @@ global.updateDynamicOptionsMaster = require("./workflows/update-dynamic-options/
 global.verifyPaidInvoicesMaster = require("./workflows/verify-paid-invoices/00-master");
 
 console.log(
-    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes)",
+    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes, cleanup-relances-contact-blackliste)",
 );

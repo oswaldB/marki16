@@ -209,10 +209,11 @@ const mainItems = [
 ]
 
 const impayesItems = [
-  { to: '/impayes/2', label: 'Unitaire', icon: 'i-heroicons-table-cells' },
-  { to: '/impayes/2?vue=payeur', label: 'Par payeur', icon: 'i-heroicons-user-group' },
-  { to: '/impayes/2?vue=contact', label: 'Par contact', icon: 'i-heroicons-user' },
-  { to: '/impayes/2?vue=sans-sequence', label: 'Sans séquence', icon: 'i-heroicons-document-minus' },
+  { to: '/impayes', label: 'Unitaire', icon: 'i-heroicons-table-cells' },
+  { to: '/impayes?vue=payeur', label: 'Par payeur', icon: 'i-heroicons-user-group' },
+  { to: '/impayes?vue=contact', label: 'Par contact', icon: 'i-heroicons-user' },
+  { to: '/impayes?vue=sans-sequence', label: 'Sans séquence', icon: 'i-heroicons-document-minus' },
+  { to: '/impayes-suspendus', label: 'Suspendus', icon: 'i-heroicons-pause-circle' },
 ]
 
 const relancesItems = [

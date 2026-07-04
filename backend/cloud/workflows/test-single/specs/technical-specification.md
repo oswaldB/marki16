@@ -68,7 +68,28 @@ curl -X GET "https://dev.markidiags.com/api/parse/classes/Sequence/${SEQUENCE_ID
 }
 ```
 
-### 2. Structure `payeurData` (Récupération Backend)
+### 2. Classe `SmtpProfile`
+
+Profil SMTP utilisé pour l'envoi des emails.
+
+```javascript
+{
+  "objectId": String,
+  "nom": String,           // Nom du profil (ex: "Profil Principal")
+  "host": String,          // Serveur SMTP (ex: "smtp.gmail.com")
+  "port": Number,          // Port SMTP (ex: 587, 465)
+  "secure": Boolean,       // true pour SSL/TLS
+  "username": String,      // Nom d'utilisateur SMTP
+  "password": String,      // Mot de passe SMTP
+  "email_from": String,    // Email de l'expéditeur
+  "reply_to": String,      // Email de réponse (optionnel)
+  "signature_html": String  // Signature HTML (optionnelle) ajoutée automatiquement aux emails
+}
+```
+
+**Note sur la signature** : Si le champ `signature_html` est renseigné et non vide, il est automatiquement concaténé au corps de l'email avec `<br><br>` comme séparateur avant l'envoi.
+
+### 3. Structure `payeurData` (Récupération Backend)
 
 **Note** : Cette structure est construite par le backend à partir du `payeurId` fourni.
 
@@ -222,8 +243,9 @@ corpsFinal = corpsFinal.split("[[lien_espace]]").join(lienEspace);
 
 ### Noeud 3 : Envoi de l'Email
 - Récupérer le profil SMTP depuis `sequence.emails[emailIndex].smtp` (ou du scénario actif si défini)
-- Charger les informations depuis la classe Parse `SmtpProfile` (host, port, username, password, email_from)
+- Charger les informations depuis la classe Parse `SmtpProfile` (host, port, username, password, email_from, **signature_html**)
+- **Si le profil SMTP contient un champ `signature_html` non vide** : concaténer la signature au corps de l'email avec `<br><br>` comme séparateur
 - Configurer Nodemailer avec ces paramètres
-- Construire l'email avec objet et corps traités
+- Construire l'email avec objet et corps traités (corps incluant la signature si présente)
 - Envoyer à `testEmail`
 - Retourner OK

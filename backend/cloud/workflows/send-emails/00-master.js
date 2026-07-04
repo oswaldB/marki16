@@ -145,13 +145,12 @@ async function sendEmailsMaster({
                 { relanceIds },
             );
         } else {
-            // Filtrer par statut "pret pour envoi" et date du jour
+            // Filtrer par statut "pret pour envoi" et date d'envoi <= maintenant
+            // Récupère les relances en attente (y compris celles des jours précédents)
             query.equalTo("statut", "pret pour envoi");
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            query.equalTo("dateEnvoi", today);
+            query.lessThanOrEqualTo("dateEnvoi", new Date());
             info(
-                "Requête pour toutes les relances avec statut 'pret pour envoi' pour aujourd'hui",
+                "Requête pour toutes les relances avec statut 'pret pour envoi' et date d'envoi <= maintenant",
                 "send-emails",
                 "sendEmailsMaster",
             );
@@ -172,18 +171,27 @@ async function sendEmailsMaster({
         );
 
         // Traiter chaque relance
+        let relanceIndex = 0;
         for (const relance of relances) {
+            relanceIndex++;
             const relanceId = relance.id;
             info(
-                `Traitement de la relance ${relanceId}`,
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ [${relanceIndex}/${relances.length}] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                "send-emails",
+                "sendEmailsMaster",
+            );
+            info(
+                `🔄 Traitement relance ${relanceId} (${relanceIndex}/${relances.length})`,
                 "send-emails",
                 "sendEmailsMaster",
             );
 
+            let contactEmail = null;
+
             try {
                 // Validation: Vérifier la présence du contact et de son email
                 const contact = relance.get("contact");
-                const contactEmail = contact?.get("email");
+                contactEmail = contact?.get("email");
                 const impayes = relance.get("impayes") || [];
 
                 if (!contact || !contactEmail) {
@@ -218,6 +226,42 @@ async function sendEmailsMaster({
                     continue;
                 }
 
+                // Vérification blacklist - Contact
+                if (contact.get("isBlacklisted") === true) {
+                    const errorMsg = `Relance ${relanceId}: Contact blacklisté`;
+                    warn(errorMsg, "send-emails", "sendEmailsMaster");
+                    result.erreurs.push({
+                        relanceId,
+                        erreur: "Contact blacklisté",
+                    });
+                    result.relancesErreurs++;
+
+                    // Mettre à jour la relance avec le statut blacklist
+                    relance.set("statut", "Contact blacklisté");
+                    relance.set("lastError", "Contact blacklisté");
+                    await relance.save(null, { useMasterKey: true });
+                    continue;
+                }
+
+                // Vérification blacklist - Impayés
+                for (const impaye of impayes) {
+                    if (impaye.get("isBlacklisted") === true) {
+                        const errorMsg = `Relance ${relanceId}: Impayé ${impaye.id} blacklisté`;
+                        warn(errorMsg, "send-emails", "sendEmailsMaster");
+                        result.erreurs.push({
+                            relanceId,
+                            erreur: "Impayé blacklisté",
+                        });
+                        result.relancesErreurs++;
+
+                        // Mettre à jour la relance avec le statut blacklist
+                        relance.set("statut", "Impayé blacklisté");
+                        relance.set("lastError", `Impayé ${impaye.id} blacklisté`);
+                        await relance.save(null, { useMasterKey: true });
+                        continue;
+                    }
+                }
+
                 // Récupérer le profil SMTP
                 const smtpProfil = relance.get("smtpProfil");
                 if (!smtpProfil) {
@@ -238,11 +282,48 @@ async function sendEmailsMaster({
 
                 // Préparer les données de l'email
                 const from =
-                    smtpProfil.get("fromEmail") || smtpProfil.get("user");
+                    smtpProfil.get("fromEmail") || smtpProfil.get("username");
                 const to = contactEmail;
                 const subject = relance.get("objet") || "Relance d'impayé";
-                const html = relance.get("corps") || "<p>Contenu de la relance...</p>";
+                const baseHtml = relance.get("corps") || "<p>Contenu de la relance...</p>";
                 const replyTo = smtpProfil.get("replyToEmail") || null;
+
+                // DEBUG: Récupération de la signature
+                const signatureRaw = smtpProfil.get("signature_html");
+                info(
+                    `DEBUG SMTP Profil: ${smtpProfil.id} - signature_html brut:`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { 
+                        relanceId, 
+                        smtpProfilId: smtpProfil.id,
+                        signatureRaw: signatureRaw,
+                        signatureType: typeof signatureRaw,
+                        signatureLength: signatureRaw ? signatureRaw.length : 0
+                    },
+                );
+                
+                const signatureHtml = signatureRaw || null;
+
+                // Construire le HTML final avec signature
+                let html = baseHtml;
+                if (signatureHtml && signatureHtml.trim()) {
+                    const signaturePreview = signatureHtml.substring(0, 100).replace(/\n/g, '\\n');
+                    html = baseHtml + "<br><br>" + signatureHtml;
+                    info(
+                        `✅ Signature trouvée et ajoutée (début: "${signaturePreview}...")`,
+                        "send-emails",
+                        "sendEmailsMaster",
+                        { relanceId, signatureLength: signatureHtml.length, signaturePreview },
+                    );
+                } else {
+                    info(
+                        `⚠️ Pas de signature trouvée (signatureHtml=${signatureHtml}, trim=${signatureHtml ? signatureHtml.trim() : 'N/A'})`,
+                        "send-emails",
+                        "sendEmailsMaster",
+                        { relanceId },
+                    );
+                }
 
                 info(
                     `Préparation de l'email pour ${to} - Sujet: ${subject}`,
@@ -257,8 +338,8 @@ async function sendEmailsMaster({
                     port: smtpProfil.get("port"),
                     secure: smtpProfil.get("secure") === true,
                     auth: {
-                        user: smtpProfil.get("user"),
-                        pass: smtpProfil.get("pass"),
+                        user: smtpProfil.get("username"),
+                        pass: smtpProfil.get("password"),
                     },
                     tls: {
                         // Ignorer la validation du certificat si nécessaire (pour les environnements de test)
@@ -278,41 +359,53 @@ async function sendEmailsMaster({
 
                 // Envoyer l'email
                 info(
-                    `Envoi de l'email à ${to}...`,
+                    `📤 [${relanceId}] Début sendMail vers ${to}...`,
                     "send-emails",
                     "sendEmailsMaster",
-                    { relanceId },
+                    { relanceId, to },
                 );
 
-                const emailInfo = await transporter.sendMail(emailOptions);
-
-                info(
-                    `Email envoyé avec succès à ${to} - Relance ${relanceId}`,
-                    "send-emails",
-                    "sendEmailsMaster",
-                    {
-                        relanceId,
-                        to,
-                        messageId: emailInfo.messageId,
-                    },
-                );
+                let emailInfo;
+                try {
+                    emailInfo = await transporter.sendMail(emailOptions);
+                    info(
+                        `✅ [${relanceId}] Email envoyé avec succès - MessageID: ${emailInfo.messageId}`,
+                        "send-emails",
+                        "sendEmailsMaster",
+                        { relanceId, messageId: emailInfo.messageId, response: emailInfo.response },
+                    );
+                } catch (sendErr) {
+                    error(
+                        `❌ [${relanceId}] Échec sendMail: ${sendErr.message}`,
+                        "send-emails",
+                        "sendEmailsMaster",
+                        { relanceId, error: sendErr.message, code: sendErr.code },
+                    );
+                    throw sendErr;
+                }
 
                 // Copier l'email vers le dossier Sent via IMAP (si configuré)
                 try {
+                    info(
+                        `📋 [${relanceId}] Tentative copie vers Sent...`,
+                        "send-emails",
+                        "sendEmailsMaster",
+                        { relanceId },
+                    );
                     await copyToSentFolder(
                         smtpProfil,
                         emailOptions,
                         emailInfo,
                     );
                     info(
-                        `Email copié vers le dossier Sent pour ${to}`,
+                        `✅ [${relanceId}] Copie vers Sent réussie`,
                         "send-emails",
                         "sendEmailsMaster",
                         { relanceId },
                     );
                 } catch (imapError) {
                     warn(
-                        `Impossible de copier l'email vers Sent: ${imapError.message}`,
+                        `⚠️ [${relanceId}] Copie vers Sent échouée: ${imapError.message}`,
                         "send-emails",
                         "sendEmailsMaster",
                         { relanceId, error: imapError.message },
@@ -321,38 +414,100 @@ async function sendEmailsMaster({
                 }
 
                 // Mettre à jour la relance avec succès
+                info(
+                    `💾 [${relanceId}] Mise à jour statut -> "Envoyée"...`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
                 relance.set("statut", "Envoyée");
                 relance.set("dateEnvoi", new Date());
                 relance.set("emailSent", true);
+                
+                info(
+                    `💾 [${relanceId}] Sauvegarde Parse...`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
                 await relance.save(null, { useMasterKey: true });
+                info(
+                    `✅ [${relanceId}] Relance sauvegardée avec succès`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
 
                 result.relancesEnvoyees++;
+                info(
+                    `✅ [${relanceId}] RELANCE TERMINÉE - Envoyée avec succès (${result.relancesEnvoyees} total)`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
 
             } catch (emailError) {
                 // Gestion des erreurs d'envoi
-                const errorMsg = `Erreur envoi email à ${contactEmail || "inconnu"}: ${emailError.message}`;
+                const errorMsg = `❌ [${relanceId}] Erreur envoi email à ${contactEmail || "inconnu"}: ${emailError.message}`;
                 error(errorMsg, "send-emails", "sendEmailsMaster", {
                     relanceId: relance.id,
                     error: emailError.message,
-                    stack: emailError.stack,
+                    code: emailError.code,
+                    stack: emailError.stack?.substring(0, 500),
                 });
 
                 // Mettre à jour la relance avec l'erreur
+                info(
+                    `💾 [${relanceId}] Mise à jour statut -> "Erreur d'envoi"...`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId, errorMessage: emailError.message },
+                );
                 relance.set("statut", "Erreur d'envoi");
                 relance.set("lastError", emailError.message);
+                
+                info(
+                    `💾 [${relanceId}] Sauvegarde Parse (erreur)...`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
                 await relance.save(null, { useMasterKey: true });
+                info(
+                    `✅ [${relanceId}] Relance sauvegardée (statut erreur)`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId },
+                );
 
                 result.erreurs.push({
                     relanceId: relance.id,
                     erreur: emailError.message,
                 });
                 result.relancesErreurs++;
+                info(
+                    `❌ [${relanceId}] RELANCE TERMINÉE - Erreur (${result.relancesErreurs} erreurs total)`,
+                    "send-emails",
+                    "sendEmailsMaster",
+                    { relanceId, error: emailError.message },
+                );
             }
         }
 
         // Finaliser les statistiques
         result.totalRelances = relances.length;
         stats.result = result;
+        
+        info(
+            `📊 RÉSUMÉ TRAITEMENT: ${result.relancesEnvoyees} envoyées, ${result.relancesErreurs} erreurs, ${relances.length} total`,
+            "send-emails",
+            "sendEmailsMaster",
+            { 
+                envoyees: result.relancesEnvoyees, 
+                erreurs: result.relancesErreurs, 
+                total: relances.length 
+            },
+        );
 
     } catch (globalError) {
         // Erreur globale (ex: problème avec Parse)
@@ -517,3 +672,56 @@ if (require.main === module) {
 
 // Exporter la fonction principale pour utilisation programmatique
 module.exports = sendEmailsMaster;
+
+/**
+ * Cloud Function: sendEmails
+ * Endpoint HTTP pour déclencher l'envoi des emails de relance
+ * 
+ * curl -X POST \
+ *   -H "X-Parse-Application-Id: {APP_ID}" \
+ *   -H "X-Parse-Master-Key: {MASTER_KEY}" \
+ *   -H "Content-Type: application/json" \
+ *   -d '{"relanceIds": ["id1", "id2"]}' \
+ *   {PARSE_SERVER_URL}/functions/sendEmails
+ * 
+ * Paramètres optionnels:
+ * - relanceIds: string[] - IDs spécifiques de relances à envoyer
+ * - trigger: string - Type de déclenchement (défaut: "cloud")
+ */
+if (typeof Parse !== "undefined") {
+    Parse.Cloud.define("sendEmails", async (request) => {
+        const { relanceIds = null, trigger = "cloud" } = request.params;
+        
+        info(
+            `Cloud Function sendEmails appelée (trigger: ${trigger})`,
+            "send-emails",
+            "sendEmails",
+            { relanceIds },
+        );
+
+        try {
+            const stats = await sendEmailsMaster({
+                trigger,
+                relanceIds,
+            });
+
+            return {
+                success: true,
+                stats: stats.result,
+                errors: stats.errors,
+                durationMs: stats.total.durationMs,
+            };
+        } catch (err) {
+            error(
+                `Erreur dans Cloud Function sendEmails: ${err.message}`,
+                "send-emails",
+                "sendEmails",
+                { error: err },
+            );
+            throw new Parse.Error(
+                Parse.Error.SCRIPT_FAILED,
+                `Erreur lors de l'envoi des emails: ${err.message}`,
+            );
+        }
+    });
+}

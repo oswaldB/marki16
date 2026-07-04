@@ -498,6 +498,40 @@ async function testSingleMaster(options = {}) {
         const smtpProfile = await smtpQuery.get(smtpId, { useMasterKey: true });
         const fromEmail =
             smtpProfile.get("email_from") || smtpProfile.get("username");
+        
+        // DEBUG: Récupération de la signature
+        const signatureRaw = smtpProfile.get("signature_html");
+        info(
+            "DEBUG SMTP Profil - signature_html brut:",
+            "test-single",
+            "testSingleMaster",
+            { 
+                smtpProfilId: smtpProfile.id,
+                signatureRaw: signatureRaw,
+                signatureType: typeof signatureRaw,
+                signatureLength: signatureRaw ? signatureRaw.length : 0
+            },
+        );
+        
+        const signatureHtml = signatureRaw || null;
+
+        // Ajouter la signature au corps si elle existe
+        if (signatureHtml && signatureHtml.trim()) {
+            const signaturePreview = signatureHtml.substring(0, 100).replace(/\n/g, '\\n');
+            corpsFinal = corpsFinal + "<br><br>" + signatureHtml;
+            info(
+                `✅ Signature trouvée et ajoutée (début: "${signaturePreview}...")`,
+                "test-single",
+                "testSingleMaster",
+                { signatureLength: signatureHtml.length, signaturePreview },
+            );
+        } else {
+            info(
+                `⚠️ Pas de signature trouvée (signatureHtml=${signatureHtml}, trim=${signatureHtml ? signatureHtml.trim() : 'N/A'})`,
+                "test-single",
+                "testSingleMaster",
+            );
+        }
 
         // Construire l'email
         const fromName = userName ? `${userName} (Test)` : "Test ADTI";

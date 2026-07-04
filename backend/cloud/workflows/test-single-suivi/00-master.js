@@ -518,6 +518,27 @@ async function testSingleSuiviMaster(options = {}) {
         const fromEmail =
             smtpProfile.get("email_from") || smtpProfile.get("username");
 
+        // Récupération de la signature
+        const signatureRaw = smtpProfile.get("signature_html");
+        const signatureHtml = signatureRaw || null;
+
+        // Ajouter la signature au corps si elle existe
+        if (signatureHtml && signatureHtml.trim()) {
+            corpsFinal = corpsFinal + "<br><br>" + signatureHtml;
+            info(
+                `✅ Signature trouvée et ajoutée (${signatureHtml.length} caractères)`,
+                "test-single-suivi",
+                "testSingleSuiviMaster",
+                { signatureLength: signatureHtml.length },
+            );
+        } else {
+            info(
+                `⚠️ Pas de signature trouvée pour le profil SMTP`,
+                "test-single-suivi",
+                "testSingleSuiviMaster",
+            );
+        }
+
         // Construire l'email
         const fromName = userName ? `${userName} (Test Suivi)` : "Test Suivi ADTI";
         const mailOptions = {

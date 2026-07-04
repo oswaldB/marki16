@@ -15,12 +15,117 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <!-- Badge de blacklist F-008 -->
+        <ImpayeBadgeBlacklist v-if="impayeObj" :impaye="impayeObj" />
+        
         <UBadge v-if="impaye" color="neutral" variant="subtle">{{ statut }}</UBadge>
+        
+        <!-- Bouton blacklist F-008 -->
+        <UButton
+          v-if="impayeObj && !isBlacklisted"
+          icon="i-heroicons-pause-circle"
+          color="amber"
+          variant="outline"
+          size="sm"
+          @click="toggleBlacklistForm"
+        >
+          {{ showBlacklistForm ? 'Annuler' : 'Suspendre' }}
+        </UButton>
+        
+        <UButton
+          v-if="impayeObj && isBlacklisted"
+          icon="i-heroicons-play-circle"
+          color="green"
+          variant="outline"
+          size="sm"
+          @click="handleUnblacklist"
+          :loading="blacklistSaving"
+        >
+          Réactiver
+        </UButton>
+        
         <UButton icon="i-heroicons-document" color="neutral" variant="outline" @click="pdfOuvert = true">
           Voir PDF
         </UButton>
       </div>
     </div>
+
+    <!-- F-008: Formulaire de suspension inline -->
+    <UCard v-if="showBlacklistForm && impayeObj && !isBlacklisted" class="border-amber-200 bg-amber-50/50">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-amber-800 uppercase tracking-wider">
+            Suspendre les relances
+          </h2>
+          <UButton
+            color="gray"
+            variant="ghost"
+            size="xs"
+            icon="i-heroicons-x-mark"
+            @click="showBlacklistForm = false"
+          />
+        </div>
+      </template>
+      
+      <div class="space-y-4">
+        <!-- Info -->
+        <div class="text-sm text-gray-600">
+          La suspension empêchera la génération de nouvelles relances pour cette facture.
+        </div>
+        
+        <!-- Motif -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Motif de suspension <span class="text-red-500">*</span>
+          </label>
+          <USelect
+            v-model="blacklistForm.motifType"
+            :items="blacklistMotifOptions"
+            placeholder="Choisir un motif..."
+            class="w-full"
+          />
+        </div>
+        
+        <!-- Détail -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Détail (optionnel)</label>
+          <UTextarea
+            v-model="blacklistForm.motifDetail"
+            rows="3"
+            placeholder="Précisez si nécessaire..."
+            class="w-full min-w-[400px]"
+            :ui="{ base: 'w-full' }"
+          />
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 pt-2">
+          <UButton
+            color="gray"
+            variant="ghost"
+            @click="showBlacklistForm = false"
+          >
+            Annuler
+          </UButton>
+          <UButton
+            color="amber"
+            :loading="blacklistSaving"
+            :disabled="!canSubmitBlacklist"
+            @click="handleBlacklistSubmit"
+          >
+            Confirmer la suspension
+          </UButton>
+        </div>
+        
+        <!-- Erreur -->
+        <UAlert
+          v-if="blacklistError"
+          color="red"
+          icon="i-heroicons-exclamation-circle"
+          :title="blacklistError"
+        />
+      </div>
+    </UCard>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
 
@@ -293,16 +398,26 @@
           <div class="flex items-center justify-between">
             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Relances</h2>
             <div class="flex items-center gap-2">
-              <UButton
-                size="sm"
-                color="amber"
-                variant="outline"
-                icon="i-heroicons-pause-circle"
-                @click="pauseDrawerOuvert = true"
-              >Mettre en pause</UButton>
-              <UButton icon="i-heroicons-plus" size="sm" @click="ouvrirRelanceCreate">
-                Créer une relance
-              </UButton>
+              <UTooltip text="Les relances sont suspendues pour cet impayé">
+                <UButton
+                  size="sm"
+                  color="amber"
+                  variant="outline"
+                  icon="i-heroicons-pause-circle"
+                  :disabled="isBlacklisted"
+                  @click="pauseDrawerOuvert = true"
+                >Mettre en pause</UButton>
+              </UTooltip>
+              <UTooltip text="Les relances sont suspendues pour cet impayé">
+                <UButton 
+                  icon="i-heroicons-plus" 
+                  size="sm" 
+                  :disabled="isBlacklisted"
+                  @click="ouvrirRelanceCreate"
+                >
+                  Créer une relance
+                </UButton>
+              </UTooltip>
             </div>
           </div>
         </template>
@@ -414,6 +529,8 @@
 </template>
 
 <script setup>
+import { useBlacklistImpayeStore, BLACKLIST_MOTIF_TYPES } from '~/stores/blacklistImpayeStore'
+
 const route = useRoute()
 const { $parse } = useNuxtApp()
 const toast = useToast()
@@ -469,6 +586,74 @@ const pauseDrawerOuvert = ref(false)
 const relanceDrawerOuvert = ref(false)
 const relanceDrawerMode = ref('create')
 const relanceSelectionnee = ref(null)
+
+// ── F-008 : Blacklist des Impayés ──
+const blacklistStore = useBlacklistImpayeStore()
+const showBlacklistForm = ref(false)
+const blacklistSaving = ref(false)
+const blacklistError = ref(null)
+const blacklistForm = reactive({
+  motifType: '',
+  motifDetail: ''
+})
+
+const blacklistMotifOptions = BLACKLIST_MOTIF_TYPES.map(m => ({ label: m.label, value: m.value }))
+
+const isBlacklisted = computed(() => {
+  if (!impayeObj.value) return false
+  return impayeObj.value.get('isBlacklisted') === true
+})
+
+const canSubmitBlacklist = computed(() => {
+  return !!(blacklistForm.motifType || blacklistForm.motifDetail?.trim())
+})
+
+function toggleBlacklistForm() {
+  showBlacklistForm.value = !showBlacklistForm.value
+  if (showBlacklistForm.value) {
+    blacklistForm.motifType = ''
+    blacklistForm.motifDetail = ''
+    blacklistError.value = null
+  }
+}
+
+async function handleBlacklistSubmit() {
+  blacklistError.value = null
+  blacklistSaving.value = true
+  
+  try {
+    const contact = impayeObj.value.get('contact_relance') || impayeObj.value.get('payeur')
+    await blacklistStore.blacklistImpaye(
+      impayeObj.value.id,
+      blacklistForm.motifType,
+      blacklistForm.motifDetail,
+      contact?.id
+    )
+    showBlacklistForm.value = false
+    await charger()
+    await chargerRelances()
+    toast.add({ title: 'Relances suspendues', color: 'green' })
+  } catch (err) {
+    blacklistError.value = err.message || 'Une erreur est survenue'
+  } finally {
+    blacklistSaving.value = false
+  }
+}
+
+async function handleUnblacklist() {
+  blacklistSaving.value = true
+  try {
+    const contact = impayeObj.value.get('contact_relance') || impayeObj.value.get('payeur')
+    await blacklistStore.unblacklistImpaye(impayeObj.value.id, contact?.id)
+    await charger()
+    await chargerRelances()
+    toast.add({ title: 'Relances réactivées', color: 'green' })
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    blacklistSaving.value = false
+  }
+}
 
 // Colonnes relances
 const colonnesRelances = [

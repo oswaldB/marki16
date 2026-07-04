@@ -3,6 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 
+// Charger les variables d'environnement
+require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
+
 // Configuration Ollama
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "https://ollama.com/api";
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
@@ -16,8 +19,116 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
 const LOG_DIR = path.join(__dirname, "logs");
 const LOG_FILE = path.join(LOG_DIR, `generate-suivis-${new Date().toISOString().split("T")[0]}.log`);
 
-// Fichier de prompt
-const PROMPT_FILE = path.join(process.cwd(), "..", "..", "configuration/prompts/suivi-email-prompt.txt");
+// Fichier de prompt legacy
+const PROMPT_FILE = path.join(__dirname, "..", "..", "..", "..", "configuration/prompts/suivi-email-prompt.txt");
+
+// Base des prompts par scénario
+const PROMPT_BASE_PATH = path.join(__dirname, "..", "..", "..", "..", "configuration/prompts/scenarios");
+
+/**
+ * Récupère le chemin du fichier de prompt selon le scénario
+ * @param {string} scenarioType - Type de scénario (single, multiple, broker, both)
+ * @returns {string} - Chemin du fichier de prompt
+ */
+function getPromptFile(scenarioType) {
+    return path.join(PROMPT_BASE_PATH, `suivi-${scenarioType}-prompt.txt`);
+}
+
+/**
+ * Récupère les impayés où le contact est apporteur d'affaires (mais pas payeur)
+ * @param {Parse.Object} contact - Le contact
+ * @param {Array} currentImpayes - Les impayés déjà sélectionnés (à exclure)
+ * @returns {Promise<Array>} - Liste des impayés où le contact est apporteur
+ */
+async function getBrokerImpayes(contact, currentImpayes) {
+    const currentImpayeIds = new Set(currentImpayes.map((i) => i.id));
+    
+    const Impaye = Parse.Object.extend("Impaye");
+    const query = new Parse.Query(Impaye);
+    query.equalTo("facture_soldee", false);
+    query.greaterThan("reste_a_payer", 0);
+    
+    // Le contact est l'apporteur
+    query.equalTo("apporteur", contact);
+    
+    // Mais PAS le payeur (sinon c'est ses propres impayés)
+    query.notEqualTo("payeur", contact);
+    query.notEqualTo("contact_relance", contact);
+    
+    // Exclure les impayés déjà dans le groupe courant
+    if (currentImpayeIds.size > 0) {
+        query.notContainedIn("objectId", Array.from(currentImpayeIds));
+    }
+    
+    query.limit(999999);
+    
+    try {
+        const brokerImpayes = await query.find({ useMasterKey: true });
+        return brokerImpayes;
+    } catch (error) {
+        log("ERROR", contact.id, null, `Erreur récupération broker impayés: ${error.message}`);
+        return [];
+    }
+}
+
+/**
+ * Construit le JSON des impayés broker pour le prompt
+ * @param {Array} brokerImpayes - Liste des impayés où le contact est apporteur
+ * @returns {Array} - Tableau d'objets pour le prompt
+ */
+function buildBrokerImpayesData(brokerImpayes) {
+    return brokerImpayes.map((i) => ({
+        id: i.id,
+        nfacture: i.get("nfacture"),
+        reference: i.get("reference"),
+        numero_dossier: i.get("numero_dossier"),
+        date_piece: i.get("date_piece"),
+        date_echeance: i.get("date_echeance"),
+        total_ttc: i.get("total_ttc"),
+        reste_a_payer: i.get("reste_a_payer"),
+        adresse_bien: i.get("adresse_bien"),
+        ville: i.get("ville"),
+        code_postal: i.get("code_postal"),
+        // Payeur de cet impayé (pas le contact courant)
+        payeur_nom: i.get("payeur_nom"),
+        payeur_prenom: i.get("payeur_prenom"),
+        payeur_email: i.get("payeur_email"),
+        // Apporteur = contact courant
+        apporteur_nom: i.get("apporteur_nom"),
+        apporteur_prenom: i.get("apporteur_prenom"),
+        apporteur_societe: i.get("apporteur_societe"),
+    }));
+}
+
+/**
+ * Détermine le type de scénario selon le contact et les impayés
+ * @param {Parse.Object} contact - Le contact
+ * @param {Array} impayes - Les impayés du groupe
+ * @param {Array} brokerImpayes - Les impayés où le contact est apporteur
+ * @returns {string} - Type de scénario (single, multiple, broker, both)
+ */
+function determineScenarioType(contact, impayes, brokerImpayes) {
+    const nombreImpayes = impayes.length;
+    
+    // Détecter si le contact est un apporteur d'affaires
+    const contactType = contact.get("type_personne");
+    const isBroker = contactType === "Apporteur d'affaire" || 
+                     contactType === "Apporteur" ||
+                     contactType === "apporteur" ||
+                     contactType === "apporteur d'affaire";
+    
+    const hasBrokerImpayes = brokerImpayes && brokerImpayes.length > 0;
+    
+    if (isBroker && hasBrokerImpayes) {
+        return "both";
+    } else if (isBroker) {
+        return "broker";
+    } else if (nombreImpayes === 1) {
+        return "single";
+    } else {
+        return "multiple";
+    }
+}
 
 /**
  * Écrit un message dans le fichier de log
@@ -47,7 +158,7 @@ function log(level, contactId, emailIndex, message) {
 
 /**
  * Vérifie si la fréquence correspond à aujourd'hui
- * @param {string} frequence - La fréquence (quotidien, hebdomadaire, lundi, 1, 15, etc.)
+ * @param {string|Object} frequence - La fréquence (peut être string ou objet structuré)
  * @returns {boolean} - True si la fréquence correspond à aujourd'hui
  */
 function isFrequencyValid(frequence) {
@@ -59,23 +170,50 @@ function isFrequencyValid(frequence) {
     
     const JOURS_SEMAINE = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
     
+    // Nouveau format : objet structuré
+    if (typeof frequence === "object" && frequence.type) {
+        const type = frequence.type;
+        const hour = parseInt(frequence.hour) || 0;
+        const dayOfWeek = parseInt(frequence.dayOfWeek);
+        const dayOfMonth = parseInt(frequence.dayOfMonth);
+        
+        // Vérifier l'heure (si spécifiée, on vérifie que l'heure actuelle >= heure configurée)
+        const heureActuelle = aujourdhui.getHours();
+        if (heureActuelle < hour) {
+            return false;
+        }
+        
+        switch (type) {
+            case "quotidien":
+                return true;
+            case "hebdomadaire":
+                return jourSemaine === (dayOfWeek || 1); // Par défaut lundi
+            case "mensuel":
+                return jourDuMois === (dayOfMonth || 1); // Par défaut le 1er
+            default:
+                return false;
+        }
+    }
+    
+    // Ancien format : string (compatibilité descendante)
+    const freqStr = String(frequence).toLowerCase();
+    
     // Quotidien
-    if (frequence === "quotidien") return true;
+    if (freqStr === "quotidien") return true;
     
     // Hebdomadaire = tous les lundis
-    if (frequence === "hebdomadaire") {
+    if (freqStr === "hebdomadaire") {
         return jourSemaine === 1; // Lundi
     }
     
     // Jour du mois (ex: "1", "15", "28")
-    if (/^\d+$/.test(frequence)) {
-        return jourDuMois === parseInt(frequence);
+    if (/^\d+$/.test(freqStr)) {
+        return jourDuMois === parseInt(freqStr);
     }
     
     // Jour de la semaine (ex: "lundi", "mardi")
-    const jourCible = frequence.toLowerCase();
-    if (JOURS_SEMAINE.includes(jourCible)) {
-        return JOURS_SEMAINE[jourSemaine] === jourCible;
+    if (JOURS_SEMAINE.includes(freqStr)) {
+        return JOURS_SEMAINE[jourSemaine] === freqStr;
     }
     
     return false;
@@ -268,15 +406,6 @@ async function generateSuivis() {
             };
         }
         
-        // Charger le template de prompt
-        let promptTemplate;
-        try {
-            promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
-        } catch (err) {
-            log("ERROR", null, null, `Impossible de charger le fichier de prompt: ${err.message}`);
-            throw err;
-        }
-        
         let suivisCrees = 0;
         let suivisIgnores = 0;
         let erreurs = 0;
@@ -321,13 +450,19 @@ async function generateSuivis() {
                 const groupedByContact = new Map();
                 
                 for (const impaye of impayes) {
+                    // Skip si l'impayé est blacklisté
+                    if (impaye.get("isBlacklisted") === true) {
+                        log("INFO", null, emailIndex, `Impayé ${impaye.id} blacklisté - ignoré`);
+                        continue;
+                    }
+                    
                     let contact = impaye.get("contact_relance") || impaye.get("payeur");
                     if (!contact) continue;
                     
                     // Filtrer les contacts blacklistés ou sans email
                     const contactEmail = contact.get("email");
-                    const isBlacklisted = contact.get("isBlacklisted") || false;
-                    if (!contactEmail || contactEmail.trim() === "" || isBlacklisted) continue;
+                    const isContactBlacklisted = contact.get("isBlacklisted") || false;
+                    if (!contactEmail || contactEmail.trim() === "" || isContactBlacklisted) continue;
                     
                     const key = contact.id;
                     if (!groupedByContact.has(key)) {
@@ -344,141 +479,188 @@ async function generateSuivis() {
                         // Récupérer l'historique des suivis pour ce contact
                         const history = await getHistory(contact, contactImpayes);
                         
-                        // Traiter chaque scénario actif
-                        for (const scenarioActif of scenarios) {
-                            if (!scenarioActif.active) continue;
-                            
-                            const scenarioType = scenarioActif.format; // "single" ou "multiple"
-                            
-                            // Vérifier si un suivi existe déjà pour ce contact/séquence/email_index aujourd'hui
-                            const Suivi = Parse.Object.extend("Suivi");
-                            const existingSuiviQuery = new Parse.Query(Suivi);
-                            existingSuiviQuery.equalTo("contact", contact);
-                            existingSuiviQuery.equalTo("sequence", sequence);
-                            existingSuiviQuery.equalTo("email_index", emailIndex);
-                            existingSuiviQuery.equalTo("manuelle", false);
-                            
-                            // Vérifier si un suivi a déjà été créé aujourd'hui
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            const tomorrow = new Date(today);
-                            tomorrow.setDate(tomorrow.getDate() + 1);
-                            existingSuiviQuery.greaterThanOrEqualTo("dateEnvoi", today);
-                            existingSuiviQuery.lessThan("dateEnvoi", tomorrow);
-                            
-                            const existingSuivi = await existingSuiviQuery.first({ useMasterKey: true });
-                            if (existingSuivi) {
-                                log("INFO", contactId, emailIndex, "Suivi existant trouvé pour aujourd'hui, ignoré");
+                        // Récupérer les impayés où ce contact est apporteur (pour scénarios broker/both)
+                        const brokerImpayes = await getBrokerImpayes(contact, contactImpayes);
+                        
+                        // Déterminer le type de scénario
+                        const scenarioType = determineScenarioType(contact, contactImpayes, brokerImpayes);
+                        
+                        log("INFO", contactId, emailIndex, `Scénario déterminé: ${scenarioType} (${contactImpayes.length} impayés, ${brokerImpayes.length} en tant qu'apporteur)`);
+                        
+                        // Recherche du scénario actif correspondant
+                        const scenarioActif = scenarios.find(s => s.format === scenarioType && s.active);
+                        
+                        if (!scenarioActif) {
+                            log("INFO", contactId, emailIndex, `Aucun scénario actif pour format "${scenarioType}", ignoré`);
+                            suivisIgnores++;
+                            continue;
+                        }
+                        
+                        // Vérifier si un suivi existe déjà pour ce contact/séquence/email_index aujourd'hui
+                        const Suivi = Parse.Object.extend("Suivi");
+                        const existingSuiviQuery = new Parse.Query(Suivi);
+                        existingSuiviQuery.equalTo("contact", contact);
+                        existingSuiviQuery.equalTo("sequence", sequence);
+                        existingSuiviQuery.equalTo("email_index", emailIndex);
+                        existingSuiviQuery.equalTo("manuelle", false);
+                        
+                        // Vérifier si un suivi a déjà été créé aujourd'hui
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        existingSuiviQuery.greaterThanOrEqualTo("dateEnvoi", today);
+                        existingSuiviQuery.lessThan("dateEnvoi", tomorrow);
+                        
+                        const existingSuivi = await existingSuiviQuery.first({ useMasterKey: true });
+                        if (existingSuivi) {
+                            log("INFO", contactId, emailIndex, "Suivi existant trouvé pour aujourd'hui, ignoré");
+                            suivisIgnores++;
+                            continue;
+                        }
+                        
+                        // Charger le prompt spécifique au scénario
+                        let promptTemplate;
+                        try {
+                            const promptFile = getPromptFile(scenarioType);
+                            promptTemplate = fs.readFileSync(promptFile, "utf-8");
+                            log("INFO", contactId, emailIndex, `Prompt chargé: suivi-${scenarioType}-prompt.txt`);
+                        } catch (promptErr) {
+                            log("ERROR", contactId, emailIndex, `Erreur chargement prompt spécifique: ${promptErr.message}`);
+                            // Fallback sur le prompt legacy
+                            try {
+                                promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+                                log("INFO", contactId, emailIndex, "Fallback sur prompt legacy");
+                            } catch (legacyErr) {
+                                log("ERROR", contactId, emailIndex, `Erreur chargement prompt legacy: ${legacyErr.message}`);
                                 suivisIgnores++;
                                 continue;
                             }
-                            
-                            // Préparer les données pour le prompt
-                            const impayesData = contactImpayes.map(i => ({
-                                id: i.id,
-                                nfacture: i.get("nfacture"),
-                                reference: i.get("reference"),
-                                date_piece: i.get("date_piece"),
-                                date_echeance: i.get("date_echeance"),
-                                total_ht: i.get("total_ht"),
-                                total_ttc: i.get("total_ttc"),
-                                montant_total: i.get("montant_total"),
-                                reste_a_payer: i.get("reste_a_payer"),
-                                adresse_bien: i.get("adresse_bien"),
-                                ville: i.get("ville"),
-                                code_postal: i.get("code_postal")
-                            }));
-                            
-                            const contactData = {
-                                id: contact.id,
-                                nom: contact.get("nom"),
-                                prenom: contact.get("prenom"),
-                                email: contact.get("email"),
-                                civilite: contact.get("civilite"),
-                                type_personne: contact.get("type_personne")
-                            };
-                            
-                            const objetTemplate = scenarioActif.objet || email.objet || "";
-                            const corpsTemplate = scenarioActif.corps || email.corps || "";
-                            
-                            const prompt = promptTemplate
-                                .replace(/{{objetTemplate}}/g, objetTemplate)
-                                .replace(/{{corpsTemplate}}/g, corpsTemplate)
-                                .replace(/{{impayesJson}}/g, JSON.stringify(impayesData))
-                                .replace(/{{historyJson}}/g, JSON.stringify(history))
-                                .replace(/{{emailIndex}}/g, String(emailIndex))
-                                .replace(/{{contactJson}}/g, JSON.stringify(contactData))
-                                .replace(/{{scenarioType}}/g, scenarioType);
-                            
-                            // Appeler Ollama pour générer le contenu
-                            let generatedContent;
-                            try {
-                                if (USE_OLLAMA) {
-                                    generatedContent = await callOllama(prompt, contactId, emailIndex);
-                                } else {
-                                    // Mode fallback sans Ollama
-                                    generatedContent = {
-                                        objet: objetTemplate,
-                                        corps: corpsTemplate
-                                    };
-                                }
-                            } catch (ollamaError) {
-                                log("ERROR", contactId, emailIndex, `Erreur Ollama: ${ollamaError.message}`);
-                                // Utiliser les templates en cas d'erreur
+                        }
+                        
+                        // Préparer les données pour le prompt
+                        const impayesData = contactImpayes.map(i => ({
+                            id: i.id,
+                            nfacture: i.get("nfacture"),
+                            reference: i.get("reference"),
+                            date_piece: i.get("date_piece"),
+                            date_echeance: i.get("date_echeance"),
+                            total_ht: i.get("total_ht"),
+                            total_ttc: i.get("total_ttc"),
+                            montant_total: i.get("montant_total"),
+                            reste_a_payer: i.get("reste_a_payer"),
+                            adresse_bien: i.get("adresse_bien"),
+                            ville: i.get("ville"),
+                            code_postal: i.get("code_postal")
+                        }));
+                        
+                        const contactData = {
+                            id: contact.id,
+                            nom: contact.get("nom"),
+                            prenom: contact.get("prenom"),
+                            email: contact.get("email"),
+                            civilite: contact.get("civilite"),
+                            type_personne: contact.get("type_personne")
+                        };
+                        
+                        // Date du jour au format JJ/MM/AAAA
+                        const now = new Date();
+                        const dateJour = now.toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                        
+                        const objetTemplate = scenarioActif.objet || email.objet || "";
+                        const corpsTemplate = scenarioActif.corps || email.corps || "";
+                        
+                        // Construire le prompt avec les variables
+                        let prompt = promptTemplate
+                            .replace(/{{objetTemplate}}/g, objetTemplate)
+                            .replace(/{{corpsTemplate}}/g, corpsTemplate)
+                            .replace(/{{impayesJson}}/g, JSON.stringify(impayesData))
+                            .replace(/{{historyJson}}/g, JSON.stringify(history))
+                            .replace(/{{emailIndex}}/g, String(emailIndex))
+                            .replace(/{{contactJson}}/g, JSON.stringify(contactData))
+                            .replace(/{{scenarioType}}/g, scenarioType)
+                            .replace(/{{dateJour}}/g, dateJour)
+                            .replace(/{{nombreImpayes}}/g, String(contactImpayes.length));
+                        
+                        // Ajouter les données broker pour les scénarios broker et both
+                        if (scenarioType === "broker" || scenarioType === "both") {
+                            const brokerImpayesData = buildBrokerImpayesData(brokerImpayes);
+                            prompt = prompt.replace(/{{brokerImpayesJson}}/g, JSON.stringify(brokerImpayesData));
+                            log("INFO", contactId, emailIndex, `Données broker ajoutées: ${brokerImpayes.length} impayés`);
+                        }
+                        
+                        // Appeler Ollama pour générer le contenu
+                        let generatedContent;
+                        try {
+                            if (USE_OLLAMA) {
+                                generatedContent = await callOllama(prompt, contactId, emailIndex);
+                            } else {
+                                // Mode fallback sans Ollama
                                 generatedContent = {
                                     objet: objetTemplate,
                                     corps: corpsTemplate
                                 };
                             }
-                            
-                            // Remplacer les placeholders
-                            const { objet: objetFinal, corps: corpsFinal } = replacePlaceholders(
-                                generatedContent.objet,
-                                generatedContent.corps,
-                                contact,
-                                contactImpayes
-                            );
-                            
-                            // Préparer le smtpProfil
-                            let smtpProfileObj = null;
-                            if (scenarioActif.smtp) {
-                                const SmtpProfile = Parse.Object.extend("SmtpProfile");
-                                smtpProfileObj = SmtpProfile.createWithoutData(scenarioActif.smtp);
-                            } else if (email.smtp) {
-                                const SmtpProfile = Parse.Object.extend("SmtpProfile");
-                                smtpProfileObj = SmtpProfile.createWithoutData(email.smtp);
-                            }
-                            
-                            // Créer le suivi
-                            const suivi = new Suivi();
-                            suivi.set("contact", contact);
-                            suivi.set("sequence", sequence);
-                            suivi.set("email_index", emailIndex);
-                            suivi.set("impayes", contactImpayes);
-                            suivi.set("scenario", scenarioType);
-                            suivi.set("frequence", frequence);
-                            suivi.set("valide", !validationObligatoire);
-                            suivi.set("manuelle", false);
-                            suivi.set("statut", "pret pour envoi");
-                            suivi.set("objet", objetFinal);
-                            suivi.set("corps", corpsFinal);
-                            suivi.set("dateEnvoi", new Date());
-                            suivi.set("erreur_count", 0);
-                            
-                            if (smtpProfileObj) {
-                                suivi.set("smtpProfil", smtpProfileObj);
-                            }
-                            
-                            // Récupérer les adresses CC
-                            if (email.cc) {
-                                suivi.set("cc", email.cc);
-                            }
-                            
-                            await suivi.save(null, { useMasterKey: true });
-                            
-                            suivisCrees++;
-                            log("INFO", contactId, emailIndex, `Suivi créé avec succès - scénario: ${scenarioType}`);
+                        } catch (ollamaError) {
+                            log("ERROR", contactId, emailIndex, `Erreur Ollama: ${ollamaError.message}`);
+                            // Utiliser les templates en cas d'erreur
+                            generatedContent = {
+                                objet: objetTemplate,
+                                corps: corpsTemplate
+                            };
                         }
+                        
+                        // Remplacer les placeholders
+                        const { objet: objetFinal, corps: corpsFinal } = replacePlaceholders(
+                            generatedContent.objet,
+                            generatedContent.corps,
+                            contact,
+                            contactImpayes
+                        );
+                        
+                        // Préparer le smtpProfil
+                        let smtpProfileObj = null;
+                        if (scenarioActif.smtp) {
+                            const SmtpProfile = Parse.Object.extend("SmtpProfile");
+                            smtpProfileObj = SmtpProfile.createWithoutData(scenarioActif.smtp);
+                        } else if (email.smtp) {
+                            const SmtpProfile = Parse.Object.extend("SmtpProfile");
+                            smtpProfileObj = SmtpProfile.createWithoutData(email.smtp);
+                        }
+                        
+                        // Créer le suivi
+                        const suivi = new Suivi();
+                        suivi.set("contact", contact);
+                        suivi.set("sequence", sequence);
+                        suivi.set("email_index", emailIndex);
+                        suivi.set("impayes", contactImpayes);
+                        suivi.set("scenario", { format: scenarioType });
+                        suivi.set("frequence", frequence);
+                        suivi.set("valide", !validationObligatoire);
+                        suivi.set("manuelle", false);
+                        suivi.set("statut", "pret pour envoi");
+                        suivi.set("objet", objetFinal);
+                        suivi.set("corps", corpsFinal);
+                        suivi.set("dateEnvoi", new Date());
+                        suivi.set("erreur_count", 0);
+                        
+                        if (smtpProfileObj) {
+                            suivi.set("smtpProfil", smtpProfileObj);
+                        }
+                        
+                        // Récupérer les adresses CC
+                        if (email.cc) {
+                            suivi.set("cc", email.cc);
+                        }
+                        
+                        await suivi.save(null, { useMasterKey: true });
+                        
+                        suivisCrees++;
+                        log("INFO", contactId, emailIndex, `Suivi créé avec succès - scénario: ${scenarioType}`);
                     } catch (groupError) {
                         log("ERROR", contactId, emailIndex, `Erreur traitement contact: ${groupError.message}`);
                         erreurs++;
@@ -508,6 +690,52 @@ async function generateSuivis() {
 
 // Export pour Parse Cloud Code
 module.exports = { generateSuivis };
+
+/**
+ * Cloud Function: generateSuivis
+ * Endpoint HTTP pour déclencher la génération des suivis
+ * 
+ * curl -X POST \
+ *   -H "X-Parse-Application-Id: {APP_ID}" \
+ *   -H "X-Parse-Master-Key: {MASTER_KEY}" \
+ *   -H "Content-Type: application/json" \
+ *   {PARSE_SERVER_URL}/functions/generateSuivis
+ * 
+ * Paramètres optionnels:
+ * - trigger: string - Type de déclenchement (défaut: "cloud")
+ */
+if (typeof Parse !== "undefined" && Parse.Cloud && Parse.Cloud.define) {
+    Parse.Cloud.define("generateSuivis", async (request) => {
+        const { trigger = "cloud" } = request.params;
+        const startedAt = Date.now();
+        
+        log(
+            `Cloud Function generateSuivis appelée (trigger: ${trigger})`,
+            null,
+            null
+        );
+
+        try {
+            const result = await generateSuivis();
+
+            return {
+                success: true,
+                stats: result,
+                durationMs: Date.now() - startedAt
+            };
+        } catch (err) {
+            log(
+                `Erreur dans Cloud Function generateSuivis: ${err.message}`,
+                null,
+                null
+            );
+            throw new Parse.Error(
+                Parse.Error.SCRIPT_FAILED,
+                `Erreur lors de la génération des suivis: ${err.message}`,
+            );
+        }
+    });
+}
 
 // Si exécuté directement (local/test)
 if (require.main === module) {

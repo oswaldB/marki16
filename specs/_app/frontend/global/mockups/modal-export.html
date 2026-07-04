@@ -1,0 +1,59 @@
+<!-- Mockup: global/modal-export - nominal -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modal Export - ADTI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900/50 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
+  <!-- Modal -->
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+    <h3 class="text-xl font-semibold text-slate-900 mb-2">Exporter les données</h3>
+    <p class="text-slate-600 mb-6">Choisissez le format d'export pour vos données.</p>
+
+    <div class="space-y-3 mb-6">
+      <label class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+        <input type="radio" name="format" value="excel" class="w-4 h-4 text-blue-600" checked>
+        <div class="flex-1">
+          <p class="font-medium text-slate-900">Excel (.xlsx)</p>
+          <p class="text-sm text-slate-500">Fichier avec données brutes et filtres</p>
+        </div>
+        <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+        </svg>
+      </label>
+
+      <label class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+        <input type="radio" name="format" value="pdf" class="w-4 h-4 text-blue-600">
+        <div class="flex-1">
+          <p class="font-medium text-slate-900">PDF</p>
+          <p class="text-sm text-slate-500">Rapport formaté avec graphiques</p>
+        </div>
+        <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+        </svg>
+      </label>
+
+      <label class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+        <input type="radio" name="format" value="csv" class="w-4 h-4 text-blue-600">
+        <div class="flex-1">
+          <p class="font-medium text-slate-900">CSV</p>
+          <p class="text-sm text-slate-500">Format simple compatible tous logiciels</p>
+        </div>
+        <svg class="w-6 h-6 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+        </svg>
+      </label>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <button class="px-4 py-2 text-slate-700 hover:text-slate-900">Annuler</button>
+      <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+        Exporter
+      </button>
+    </div>
+  </div>
+</body>
+</html>

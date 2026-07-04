@@ -82,7 +82,8 @@ export const useBlacklistStore = defineStore('blacklist', {
       }
       
       try {
-        await $parse.Object.saveAll(contactsToUpdate)
+        // Remplacer saveAll (batch) par des saves individuels en parallèle
+        await Promise.all(contactsToUpdate.map(contact => contact.save()))
         // Invalider le cache et recharger
         this.lastFetched = null
         await this.fetchBlacklistedContacts(true)
@@ -112,7 +113,8 @@ export const useBlacklistStore = defineStore('blacklist', {
       }
       
       try {
-        await $parse.Object.saveAll(contactsToUpdate)
+        // Remplacer saveAll (batch) par des saves individuels en parallèle
+        await Promise.all(contactsToUpdate.map(contact => contact.save()))
         // Invalider le cache et recharger
         this.lastFetched = null
         await this.fetchBlacklistedContacts(true)
@@ -173,7 +175,8 @@ export const useBlacklistStore = defineStore('blacklist', {
           const relances = await query.find()
           
           if (relances.length > 0) {
-            await $parse.Object.destroyAll(relances)
+            // Remplacer destroyAll (batch) par des destroys individuels en parallèle
+            await Promise.all(relances.map(relance => relance.destroy()))
             deletedCount += relances.length
           }
         } catch (error) {

@@ -1,0 +1,169 @@
+<!-- Mockup: fiche-client - nominal -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche Client - ADTI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <div class="text-xl font-bold text-blue-600">ADTI</div>
+        <div class="flex gap-6 text-sm">
+          <a href="#" class="text-slate-600 hover:text-slate-900">Dashboard</a>
+          <a href="#" class="text-slate-600 hover:text-slate-900">Factures</a>
+          <a href="#" class="text-blue-600 font-medium">Clients</a>
+          <a href="#" class="text-slate-600 hover:text-slate-900">Importer</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-6">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+      <a href="#" class="hover:text-blue-600">Clients</a>
+      <span>→</span>
+      <span class="text-slate-900">SARL Dupont Construction</span>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">SARL Dupont Construction</h1>
+        <p class="text-slate-600">SIRET: 123 456 789 00012 • Client depuis janvier 2022</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="px-4 py-2 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50">
+          ✉️ Envoyer un email
+        </button>
+        <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          🔔 Relancer
+        </button>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Client Info -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h3 class="font-semibold text-slate-900 mb-4">Informations</h3>
+        <div class="space-y-3">
+          <div>
+            <p class="text-sm text-slate-500">Adresse</p>
+            <p class="text-slate-700">15 rue de la Paix<br>75002 Paris</p>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Email</p>
+            <p class="text-slate-700">contact@dupont-construction.fr</p>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Téléphone</p>
+            <p class="text-slate-700">01 23 45 67 89</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h3 class="font-semibold text-slate-900 mb-4">Résumé financier</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Solde débiteur</span>
+            <span class="text-2xl font-bold text-red-600">24.8k€</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Factures impayées</span>
+            <span class="font-semibold text-slate-900">3</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">DSO moyen</span>
+            <span class="font-semibold text-slate-900">78 jours</span>
+          </div>
+          <div class="pt-3 border-t border-slate-200">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-600">Score client</span>
+              <span class="px-3 py-1 bg-red-100 text-red-700 font-bold rounded-full">D</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Trend -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h3 class="font-semibold text-slate-900 mb-4">Tendance de paiement</h3>
+        <div class="h-32 flex items-end gap-2">
+          <div class="flex-1 bg-slate-200 rounded-t" style="height: 40%"></div>
+          <div class="flex-1 bg-slate-200 rounded-t" style="height: 60%"></div>
+          <div class="flex-1 bg-slate-200 rounded-t" style="height: 80%"></div>
+          <div class="flex-1 bg-red-300 rounded-t" style="height: 100%"></div>
+          <div class="flex-1 bg-red-400 rounded-t" style="height: 90%"></div>
+          <div class="flex-1 bg-red-500 rounded-t" style="height: 95%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Retard moyen sur les 6 derniers mois</p>
+      </div>
+    </div>
+
+    <!-- Invoice History -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-semibold text-slate-900">Historique des factures</h3>
+        <a href="#" class="text-sm text-blue-600 hover:underline">Voir toutes les factures →</a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium text-slate-700">N° Facture</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-700">Date</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-700">Échéance</th>
+              <th class="px-4 py-3 text-right font-medium text-slate-700">Montant</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-700">Statut</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-700">Jours de retard</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-mono">FACT-2024-045</td>
+              <td class="px-4 py-3">15/01/2024</td>
+              <td class="px-4 py-3">15/02/2024</td>
+              <td class="px-4 py-3 text-right font-mono">12 500 €</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Impayée</span></td>
+              <td class="px-4 py-3 text-red-600 font-medium">+127 jours</td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-mono">FACT-2024-032</td>
+              <td class="px-4 py-3">02/12/2023</td>
+              <td class="px-4 py-3">02/01/2024</td>
+              <td class="px-4 py-3 text-right font-mono">8 200 €</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Impayée</span></td>
+              <td class="px-4 py-3 text-red-600 font-medium">+168 jours</td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-mono">FACT-2024-018</td>
+              <td class="px-4 py-3">15/11/2023</td>
+              <td class="px-4 py-3">15/12/2023</td>
+              <td class="px-4 py-3 text-right font-mono">4 100 €</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Impayée</span></td>
+              <td class="px-4 py-3 text-red-600 font-medium">+186 jours</td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-mono">FACT-2023-156</td>
+              <td class="px-4 py-3">10/10/2023</td>
+              <td class="px-4 py-3">10/11/2023</td>
+              <td class="px-4 py-3 text-right font-mono">6 800 €</td>
+              <td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full">Payée</span></td>
+              <td class="px-4 py-3 text-slate-500">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

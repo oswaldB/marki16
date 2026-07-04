@@ -71,7 +71,7 @@ Séquence de suivis avec fréquences planifiées.
       "corps": String,          // Template corps HTML
       "scenarios": [
         {
-          "format": String,     // "single" ou "multiple"
+          "format": String,     // "single", "multiple", "broker" ou "both"
           "active": Boolean,    // Seuls les actifs sont traités
           "objet": String,      // Template spécifique au scénario
           "corps": String,      // Template spécifique au scénario
@@ -100,7 +100,7 @@ Représente un suivi généré (équivalent de Relance).
   "sequence": Pointer(Sequence),
   "impayes": Array,             // Liste des impayés concernés
   "email_index": Number,        // Index de l'email dans la séquence
-  "scenario": String,           // "single" ou "multiple"
+  "scenario": String,           // "single", "multiple", "broker" ou "both"
   "smtpProfil": Pointer(SmtpProfile),
   "cc": String,
   "erreur_count": Number,
@@ -376,6 +376,48 @@ function shouldGenerateToday(frequence) {
 
 ---
 
+## Détermination des Scénarios
+
+La détermination du scénario est automatique et basée sur :
+1. Le nombre d'impayés du contact
+2. Le type de personne (apporteur d'affaires ou non)
+3. La présence d'impayés où le contact est également apporteur
+
+```javascript
+// Déterminer si le contact est un apporteur d'affaires
+const isBroker = contact.get("type_personne") === "Apporteur d'affaire" || 
+                 contact.get("type_personne") === "Apporteur";
+
+// Récupérer les impayés où ce contact est apporteur (mais pas payeur)
+const brokerImpayes = await getBrokerImpayes(contact, impayes);
+const hasBrokerImpayes = brokerImpayes.length > 0;
+
+// Détermination automatique du scénario
+const nombreImpayes = impayes.length;
+let scenarioType;
+
+if (isBroker && hasBrokerImpayes) {
+    scenarioType = "both";
+} else if (isBroker) {
+    scenarioType = "broker";
+} else if (nombreImpayes === 1) {
+    scenarioType = "single";
+} else {
+    scenarioType = "multiple";
+}
+```
+
+**Règles de détermination** :
+
+| Condition | Scénario | Description |
+|-----------|----------|-------------|
+| Contact = apporteur ET a des impayés où il est apporteur | `both` | Suivi combinant ses propres impayés + ceux où il est apporteur |
+| Contact = apporteur (sans impayés où il est apporteur) | `broker` | Suivi spécifique apporteur |
+| 1 impayé uniquement | `single` | Suivi pour une facture unique |
+| 2+ impayés | `multiple` | Suivi pour plusieurs factures |
+
+---
+
 ## Prompt Ollama
 
 ### Configuration
@@ -386,22 +428,62 @@ const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 const OLLAMA_MODEL = "mistral-large-3:675b-cloud";
 ```
 
-### Prompt (voir `/configuration/prompts/suivi-email-prompt.txt`)
+### Prompts par scénario
+
+Chaque scénario dispose d'un prompt spécifique pour adapter le ton et le contenu du suivi :
+
+| Scénario | Fichier de prompt | Description |
+|----------|-------------------|-------------|
+| `single` | `configuration/prompts/scenarios/suivi-single-prompt.txt` | 1 facture - ton informatif |
+| `multiple` | `configuration/prompts/scenarios/suivi-multiple-prompt.txt` | Plusieurs factures - ton informatif |
+| `broker` | `configuration/prompts/scenarios/suivi-broker-prompt.txt` | Apporteur d'affaires |
+| `both` | `configuration/prompts/scenarios/suivi-both-prompt.txt` | Impayés + rôle d'apporteur |
+
+### Construction du prompt
 
 ```javascript
-const PROMPT_FILE = path.join(__dirname, "../../../configuration/prompts/suivi-email-prompt.txt");
-const promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+const PROMPT_BASE_PATH = "/home/ubuntu/prod/adti/configuration/prompts/scenarios";
+const promptFile = path.join(PROMPT_BASE_PATH, `suivi-${scenarioType}-prompt.txt`);
+const promptTemplate = fs.readFileSync(promptFile, "utf-8");
 
+// Date du jour au format JJ/MM/AAAA
+const aujourdhui = new Date();
+const dateJour = aujourdhui.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+});
+
+// Construction du prompt avec toutes les variables
 const prompt = promptTemplate
-    .replace(/{{objetTemplate}}/g, objetTemplate)
-    .replace(/{{corpsTemplate}}/g, corpsTemplate)
-    .replace(/{{impayesJson}}/g, impayesJson)
-    .replace(/{{historyJson}}/g, historyJson)
-    .replace(/{{contactJson}}/g, contactJson)
-    .replace(/{{scenarioType}}/g, scenarioType);
+    .replace(/{{objetTemplate}}/g, scenarioActif.objet || email.objet)
+    .replace(/{{corpsTemplate}}/g, scenarioActif.corps || email.corps)
+    .replace(/{{impayesJson}}/g, JSON.stringify(impayesData))
+    .replace(/{{brokerImpayesJson}}/g, JSON.stringify(brokerImpayesData))
+    .replace(/{{historyJson}}/g, JSON.stringify(history))
+    .replace(/{{emailIndex}}/g, String(emailIndex))
+    .replace(/{{contactJson}}/g, JSON.stringify(contactData))
+    .replace(/{{scenarioType}}/g, scenarioType)
+    .replace(/{{dateJour}}/g, dateJour)
+    .replace(/{{nombreImpayes}}/g, String(contactImpayes.length));
 ```
 
-> **Note** : Le prompt est maintenant externalisé dans `/configuration/prompts/suivi-email-prompt.txt`. Voir ce fichier pour le contenu complet des règles de génération.
+**Variables disponibles** :
+
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `{{objetTemplate}}` | Template de l'objet depuis la séquence | `"Suivi de vos dossiers"` |
+| `{{corpsTemplate}}` | Template du corps depuis la séquence | `"<p>Bonjour...</p>"` |
+| `{{impayesJson}}` | JSON des impayés du contact (ses factures) | `[{id: "...", nfacture: 123...}]` |
+| `{{brokerImpayesJson}}` | JSON des impayés où il est apporteur (broker/both uniquement) | `[{id: "...", payeur_nom: "..."}]` |
+| `{{historyJson}}` | Historique des suivis précédents | `[{statut: "...", dateEnvoi: "..."}]` |
+| `{{emailIndex}}` | Index de l'email dans la séquence | `1`, `2`, etc. |
+| `{{contactJson}}` | Données du contact destinataire | `{nom: "...", prenom: "..."}` |
+| `{{scenarioType}}` | Type de scénario déterminé | `"single"`, `"multiple"`, `"broker"`, `"both"` |
+| `{{dateJour}}` | **Date du jour au format JJ/MM/AAAA** | `"04/07/2025"` |
+| `{{nombreImpayes}}` | Nombre d'impayés du contact | `1`, `3`, etc. |
+
+> **Note** : Les prompts sont externalisés dans `/home/ubuntu/prod/adti/configuration/prompts/scenarios/`. Voir ces fichiers pour le contenu complet des règles de génération par scénario.
 
 ### Génération avec retry
 

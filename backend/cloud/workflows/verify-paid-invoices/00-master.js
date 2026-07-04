@@ -421,11 +421,12 @@ async function verifyPaidInvoices(trigger) {
 }
 
 /**
- * Nettoie les relances pour les factures nouvellement payées
+ * Nettoie les relances pour les factures payées
  * @param {string} trigger - Type de déclencheur
+ * @param {boolean} fullCleanup - Si true, nettoie toutes les relances des factures soldées (même anciennes)
  * @returns {Promise<Object>} Statistiques du nettoyage
  */
-async function cleanupRelances(trigger) {
+async function cleanupRelances(trigger, fullCleanup = false) {
     const stats = {
         deleted: 0,
         updated: 0,
@@ -437,7 +438,7 @@ async function cleanupRelances(trigger) {
             throw new Error("Parse SDK not initialized");
         }
 
-        if (!workflowStartTime) {
+        if (!fullCleanup && !workflowStartTime) {
             warn(
                 "workflowStartTime not set, cannot filter recently paid invoices",
                 "verify-paid-invoices",
@@ -447,20 +448,26 @@ async function cleanupRelances(trigger) {
         }
 
         info(
-            "Searching for recently paid invoices...",
+            fullCleanup 
+                ? "Searching for ALL paid invoices (full cleanup mode)..." 
+                : "Searching for recently paid invoices...",
             "verify-paid-invoices",
             "cleanupRelances",
         );
 
-        // 1. Rechercher les factures payées récemment (depuis le démarrage du workflow)
+        // 1. Rechercher les factures payées
         const paidQuery = new Parse.Query("Impaye");
         paidQuery.equalTo("facture_soldee", true);
         paidQuery.equalTo("solde", true);
-        paidQuery.greaterThanOrEqualTo("solde_le", workflowStartTime);
+        
+        // Si pas en mode full cleanup, filtrer uniquement les factures soldées depuis le démarrage du workflow
+        if (!fullCleanup && workflowStartTime) {
+            paidQuery.greaterThanOrEqualTo("solde_le", workflowStartTime);
+        }
 
         const paidInvoices = await paidQuery.find({ useMasterKey: true });
         info(
-            `Found ${paidInvoices.length} recently paid invoices`,
+            `Found ${paidInvoices.length} paid invoices`,
             "verify-paid-invoices",
             "cleanupRelances",
         );
@@ -478,7 +485,8 @@ async function cleanupRelances(trigger) {
         for (const paidImpaye of paidInvoices) {
             try {
                 const relanceQuery = new Parse.Query("Relance");
-                relanceQuery.equalTo("impaye", paidImpaye);
+                // Le champ impayes est un tableau de pointeurs vers Impaye
+                relanceQuery.containedIn("impayes", [paidImpaye]);
 
                 const relances = await relanceQuery.find({
                     useMasterKey: true,
@@ -493,11 +501,15 @@ async function cleanupRelances(trigger) {
                     const statut = relance.get("statut");
                     const relanceId = relance.id;
 
-                    // Supprimer si le statut est "En attente de génération" ou "pret pour envoi"
-                    if (
-                        statut === "En attente de génération" ||
-                        statut === "pret pour envoi"
-                    ) {
+                    // Supprimer si le statut indique que la relance n'a pas encore été envoyée
+                    const statutsASupprimer = [
+                        "En attente de génération",
+                        "pret pour envoi",
+                        "brouillon",
+                        "planifiée"
+                    ];
+                    
+                    if (statutsASupprimer.includes(statut)) {
                         try {
                             await relance.destroy({ useMasterKey: true });
                             stats.deleted++;
@@ -620,18 +632,39 @@ async function verifyPaidInvoicesMaster(trigger = "manual") {
             "verifyPaidInvoicesMaster",
         );
 
-        // Exécuter le nettoyage des relances
+        // Exécuter le nettoyage des relances pour les nouvelles factures payées
         info(
-            "Starting relance cleanup...",
+            "Starting relance cleanup for newly paid invoices...",
             "verify-paid-invoices",
             "verifyPaidInvoicesMaster",
         );
-        stats.cleanup = await cleanupRelances(trigger);
+        const newCleanupStats = await cleanupRelances(trigger, false);
         info(
-            `Relance cleanup completed: ${JSON.stringify(stats.cleanup)}`,
+            `New relance cleanup completed: ${JSON.stringify(newCleanupStats)}`,
             "verify-paid-invoices",
             "verifyPaidInvoicesMaster",
         );
+
+        // Exécuter le nettoyage complet des relances orphelines (toutes les factures soldées)
+        info(
+            "Starting FULL relance cleanup for ALL paid invoices (orphan cleanup)...",
+            "verify-paid-invoices",
+            "verifyPaidInvoicesMaster",
+        );
+        const fullCleanupStats = await cleanupRelances(trigger, true);
+        info(
+            `Full relance cleanup completed: ${JSON.stringify(fullCleanupStats)}`,
+            "verify-paid-invoices",
+            "verifyPaidInvoicesMaster",
+        );
+
+        // Combiner les statistiques de nettoyage
+        stats.cleanup = {
+            newlyPaid: newCleanupStats,
+            allPaid: fullCleanupStats,
+            deleted: (newCleanupStats.deleted || 0) + (fullCleanupStats.deleted || 0),
+            skipped: (newCleanupStats.skipped || 0) + (fullCleanupStats.skipped || 0),
+        };
 
         // Calculer les statistiques globales
         stats.total.updatedInvoices = stats.result.updated || 0;
@@ -640,7 +673,8 @@ async function verifyPaidInvoicesMaster(trigger = "manual") {
             (stats.result.skipped || 0) + (stats.cleanup.skipped || 0);
         stats.total.errors = [
             ...(stats.result.errors || []),
-            ...(stats.cleanup.errors || []),
+            ...(stats.cleanup.newlyPaid?.errors || []),
+            ...(stats.cleanup.allPaid?.errors || []),
         ];
         stats.total.invoiceNumbers = stats.result.invoiceNumbers || [];
         stats.total.endTime = new Date().toISOString();

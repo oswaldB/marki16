@@ -336,6 +336,16 @@
                     {{ positionRelanceCourante }} / {{ relancesAValider.length }}
                   </span>
                   <UButton
+                    color="neutral"
+                    variant="outline"
+                    icon="i-heroicons-document-arrow-down"
+                    :loading="saving"
+                    :disabled="!hasUnsavedChanges"
+                    @click="enregistrerRelance"
+                  >
+                    Enregistrer
+                  </UButton>
+                  <UButton
                     color="primary"
                     :loading="validantWorkflow"
                     @click="validerRelanceWorkflow"
@@ -371,8 +381,9 @@
                 <div>
                   <label class="text-xs text-gray-500 mb-1 block">Date d'envoi</label>
                   <UInput
-                    :model-value="formatDate(relanceCourante.dateEnvoi)"
-                    readonly
+                    :model-value="dateEnvoiInput"
+                    @update:model-value="updateDateEnvoi"
+                    type="date"
                     class="w-full"
                   />
                 </div>
@@ -389,8 +400,7 @@
               <div>
                 <label class="text-xs text-gray-500 mb-1 block">CC</label>
                 <UInput
-                  :model-value="relanceCourante.cc"
-                  readonly
+                  v-model="relanceCourante.cc"
                   class="w-full"
                 />
               </div>
@@ -398,8 +408,7 @@
               <div>
                 <label class="text-xs text-gray-500 mb-1 block">Objet</label>
                 <UInput
-                  :model-value="relanceCourante.objet"
-                  readonly
+                  v-model="relanceCourante.objet"
                   class="w-full"
                 />
               </div>
@@ -409,6 +418,7 @@
                 <label class="text-xs text-gray-500 mb-1 block">Corps de l'email</label>
                 <div class="border border-gray-200 rounded-md overflow-hidden bg-white">
                   <ToastuiEditor
+                    ref="editorValidationRef"
                     :key="relanceCourante?.id"
                     :initial-value="relanceCourante.corps"
                     :options="{
@@ -416,7 +426,7 @@
                       usageStatistics: false,
                       hideModeSwitch: true,
                     }"
-                    @change="(html) => relanceCourante.corps = html"
+                    @change="(html) => { relanceCourante.corps = html; markAsModified() }"
                   />
                 </div>
               </div>
@@ -462,6 +472,35 @@
           </div>
         </div>
       </div>
+
+      <!-- F-009: Modal de confirmation pour modifications non sauvegardées -->
+      <UModal v-model:open="showUnsavedChangesModal" :ui="{ width: 'sm' }">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <UIcon name="i-heroicons-exclamation-triangle" class="size-5 text-yellow-500" />
+            <span class="font-semibold">Modifications non enregistrées</span>
+          </div>
+        </template>
+        <template #body>
+          <p class="text-sm text-gray-600">
+            Vous avez des modifications non sauvegardées sur cette relance. 
+            Voulez-vous les enregistrer avant de continuer ?
+          </p>
+        </template>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="neutral" variant="ghost" @click="handleUnsavedChangesAction('cancel')">
+              Annuler
+            </UButton>
+            <UButton color="red" variant="outline" @click="handleUnsavedChangesAction('discard')">
+              Abandonner
+            </UButton>
+            <UButton color="primary" @click="handleUnsavedChangesAction('save')">
+              Enregistrer
+            </UButton>
+          </div>
+        </template>
+      </UModal>
 
     </template>
 
@@ -660,8 +699,13 @@ const originalToValue = ref('') // Valeur originale du champ To pour détecter l
 // Validation workflow
 const relanceCourante = ref(null)
 const validantWorkflow = ref(false)
+const saving = ref(false) // F-009: état de sauvegarde
 const modeTriValidation = ref('chronologique') // 'chronologique' ou 'destinataire'
 const validationSearch = ref('')
+const editorValidationRef = ref(null) // F-009: référence vers l'éditeur ToastUI
+const originalRelanceData = ref(null) // F-009: données originales pour comparaison
+const showUnsavedChangesModal = ref(false) // F-009: modal de confirmation
+const pendingRelanceSelection = ref(null) // F-009: relance en attente de sélection
 
 // Validation en masse
 const selectedRelancesForBulk = ref([])
@@ -671,14 +715,25 @@ const bulkValidating = ref(false)
 const supprimantRelance = ref(false)
 
 function isSelectedBulk(relanceId) {
-  return selectedRelancesForBulk.value?.includes(relanceId) ?? false
+  const id = String(relanceId)
+  return selectedRelancesForBulk.value?.some(existingId => String(existingId) === id) ?? false
 }
 
 function toggleBulkSelection(relanceId, checked) {
-  if (checked) {
-    selectedRelancesForBulk.value = [...(selectedRelancesForBulk.value || []), relanceId]
+  // S'assurer que checked est bien un booléen
+  const isChecked = checked === true || checked === 'true' || (checked && checked !== false)
+  
+  // S'assurer que relanceId est une chaîne
+  const id = String(relanceId)
+  
+  if (isChecked) {
+    // Vérifier si l'ID est déjà présent (comparaison en tant que chaînes)
+    const alreadyExists = selectedRelancesForBulk.value.some(existingId => String(existingId) === id)
+    if (!alreadyExists) {
+      selectedRelancesForBulk.value = [...selectedRelancesForBulk.value, id]
+    }
   } else {
-    selectedRelancesForBulk.value = (selectedRelancesForBulk.value || []).filter(id => id !== relanceId)
+    selectedRelancesForBulk.value = selectedRelancesForBulk.value.filter(existingId => String(existingId) !== id)
   }
 }
 
@@ -725,6 +780,36 @@ const positionRelanceCourante = computed(() => {
 const peutPasser = computed(() => {
   return relancesAValider.value.length > 1
 })
+
+// F-009: Computed pour détecter les modifications non sauvegardées
+const hasUnsavedChanges = computed(() => {
+  if (!relanceCourante.value || !originalRelanceData.value) return false
+  
+  const currentCorps = relanceCourante.value.corps || ''
+  const originalCorps = originalRelanceData.value.corps || ''
+  const currentDate = relanceCourante.value.dateEnvoi || ''
+  const originalDate = originalRelanceData.value.dateEnvoi || ''
+  
+  return relanceCourante.value.objet !== originalRelanceData.value.objet ||
+         currentCorps !== originalCorps ||
+         relanceCourante.value.cc !== originalRelanceData.value.cc ||
+         String(currentDate) !== String(originalDate)
+})
+
+// F-009: Marquer comme modifié (appelé par l'éditeur)
+function markAsModified() {
+  // Le computed hasUnsavedChanges se met à jour automatiquement
+}
+
+// Computed pour le champ date d'envoi (conversion Date <-> string YYYY-MM-DD)
+const dateEnvoiInput = computed(() => {
+  return toDateInput(relanceCourante.value?.dateEnvoi)
+})
+
+function updateDateEnvoi(value) {
+  if (!relanceCourante.value) return
+  relanceCourante.value.dateEnvoi = value ? new Date(value) : null
+}
 
 // ── Constants ──────────────────────────────────────────────────
 const STATUT_CONFIG = {
@@ -1120,15 +1205,12 @@ async function annulerGroupe() {
 
     const relancesAAnnuler = Object.values(relancesParId)
 
-    await $parse.Object.saveAll(relancesAAnnuler.map(r => {
+    // Appels individuels au lieu de saveAll (batch)
+    await Promise.all(relancesAAnnuler.map(async (r) => {
       r._parse.set('statut', 'annulé')
-      return r._parse
-    }))
-
-    // Mettre à jour le statut localement
-    relancesAAnnuler.forEach(r => {
+      await r._parse.save()
       r.statut = 'annulé'
-    })
+    }))
 
     toast.add({ title: `${relancesAAnnuler.length} relance(s) annulée(s)`, color: 'green' })
     selection.value = []
@@ -1157,15 +1239,12 @@ async function validerGroupe() {
       return
     }
 
-    await $parse.Object.saveAll(relancesAValider.map(r => {
+    // Appels individuels au lieu de saveAll (batch)
+    await Promise.all(relancesAValider.map(async (r) => {
       r._parse.set('valide', true)
-      return r._parse
-    }))
-
-    // Mettre à jour le statut localement
-    relancesAValider.forEach(r => {
+      await r._parse.save()
       r.valide = true
-    })
+    }))
 
     toast.add({ title: `${relancesAValider.length} relance(s) validée(s)`, color: 'green' })
     selection.value = []
@@ -1243,14 +1322,12 @@ async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
     })
 
     if (relancesAAppliquer.length > 0) {
-      // Mettre à jour toutes les relances suivantes
-      const objetsAEnregistrer = relancesAAppliquer.map(r => {
+      // Appels individuels au lieu de saveAll (batch)
+      await Promise.all(relancesAAppliquer.map(async (r) => {
         r._parse.set('to', nouveauTo)
+        await r._parse.save()
         r.to = nouveauTo // Mettre à jour localement
-        return r._parse
-      })
-
-      await $parse.Object.saveAll(objetsAEnregistrer)
+      }))
 
       toast.add({
         title: `Destinataire appliqué à ${relancesAAppliquer.length} relance(s) suivante(s)`,
@@ -1284,7 +1361,121 @@ async function validerRelanceDrawer() {
 
 // ── Workflow de validation ────────────────────────────────────
 function selectionnerRelancePourValidation(relance) {
+  // F-009: Vérifier s'il y a des modifications non sauvegardées
+  if (hasUnsavedChanges.value) {
+    pendingRelanceSelection.value = relance
+    showUnsavedChangesModal.value = true
+    return
+  }
+  
+  setRelanceCourante(relance)
+}
+
+// F-009: Définir la relance courante et sauvegarder les données originales
+function setRelanceCourante(relance) {
   relanceCourante.value = relance
+  // Sauvegarder les données originales pour détecter les modifications
+  if (relance) {
+    originalRelanceData.value = {
+      objet: relance.objet,
+      corps: relance.corps,
+      cc: relance.cc,
+      dateEnvoi: relance.dateEnvoi
+    }
+  } else {
+    originalRelanceData.value = null
+  }
+}
+
+// F-009: Enregistrer les modifications sans valider
+async function enregistrerRelance() {
+  if (!relanceCourante.value) return
+
+  console.log('[CHECKPOINT] enregistrer-relance:start', { relanceId: relanceCourante.value.id })
+  saving.value = true
+  
+  try {
+    const row = relanceCourante.value
+    const r = row._parse
+
+    // Récupérer le contenu HTML depuis l'éditeur si disponible
+    let corpsHtml = row.corps
+    if (editorValidationRef.value) {
+      try {
+        corpsHtml = editorValidationRef.value.getInstance().getHTML()
+        console.log('[CHECKPOINT] enregistrer-relance:editor-read', { length: corpsHtml.length })
+      } catch (e) {
+        console.warn('Impossible de lire le contenu de l\'éditeur:', e)
+      }
+    }
+
+    console.log('[CHECKPOINT] enregistrer-relance:parse-save', { 
+      sujet: row.objet, 
+      cc: row.cc, 
+      contenuLength: corpsHtml.length 
+    })
+
+    // Mise à jour des champs modifiables
+    r.set('sujet', row.objet)
+    r.set('contenu', corpsHtml)
+    r.set('cc', row.cc)
+    r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
+    // NOTE: on ne touche PAS à 'valide'
+
+    await r.save()
+
+    // Mettre à jour l'état local
+    row.corps = corpsHtml
+    
+    // Mettre à jour les données originales
+    originalRelanceData.value = {
+      objet: row.objet,
+      corps: corpsHtml,
+      cc: row.cc,
+      dateEnvoi: row.dateEnvoi
+    }
+
+    console.log('[CHECKPOINT] enregistrer-relance:success', { relanceId: row.id })
+
+    toast.add({
+      title: 'Modifications enregistrées',
+      color: 'green'
+    })
+
+  } catch (err) {
+    console.error('[CHECKPOINT] enregistrer-relance:error', { 
+      relanceId: relanceCourante.value?.id, 
+      error: err.message 
+    })
+    
+    toast.add({
+      title: 'Erreur',
+      description: err.message,
+      color: 'red'
+    })
+  } finally {
+    saving.value = false
+  }
+}
+
+// F-009: Gérer le modal de changements non sauvegardées
+async function handleUnsavedChangesAction(action) {
+  showUnsavedChangesModal.value = false
+  
+  if (action === 'save') {
+    await enregistrerRelance()
+    if (pendingRelanceSelection.value) {
+      setRelanceCourante(pendingRelanceSelection.value)
+      pendingRelanceSelection.value = null
+    }
+  } else if (action === 'discard') {
+    // Abandonner les modifications et changer de relance
+    if (pendingRelanceSelection.value) {
+      setRelanceCourante(pendingRelanceSelection.value)
+      pendingRelanceSelection.value = null
+    }
+  }
+  // Si 'cancel', ne rien faire (rester sur la relance actuelle)
 }
 
 async function validerRelanceWorkflow() {
@@ -1295,10 +1486,30 @@ async function validerRelanceWorkflow() {
     const row = relanceCourante.value
     const r = row._parse
 
+    // F-009: Sauvegarder d'abord les modifications si présentes
+    if (hasUnsavedChanges.value) {
+      let corpsHtml = row.corps
+      if (editorValidationRef.value) {
+        try { corpsHtml = editorValidationRef.value.getInstance().getHTML() } catch {}
+      }
+      r.set('sujet', row.objet)
+      r.set('contenu', corpsHtml)
+      r.set('cc', row.cc)
+      r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
+    }
+
     r.set('valide', true)
     row.valide = true
 
     await r.save()
+    
+    // F-009: Mettre à jour les données originales
+    originalRelanceData.value = {
+      objet: row.objet,
+      corps: row.corps,
+      cc: row.cc,
+      dateEnvoi: row.dateEnvoi
+    }
 
     toast.add({ title: 'Relance validée !', color: 'green' })
 
@@ -1312,7 +1523,7 @@ async function validerRelanceWorkflow() {
   }
 }
 
-// Validation en masse
+// Validation en masse (appels unitaires)
 async function validateAllSelected() {
   if (selectedRelancesForBulk.value.length === 0) {
     toast.add({ title: 'Aucune relance sélectionnée', color: 'yellow' })
@@ -1320,27 +1531,53 @@ async function validateAllSelected() {
   }
 
   bulkValidating.value = true
+  let successCount = 0
+  let errorCount = 0
+
   try {
+    // Convertir les IDs sélectionnés en chaînes pour comparaison
+    const selectedIds = selectedRelancesForBulk.value.map(id => String(id))
+
     // Filtrer les relances qui ne sont pas encore validées
     const relancesToValidate = relancesAValider.value
-      .filter(r => selectedRelancesForBulk.value.includes(r.id) && !r.valide)
+      .filter(r => selectedIds.includes(String(r.id)) && !r.valide)
 
     if (relancesToValidate.length === 0) {
       toast.add({ title: 'Toutes les relances sélectionnées sont déjà validées', color: 'yellow' })
       return
     }
 
-    // Valider toutes les relances sélectionnées
-    await $parse.Object.saveAll(relancesToValidate.map(r => {
-      r._parse.set('valide', true)
-      r.valide = true
-      return r._parse
-    }))
+    // Boucle d'appels unitaires
+    for (const r of relancesToValidate) {
+      try {
+        r._parse.set('valide', true)
+        await r._parse.save()
+        r.valide = true
+        successCount++
+      } catch (saveErr) {
+        console.error(`Erreur validation relance ${r.id}:`, saveErr)
+        errorCount++
+      }
+    }
 
-    toast.add({
-      title: `${relancesToValidate.length} relance(s) validée(s)`,
-      color: 'green'
-    })
+    // Toast de résultat
+    if (successCount > 0 && errorCount === 0) {
+      toast.add({
+        title: `${successCount} relance(s) validée(s)`,
+        color: 'green'
+      })
+    } else if (successCount > 0 && errorCount > 0) {
+      toast.add({
+        title: `${successCount} validée(s), ${errorCount} échec(s)`,
+        color: 'yellow'
+      })
+    } else {
+      toast.add({
+        title: 'Erreur',
+        description: `Aucune relance validée (${errorCount} échec(s))`,
+        color: 'red'
+      })
+    }
 
     // Réinitialiser la sélection
     selectedRelancesForBulk.value = []
@@ -1442,7 +1679,7 @@ async function supprimerRelance() {
 // Auto-sélectionner la première relance quand on arrive sur la vue validation
 watch(vue, (newVue) => {
   if (newVue === 'validation' && relancesAValider.value.length > 0) {
-    relanceCourante.value = relancesAValider.value[0]
+    setRelanceCourante(relancesAValider.value[0])
   }
 })
 

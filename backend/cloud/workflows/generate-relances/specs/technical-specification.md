@@ -120,7 +120,7 @@ curl -X GET "https://dev.markidiags.com/api/parse/schemas/{ClassName}" \
       "frequence": String,
       "scenarios": [
         {
-          "format": String, // "single" ou "multiple"
+          "format": String, // "single", "multiple", "broker" ou "both"
           "active": Boolean,
           "objet": String,
           "corps": String,
@@ -303,9 +303,12 @@ const impayesSansRelance = impayesSansContactsBlacklistes.filter(
 );
 ```
 
-#### Étape 3 : Regroupement des impayés par payeur
+#### Étape 3 : Regroupement des impayés par payeur et par numéro de facture
 
 **Logique** :
+
+Le regroupement doit se faire non seulement par payeur et séquence, mais aussi par numéro de facture (`nfacture`). En effet, une même facture peut avoir plusieurs numéros de dossier (`numero_dossier`) différents, ce qui crée plusieurs lignes d'impayés pour une même facture. Ces lignes doivent être regroupées ensemble pour la relance.
+
 ```javascript
 const groupedByContactSequence = new Map();
 
@@ -317,29 +320,59 @@ for (const impaye of impayesSansRelance) {
     }
     
     const sequence = impaye.get("sequence");
+    const nfacture = impaye.get("nfacture");
 
-    if (!contact || !sequence) continue;
+    if (!contact || !sequence || !nfacture) continue;
 
-    const key = `${contact.id}_${sequence.id}`;
+    // Clé de regroupement : contact + séquence + numéro de facture
+    // Important : une facture peut avoir plusieurs numéros de dossier différents,
+    // donc on regroupe par nfacture pour éviter de créer plusieurs relances
+    // pour la même facture
+    const key = `${contact.id}_${sequence.id}_${nfacture}`;
     if (!groupedByContactSequence.has(key)) {
-        groupedByContactSequence.set(key, { contact, sequence, impayes: [] });
+        groupedByContactSequence.set(key, { contact, sequence, nfacture, impayes: [] });
     }
     groupedByContactSequence.get(key).impayes.push(impaye);
 }
 ```
 
-#### Étape 4 : Détermination du scénario (single vs multiple) et création des relances
+**Note importante** : Le regroupement par `nfacture` est essentiel car une même facture peut être associée à plusieurs dossiers (plusieurs `numero_dossier`), générant ainsi plusieurs lignes d'impayés dans la base. Sans ce regroupement, on créerait des relances en double pour une même facture.
 
-**Logique de détermination entre scénario `single` et `multiple`** :
+#### Étape 4 : Détermination du scénario et création des relances
 
-La détermination est automatique et basée sur le nombre d'impayés dans le groupe :
+**Logique de détermination des scénarios** :
+
+La détermination est automatique et basée sur :
+1. Le nombre d'impayés dans le groupe
+2. Le type de personne (apporteur d'affaires ou non)
+3. La présence d'impayés où le contact est également apporteur
 
 ```javascript
-// Détermination automatique du scénario selon le nombre d'impayés
-// - 1 impayé → single
-// - 2+ impayés → multiple
+// Déterminer si le contact est un apporteur d'affaires
+const isBroker = contact.get("type_personne") === "Apporteur d'affaire" || 
+                 contact.get("type_personne") === "Apporteur";
+
+// Récupérer les impayés où ce contact est apporteur (mais pas payeur)
+const brokerImpayes = await getBrokerImpayes(contact, impayes);
+const hasBrokerImpayes = brokerImpayes.length > 0;
+
+// Détermination automatique du scénario
 const nombreImpayes = impayes.length;
-const scenarioType = nombreImpayes === 1 ? "single" : "multiple";
+let scenarioType;
+
+if (isBroker && hasBrokerImpayes) {
+    // L'apporteur a ses propres impayés + est apporteur sur d'autres
+    scenarioType = "both";
+} else if (isBroker) {
+    // C'est un apporteur sans impayés où il est apporteur (seulement ses propres factures)
+    scenarioType = "broker";
+} else if (nombreImpayes === 1) {
+    // Client normal avec 1 facture
+    scenarioType = "single";
+} else {
+    // Client normal avec plusieurs factures
+    scenarioType = "multiple";
+}
 
 // Rechercher le scénario correspondant dans la configuration
 const scenarioActif = scenarios.find(s => s.format === scenarioType && s.active);
@@ -350,12 +383,45 @@ if (!scenarioActif) {
 }
 ```
 
+**Récupération des impayés où le contact est apporteur** :
+
+```javascript
+/**
+ * Récupère les impayés où le contact est apporteur d'affaires
+ * mais pas payeur (pour éviter les doublons avec ses propres impayés)
+ */
+async function getBrokerImpayes(contact, currentImpayes) {
+    const currentImpayeIds = new Set(currentImpayes.map(i => i.id));
+    
+    const Impaye = Parse.Object.extend("Impaye");
+    const query = new Parse.Query(Impaye);
+    query.equalTo("facture_soldee", false);
+    query.greaterThan("reste_a_payer", 0);
+    
+    // Le contact est l'apporteur
+    query.equalTo("apporteur", contact);
+    
+    // Mais PAS le payeur (sinon ce serait ses propres impayés déjà dans la liste)
+    query.notEqualTo("payeur", contact);
+    query.notEqualTo("contact_relance", contact);
+    
+    // Exclure les impayés déjà dans le groupe courant
+    query.notContainedIn("objectId", Array.from(currentImpayeIds));
+    
+    query.limit(999999);
+    
+    return await query.find({ useMasterKey: true });
+}
+```
+
 **Règles de détermination** :
 
-| Nombre d'impayés | Scénario sélectionné | Description |
-|------------------|----------------------|-------------|
-| 1 | `single` | Email personnalisé pour une facture unique |
-| 2 ou plus | `multiple` | Email pour relancer plusieurs factures |
+| Condition | Scénario sélectionné | Description |
+|-----------|----------------------|-------------|
+| Contact = apporteur ET a des impayés où il est apporteur | `both` | Email combinant ses propres impayés + ceux où il est apporteur |
+| Contact = apporteur (sans impayés où il est apporteur) | `broker` | Email spécifique apporteur pour ses propres factures |
+| 1 impayé uniquement | `single` | Email personnalisé pour une facture unique |
+| 2+ impayés | `multiple` | Email pour relancer plusieurs factures |
 
 **Important** :
 - Le système détermine automatiquement le type de scénario en fonction du nombre d'impayés
@@ -472,31 +538,75 @@ corps: |
   <p><a href="[[lien_pdf]]">Télécharger la facture PDF</a></p>
 ```
 
-**Prompt complet** (voir `configuration/prompts/relance-email-prompt.txt`) :
+**Prompts par scénario** :
 
-> **⚠️ Précision sur le chemin** : Le fichier de prompt est situé dans le dossier racine du projet (`/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt`).
+Chaque scénario dispose d'un prompt spécifique pour adapter le contenu généré :
+
+| Scénario | Fichier de prompt | Description |
+|----------|-------------------|-------------|
+| `single` | `configuration/prompts/scenarios/relance-single-prompt.txt` | 1 facture impayée |
+| `multiple` | `configuration/prompts/scenarios/relance-multiple-prompt.txt` | Plusieurs factures impayées |
+| `broker` | `configuration/prompts/scenarios/relance-broker-prompt.txt` | Apporteur d'affaires |
+| `both` | `configuration/prompts/scenarios/relance-both-prompt.txt` | Impayés + rôle d'apporteur |
+
+**Sélection du prompt** :
 
 ```javascript
-const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt";
-const promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+const PROMPT_BASE_PATH = "/home/ubuntu/prod/adti/configuration/prompts/scenarios";
+const promptFile = path.join(PROMPT_BASE_PATH, `relance-${scenarioType}-prompt.txt`);
+const promptTemplate = fs.readFileSync(promptFile, "utf-8");
+```
 
+**Variables du prompt** :
+
+```javascript
 const objetTemplate = scenarioActif?.objet || emailConfig.objet || "";
 const corpsTemplate = scenarioActif?.corps || emailConfig.corps || "";
-const impayesJson = JSON.stringify(impayes);
+const impayesJson = JSON.stringify(impayesData);
 const historyJson = JSON.stringify(history);
-const contactJson = JSON.stringify(contact);
+const contactJson = JSON.stringify(contactData);
+const nombreImpayes = impayes.length;
+
+// Date du jour au format JJ/MM/AAAA
+const now = new Date();
+const dateJour = now.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+});
+
+// Pour les scénarios broker et both : impayés où le contact est apporteur
+const brokerImpayesJson = (scenarioType === "broker" || scenarioType === "both") 
+    ? JSON.stringify(brokerImpayesData) 
+    : "[]";
 
 const prompt = promptTemplate
     .replace(/{{objetTemplate}}/g, objetTemplate)
     .replace(/{{corpsTemplate}}/g, corpsTemplate)
     .replace(/{{impayesJson}}/g, impayesJson)
+    .replace(/{{brokerImpayesJson}}/g, brokerImpayesJson)
     .replace(/{{historyJson}}/g, historyJson)
     .replace(/{{emailIndex}}/g, emailIndex)
     .replace(/{{contactJson}}/g, contactJson)
-    .replace(/{{scenarioType}}/g, scenarioType);
+    .replace(/{{scenarioType}}/g, scenarioType)
+    .replace(/{{nombreImpayes}}/g, String(nombreImpayes))
+    .replace(/{{dateJour}}/g, dateJour);
 ```
 
-> **Note** : Le prompt est externalisé dans `/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt` (racine du projet). Voir ce fichier pour le contenu complet des règles de génération.
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `{{objetTemplate}}` | Template de l'objet depuis la séquence | `"Relance facture [[nfacture]]"` |
+| `{{corpsTemplate}}` | Template du corps depuis la séquence | `"<p>Bonjour...</p>"` |
+| `{{impayesJson}}` | JSON des impayés du contact (ses factures) | `[{id: "...", nfacture: 123...}]` |
+| `{{brokerImpayesJson}}` | JSON des impayés où il est apporteur (broker/both uniquement) | `[{id: "...", payeur_nom: "..."}]` |
+| `{{historyJson}}` | Historique des relances précédentes | `[{statut: "...", dateEnvoi: "..."}]` |
+| `{{emailIndex}}` | Index de l'email dans la séquence | `1`, `2`, etc. |
+| `{{contactJson}}` | Données du contact destinataire | `{nom: "...", prenom: "..."}` |
+| `{{scenarioType}}` | Type de scénario déterminé | `"single"`, `"multiple"`, `"broker"`, `"both"` |
+| `{{nombreImpayes}}` | Nombre d'impayés du contact | `1`, `3`, etc. |
+| `{{dateJour}}` | **Date du jour au format JJ/MM/AAAA** | `"04/07/2025"` |
+
+> **Note** : Les prompts sont externalisés dans `/home/ubuntu/prod/adti/configuration/prompts/scenarios/`. Voir ces fichiers pour le contenu complet des règles de génération par scénario.
 
 **Construction de impayesJson** :
 Tous les champs suivants de la classe `Impaye` doivent être inclus dans le JSON envoyé au LLM pour permettre une personnalisation complète des emails :
@@ -567,12 +677,48 @@ const impayesData = impayes.map(i => ({
 }));
 ```
 
-**Construction de historyJson** :
-- Récupérer les relances déjà envoyées pour ce contact et ces impayés
-- **La récupération doit être faite avant chaque génération d'email** (à l'intérieur de la boucle des emails) pour inclure les relances précédemment créées dans la même séquence
-- Limiter à 10 pour éviter un prompt trop long
-- Inclure tous les champs pertinents
-- Filtrer par séquence pour n'avoir que l'historique de la séquence courante
+**Construction de brokerImpayesJson** (scénarios `broker` et `both` uniquement) :
+
+Pour les scénarios impliquant un apporteur d'affaires, récupérer les impayés où le contact est apporteur mais pas payeur :
+
+```javascript
+async function buildBrokerImpayesJson(contact) {
+    const Impaye = Parse.Object.extend("Impaye");
+    const query = new Parse.Query(Impaye);
+    query.equalTo("facture_soldee", false);
+    query.greaterThan("reste_a_payer", 0);
+    query.equalTo("apporteur", contact);
+    // Exclure où il est déjà payeur (ses propres impayés sont dans impayesJson)
+    query.notEqualTo("payeur", contact);
+    query.notEqualTo("contact_relance", contact);
+    query.limit(999999);
+    
+    const brokerImpayes = await query.find({ useMasterKey: true });
+    
+    return brokerImpayes.map(i => ({
+        id: i.id,
+        nfacture: i.get("nfacture"),
+        reference: i.get("reference"),
+        numero_dossier: i.get("numero_dossier"),
+        date_piece: i.get("date_piece"),
+        date_echeance: i.get("date_echeance"),
+        total_ttc: i.get("total_ttc"),
+        reste_a_payer: i.get("reste_a_payer"),
+        adresse_bien: i.get("adresse_bien"),
+        ville: i.get("ville"),
+        code_postal: i.get("code_postal"),
+        // Payeur de cet impayé (pas le contact courant)
+        payeur_nom: i.get("payeur_nom"),
+        payeur_prenom: i.get("payeur_prenom"),
+        // Apporteur = contact courant
+        apporteur_nom: i.get("apporteur_nom"),
+        apporteur_prenom: i.get("apporteur_prenom"),
+        apporteur_societe: i.get("apporteur_societe")
+    }));
+}
+```
+
+Ces données sont injectées dans le prompt via `{{brokerImpayesJson}}` pour que le LLM puisse contextualiser le rôle d'apporteur du destinataire.
 
 
 

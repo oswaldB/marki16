@@ -522,22 +522,21 @@ function envoyerTest() {
   isOpen.value = false
   
   // Lancer l'envoi en arrière-plan sans attendre la réponse
-  $parse.User.current().then((currentUser) => {
-    const requestData = {
-      sequenceId: props.sequence.id,
-      testEmail: testEmail.value,
-      payeurId: selectedPayeur.value,
-      payeurData: selectedPayeurData.value,
-      emailIndex: 0,
-      userId: currentUser ? currentUser.id : null,
-      userEmail: currentUser ? currentUser.get('email') : null,
-      userName: currentUser ? currentUser.get('username') : null
-    }
-    
-    // Fire and forget - on n'attend pas la réponse
-    $parse.Cloud.run('sendTestSingleSuivi', requestData).catch((error) => {
-      console.error('Erreur envoi test (arrière-plan):', error)
-    })
+  const currentUser = $parse.User.current()
+  const requestData = {
+    sequenceId: props.sequence.id,
+    testEmail: testEmail.value,
+    payeurId: selectedPayeur.value,
+    payeurData: selectedPayeurData.value,
+    emailIndex: 0,
+    userId: currentUser ? currentUser.id : null,
+    userEmail: currentUser ? currentUser.get('email') : null,
+    userName: currentUser ? currentUser.get('username') : null
+  }
+  
+  // Fire and forget - on n'attend pas la réponse
+  $parse.Cloud.run('sendTestSingleSuivi', requestData).catch((error) => {
+    console.error('Erreur envoi test (arrière-plan):', error)
   })
 }
 

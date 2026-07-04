@@ -277,7 +277,7 @@ async function envoyerTest() {
 
     // Appeler le cloud code pour envoyer les emails de test
     // Envoyer les emails originaux avec des informations supplémentaires
-    const currentUser = await $parse.User.current()
+    const currentUser = $parse.User.current()
 
     // Préparer les données à envoyer (retirer activeScenario pour laisser le backend décider)
     const emailsWithoutActiveScenario = props.emails.map(email => {
