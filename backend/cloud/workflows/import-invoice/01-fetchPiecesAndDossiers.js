@@ -19,7 +19,7 @@ if (typeof Parse === "undefined") {
     global.Parse = Parse;
 }
 
-// Requête : Pièces + Dossiers
+// Requête : Pièces + Dossiers + Missions (agrégées en JSON)
 const QUERY_PIECES = `
   SELECT
     p.idpiece,
@@ -53,7 +53,24 @@ const QUERY_PIECES = `
     d.numVoie,
     d.cptNumVoie,
     d.typeVoie,
-    d.dateDebutMission
+    d.dateDebutMission,
+    d.idCadreMission,
+    (
+      SELECT json_group_array(
+        json_object(
+          'idMission', m.idMission,
+          'idCategorieMission', m.idCategorieMission,
+          'idTypeMission', m.idTypeMission,
+          'intitule', m.intitule,
+          'titreRapport', m.titreRapport,
+          'dateDebut', m.dateDebut,
+          'dateFin', m.dateFin,
+          'conclusion', m.conclusion
+        )
+      )
+      FROM _ADN_DIAG__Mission m
+      WHERE m.idDossier = d.idDossier
+    ) as missions_json
   FROM _GCO__GcoPiece p
   LEFT JOIN _GCO__GcoPieceMetier pm ON p.idpiece = pm.idpiece
   LEFT JOIN _ADN_DIAG__Dossier d ON pm.idmetier = d.idDossier

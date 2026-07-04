@@ -234,6 +234,22 @@ function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interloc
     impaye.set("escalier", pieceRow.escalier || null);
     impaye.set("porte", pieceRow.porte || null);
 
+    // Cadre mission (contexte: AVV=avant vente, LOC=location, etc.)
+    impaye.set("cadre_mission", pieceRow.idCadreMission || null);
+
+    // Tableau de toutes les missions (parsé depuis JSON SQLite)
+    let missions = [];
+    if (pieceRow.missions_json) {
+        try {
+            const parsed = JSON.parse(pieceRow.missions_json);
+            // json_group_array retourne '[null]' si vide, on filtre
+            missions = Array.isArray(parsed) ? parsed.filter(m => m && m.idMission) : [];
+        } catch (e) {
+            missions = [];
+        }
+    }
+    impaye.set("missions", missions);
+
     // Mapping des rôles vers les préfixes de champs Parse existants
     const roleToFieldPrefix = {
         "Payeur": "payeur",
