@@ -501,15 +501,8 @@ async function cleanupRelances(trigger, fullCleanup = false) {
                     const statut = relance.get("statut");
                     const relanceId = relance.id;
 
-                    // Supprimer si le statut indique que la relance n'a pas encore été envoyée
-                    const statutsASupprimer = [
-                        "En attente de génération",
-                        "pret pour envoi",
-                        "brouillon",
-                        "planifiée"
-                    ];
-                    
-                    if (statutsASupprimer.includes(statut)) {
+                    // Supprimer si le statut n'est PAS "Envoyée" (seul statut à conserver)
+                    if (statut !== "Envoyée") {
                         try {
                             await relance.destroy({ useMasterKey: true });
                             stats.deleted++;

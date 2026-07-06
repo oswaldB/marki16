@@ -6,11 +6,8 @@ require("dotenv").config({
     path: require("path").join(__dirname, "..", "..", "..", ".env"),
 });
 
-const STATUTS_A_SUPPRIMER = [
-    "En attente de génération",
-    "pret pour envoi",
-    "brouillon",
-    "planifiée"
+const STATUTS_A_CONSERVER = [
+    "Envoyée"
 ];
 
 async function parseApi(method, endpoint, body = null) {
@@ -95,9 +92,10 @@ function isImpayeSolde(impaye) {
            impaye.reste_a_payer === 0;
 }
 
-function isRelanceNonEnvoyee(relance) {
+function isRelanceASupprimer(relance) {
     const statut = relance.statut;
-    return STATUTS_A_SUPPRIMER.includes(statut);
+    // Supprimer tous les statuts SAUF "Envoyée"
+    return !STATUTS_A_CONSERVER.includes(statut);
 }
 
 async function main() {
@@ -171,7 +169,7 @@ async function main() {
             const statut = relance.statut || "sans statut";
             const nfacture = impaye.nfacture || "N/A";
             
-            if (isRelanceNonEnvoyee(relance)) {
+            if (isRelanceASupprimer(relance)) {
                 console.log(`🗑️  Relance ${relance.objectId} (statut: "${statut}") → IMPAYÉ SOLDÉ nfacture:${nfacture} - À SUPPRIMER`);
                 relancesASupprimer.push({
                     relanceId: relance.objectId,
