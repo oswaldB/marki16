@@ -628,6 +628,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import ToastuiEditor from '~/components/ToastuiEditor.vue'
 import PdfIframe from '~/components/PdfIframe.vue'
 import { useBlacklistStore } from '~/stores/blacklistStore'
+import { useImpayesStore } from '~/stores/impayesStore'
 
 const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3').then(m => m.default ?? m))
 
@@ -636,6 +637,7 @@ const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const blacklistStore = useBlacklistStore()
+const impayesStore = useImpayesStore()
 
 // ── State ──────────────────────────────────────────────────────
 const vue = ref(route.query.vue || 'tableau')
@@ -740,9 +742,28 @@ function toggleBulkSelection(relanceId, checked) {
 // Computed ref pour le drawer
 const relanceDrawer = computed(() => drawerRow.value)
 
+// Computed pour filtrer les relances liées aux impayés suspendus
+const relancesFiltrees = computed(() => {
+  return relances.value.filter(relance => {
+    // Exclure les relances liées à des impayés suspendus
+    if (relance.impayelId) {
+      const impaye = impayesStore.allImpayes.find(i => i.objectId === relance.impayelId);
+      if (impaye && impaye.isBlacklisted) return false;
+    }
+    if (relance.impayes && Array.isArray(relance.impayes)) {
+      const hasSuspended = relance.impayes.some(imp => {
+        const impaye = impayesStore.allImpayes.find(i => i.objectId === imp.id);
+        return impaye && impaye.isBlacklisted;
+      });
+      if (hasSuspended) return false;
+    }
+    return true;
+  });
+});
+
 // Computed pour le workflow de validation
 const relancesAValider = computed(() => {
-  let relancesNonValidees = relances.value.filter(r => !r.valide && !r.manuelle)
+  let relancesNonValidees = relancesFiltrees.value.filter(r => !r.valide && !r.manuelle)
 
   // Filtre de recherche
   if (validationSearch.value) {
@@ -802,918 +823,574 @@ function markAsModified() {
 }
 
 // Computed pour le champ date d'envoi (conversion Date <-> string YYYY-MM-DD)
-const dateEnvoiInput = computed(() => {
-  return toDateInput(relanceCourante.value?.dateEnvoi)
-})
-
-function updateDateEnvoi(value) {
-  if (!relanceCourante.value) return
-  relanceCourante.value.dateEnvoi = value ? new Date(value) : null
-}
-
-// ── Constants ──────────────────────────────────────────────────
-const STATUT_CONFIG = {
-  pending:   { label: 'En attente', color: 'neutral' },
-  'envoyé':  { label: 'Envoyé',     color: 'green'   },
-  'échec':   { label: 'Échec',      color: 'red'     },
-  'annulé':  { label: 'Annulé',     color: 'orange'  },
-  'optimisee': { label: 'Optimisée', color: 'purple' },
-}
-
-
-
-function sortableHeader(label) {
-  return ({ column }) => {
-    const isSorted = column.getIsSorted()
-    return h(UButton, {
-      color: 'neutral',
-      variant: 'ghost',
-      label,
-      icon: isSorted === 'asc'
-        ? 'i-lucide-arrow-up-narrow-wide'
-        : isSorted === 'desc'
-          ? 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-      class: '-mx-2.5',
-      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
-    })
-  }
-}
-
-const colonnes = [
-  { accessorKey: 'dateEnvoi',   header: sortableHeader('Date envoi prévue') },
-  { accessorKey: 'objet',       header: sortableHeader('Objet') },
-  { accessorKey: 'to',          header: sortableHeader('Destinataire') },
-  {
-    accessorKey: 'nfacture',
-    header: sortableHeader('Facture'),
-    cell: ({ row }) => {
-      const r = row.original
-
-      // Si plusieurs factures, afficher toutes les numéros de facture
-      if (r.impayes && r.impayes.length > 1) {
-        const invoiceNumbers = r.impayes.map(imp => imp.nfacture).join(', ')
-        return h('div', { class: 'text-sm font-mono' }, invoiceNumbers)
-      }
-
-      if (r.impayelId) {
-        return h(NuxtLink, {
-          to: `/impayes/${r.impayelId}`,
-          class: 'text-sky-700 hover:underline text-sm font-mono'
-        }, r.nfacture)
-      }
-      return h('span', { class: 'text-sm text-gray-400' }, r.nfacture)
-    }
+const dateEnvoiInput = computed({
+  get: () => {
+    if (!relanceCourante.value?.dateEnvoi) return ''
+    const d = new Date(relanceCourante.value.dateEnvoi)
+    return d.toISOString().split('T')[0]
   },
-  { accessorKey: 'statut',      header: sortableHeader('Statut') },
-  {
-    accessorKey: 'valide',
-    header: sortableHeader('Validé'),
-    cell: ({ row }) => {
-      const isValide = row.original.valide
-      return h('span', {
-        class: isValide ? 'text-green-600 font-medium' : 'text-yellow-600 font-medium'
-      }, isValide ? 'Oui' : 'Non')
-    }
-  },
-  {
-    id: 'actions',
-    header: ' ',
-    enableSorting: false,
-    cell: ({ row }) => {
-      const r = row.original
-      const btns = []
-      if (r.statut === 'pending') {
-        btns.push(h(UButton, { icon: 'i-heroicons-trash', color: 'red', variant: 'ghost', size: 'xs', onClick: () => annulerRelance(r) }))
-      } else if (r.statut === 'envoyé') {
-        btns.push(h(UButton, { icon: 'i-heroicons-eye', color: 'neutral', variant: 'ghost', size: 'xs', onClick: () => ouvrirDrawer(r, true) }))
-      } else if (r.statut === 'échec') {
-        btns.push(h(UButton, { icon: 'i-heroicons-arrow-path', color: 'sky', variant: 'ghost', size: 'xs', onClick: () => reessayerRelance(r) }))
-      }
-      return h('div', { class: 'flex items-center gap-1' }, btns)
-    },
-  },
-]
-
-const sorting = ref([{ id: 'dateEnvoi', desc: false }])
-
-// Options de statut - seront chargées dynamiquement
-const { getOptions } = useDynamicOptions()
-const statutOptions = ref([
-  { label: 'Tous',               value: 'tous' },
-  { label: 'En attente',         value: 'pending' },
-  { label: 'Envoyé',             value: 'envoyé' },
-  { label: 'Échec',              value: 'échec' },
-  { label: 'Annulé',             value: 'annulé' },
-  { label: 'Non validées',       value: 'non-validees' },
-])
-
-// Charger les options dynamiques
-onMounted(async () => {
-  try {
-    const dynamicOptions = await getOptions('statut_relance', false)
-    if (dynamicOptions.length > 0) {
-      statutOptions.value = [
-        { label: 'Tous', value: 'tous' },
-        ...dynamicOptions
-      ]
-    }
-  } catch (error) {
-    console.error('Failed to load dynamic statut options:', error)
+  set: (val) => {
+    if (!relanceCourante.value) return
+    relanceCourante.value.dateEnvoi = val
   }
 })
 
-// ── Computed ───────────────────────────────────────────────────
-const sequenceOptions = computed(() => [
-  { label: 'Toutes les séquences', value: 'tous' },
-  ...sequences.value.map(s => ({ label: s.get('nom'), value: s.id })),
-])
+function updateDateEnvoi(val) {
+  dateEnvoiInput.value = val
+}
 
-const relancesFiltrees = computed(() => {
-  if (!search.value) return relances.value
-  const s = search.value.toLowerCase()
-  return relances.value.filter(r =>
-    r.objet.toLowerCase().includes(s) || r.to.toLowerCase().includes(s)
-  )
-})
-
+// Relances du jour sélectionné (pour le panneau latéral du calendrier)
 const relancesJour = computed(() => {
   if (!jourSelectionne.value) return []
-  const jour = new Date(jourSelectionne.value).toDateString()
   return relancesFiltrees.value.filter(r => {
-    const d = r.dateEnvoi ? new Date(r.dateEnvoi).toDateString() : null
-    return d === jour
+    const date = new Date(r.dateEnvoi)
+    const selectedDate = new Date(jourSelectionne.value)
+    return (
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
+    )
   })
 })
 
-const calendarOptions = computed(() => ({
-  plugins: [dayGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  locale: 'fr',
-  headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-  displayEventTime: false, // Masquer l'affichage de l'heure
-  dayMaxEvents: false, // Désactiver la limite pour permettre l'overflow
-  events: relancesFiltrees.value.map(r => {
-    // Utiliser la date réelle de la relance sans heure spécifique
-    const dateRelance = new Date(r.dateEnvoi)
-    dateRelance.setHours(0, 0, 0, 0) // Réinitialiser l'heure à minuit
-
-    // Couleur orange si la relance n'est pas validée
-    const color = !r.valide ? '#f97316' : statutCalColor(r.statut)
-
-    return {
-      id: r.id,
-      title: (r.to?.split('@')[0] || '?') + ' — ' + (r.objet?.slice(0, 20) || ''),
-      start: dateRelance.toISOString(),
-      backgroundColor: color,
-      borderColor:     color,
-      extendedProps: { row: r },
-    }
-  }),
-  eventClick(info) {
-    const row = info.event.extendedProps.row
-    ouvrirDrawer(row, true)
-  },
-  dateClick(info) {
-    jourSelectionne.value = info.dateStr
-  },
-}))
-
-function statutCalColor(s) {
-  if (s === 'envoyé') return '#22c55e'
-  if (s === 'échec')  return '#ef4444'
-  if (s === 'annulé') return '#9ca3af'
-  return '#3b82f6'
-}
-
-// ── Helpers ────────────────────────────────────────────────────
-function formatDate(val) {
-  if (!val) return '—'
-  const d = val instanceof Date ? val : new Date(val)
-  return isNaN(d) ? '—' : d.toLocaleDateString('fr-FR', { dateStyle: 'short' })
-}
-
-function toDateInput(val) {
-  if (!val) return ''
-  const d = val instanceof Date ? val : new Date(val)
-  return isNaN(d) ? '' : d.toISOString().slice(0, 10)
-}
-
-function parseImpaye(i) {
-  if (!i) return null
-
-  // Handle both Parse Objects and plain JavaScript objects
-  const getValue = (key) => {
-    return i.get ? i.get(key) : i[key]
-  }
-
-  return {
-    id:           i.id,
-    nfacture:     getValue('nfacture') || '—',
-    statut:       getValue('statut') || '',
-    resteAPayer:  getValue('reste_a_payer') ?? null,
-    montantTotal: getValue('total_ttc') ?? null,
-    adresseBien:  getValue('adresse_bien') || '',
-    payeurNom:    getValue('payeur_nom') || '',
-  }
-}
-
-function parseRelance(r) {
-  // Supporte impayes (array) et impaye (single pointer)
-  const impayes = r.get('impayes')   // array de Pointer si peuplé
-  const impaye  = r.get('impaye')    // single Pointer fallback
-
-  // Handle the case where impayes contains object IDs (strings) instead of Parse Objects
-  const impayeliste = Array.isArray(impayes) && impayes.length > 0
-    ? impayes.map(i => {
-        // If it's a string (object ID), we can't parse it, so return basic info from metadata
-        if (typeof i === 'string' || !i.get) {
-          return null
-        }
-        return parseImpaye(i)
-      }).filter(Boolean)
-    : impaye ? [parseImpaye(impaye)] : []
-
-  // Toujours retourner une seule ligne, avec toutes les factures
-  // Handle both old and new field names for backward compatibility
-  const getValue = (key) => {
-    return r.get ? r.get(key) : r[key]
-  }
-
-  const metadata = getValue('metadata') || {}
-  const templateData = metadata.templateData || {}
-
-  // Get facture number from metadata if impayeliste is empty
-  const nfactureFromMetadata = templateData.nfacture || templateData.nfactures_liste
-  const factureNumber = impayeliste.length > 0
-    ? impayeliste.map(imp => imp.nfacture).join(', ')
-    : (nfactureFromMetadata ? String(nfactureFromMetadata) : '—')
-
-  // Also try to get email from contact if available
-  const contact = r.get('contact')
-  const contactEmail = contact ? (contact.get ? contact.get('email') : contact.email) : null
-
-  return {
-    _parse:      r,
-    id:          r.id,
-    dateEnvoi:   getValue('date_envoi_prevue') || getValue('date_envoi') || getValue('dateEnvoi'),
-    objet:       getValue('sujet') || getValue('objet') || '',
-    to:          templateData.payeur_email || templateData.proprio_email || contactEmail || getValue('to') || getValue('destinataire') || '',
-    cc:          getValue('cc') || '',
-    corps:       getValue('contenu') || getValue('corps') || '',
-    statut:      getValue('statut') || 'pending',
-    manuelle:    getValue('manuel') || false,
-    valide:      getValue('valide') === true,
-    nfacture:    factureNumber,
-    impayelId:   impayeliste.length > 0 ? impayeliste.map(imp => imp.id) : null,
-    email_index: getValue('email_index') ?? null,
-    impayes:     impayeliste,
-    isGrouped:   impayeliste.length > 1,
-  }
-}
-
-// ── Chargement ────────────────────────────────────────────────
+// Charger les relances depuis Parse
 async function charger() {
   loading.value = true
-  selection.value = []
   try {
-    const q = new $parse.Query('Relance')
-    q.include('impaye')
-    q.include('impayes')
-    q.include('contact')
-    q.include('sequence')
-    q.descending('date_envoi_prevue')
-    q.limit(500)
-
-    if (filtreStatut.value !== 'tous' && filtreStatut.value !== 'non-validees') {
-      q.equalTo('statut', filtreStatut.value)
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const query = new $parse.Query(Relance)
+    query.limit(1000)
+    query.descending('dateEnvoi')
+    query.include('impaye')
+    
+    // Filtrer par statut si nécessaire
+    if (filtreStatut.value !== 'tous') {
+      query.equalTo('statut', filtreStatut.value)
     }
-
-    if (filtreStatut.value === 'non-validees') {
-      q.or(
-        q.equalTo('valide', false),
-        q.doesNotExist('valide')
-      )
-      q.notEqualTo('manuel', true)
+    
+    // Filtrer par séquence si nécessaire
+    if (filtreSequence.value !== 'tous') {
+      query.equalTo('sequenceId', filtreSequence.value)
     }
-
-    if (filtreSequence.value && filtreSequence.value !== 'tous') {
-      const ptr = $parse.Object.fromJSON({ __type: 'Pointer', className: 'Sequence', objectId: filtreSequence.value })
-      q.equalTo('sequence', ptr)
+    
+    // Recherche
+    if (search.value) {
+      const searchLower = search.value.toLowerCase()
+      query.contains('objet', searchLower)
     }
-
-    const results = await q.find()
-    const toutes = results.map(parseRelance)
-    // Filtrer les relances qui n'ont pas d'email destinataire résolu
-    relances.value = toutes.filter(r => r.to && r.to.trim() !== '')
-    // Générer les liens PDF signés pour chaque impayé unique
-    await generatePdfLinks()
-  } catch (err) {
-    toast.add({ title: 'Erreur chargement', description: err.message, color: 'red' })
+    
+    const results = await query.find()
+    relances.value = results.map(r => ({
+      id: r.id,
+      dateEnvoi: r.get('dateEnvoi'),
+      objet: r.get('objet'),
+      to: r.get('to'),
+      cc: r.get('cc'),
+      corps: r.get('corps'),
+      statut: r.get('statut'),
+      valide: r.get('valide'),
+      manuelle: r.get('manuelle'),
+      impayelId: r.get('impaye')?.id,
+      impayes: r.get('impayes') || [],
+      nfacture: r.get('impaye')?.get('nfacture') || r.get('nfacture') || '—',
+      sequenceId: r.get('sequenceId'),
+      _parse: r
+    }))
+  } catch (error) {
+    console.error('Erreur chargement relances:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de charger les relances', color: 'red' })
   } finally {
     loading.value = false
   }
 }
 
-// Générer des liens PDF signés (expire en 3 min) pour tous les impayés uniques
-async function generatePdfLinks(impayeIds = null) {
-  // Si des IDs spécifiques sont fournis, les utiliser, sinon chercher dans toutes les relances
-  const uniqueImpayeIds = impayeIds || [...new Set(relances.value.flatMap(r => [r.impaye?.id, ...(r.impayes || []).map(i => i.id)].filter(Boolean)))]
-
-  for (const impayeId of uniqueImpayeIds) {
-    if (pdfLinks.value[impayeId]) continue // déjà généré
-
-    try {
-      const response = await $parse.Cloud.run('generatePdfLink', { impayelId: impayeId })
-      pdfLinks.value[impayeId] = response.url
-    } catch (err) {
-      console.error(`Erreur génération lien PDF pour ${impayeId}:`, err)
-      pdfLinks.value[impayeId] = null
-    }
-  }
-}
-
+// Charger les séquences
 async function chargerSequences() {
   try {
-    const q = new $parse.Query('Sequence')
-    q.ascending('nom')
-    q.limit(200)
-    sequences.value = await q.find()
-  } catch {}
-}
-
-// ── Actions ────────────────────────────────────────────────────
-async function createRelancesForAllActiveSequences() {
-  creatingRelances.value = true
-  try {
-    console.log('Début de la création des relances...')
-    const response = await $parse.Cloud.run('triggerImportInvoices')
-
-    console.log('Réponse de la fonction cloud:', response)
-
-    const relancesCrees = response.result?.createRelances?.created || response.result?.createRelances?.relancesCrees || 0
-    const relancesMisesAJour = response.result?.createRelances?.updated || 0
-
-    toast.add({
-      title: 'Succès',
-      description: `${relancesCrees} relance(s) créée(s), ${relancesMisesAJour} mise(s) à jour.`,
-      color: 'green'
-    })
-    await charger()
+    const { $parse } = useNuxtApp()
+    const Sequence = $parse.Object.extend('Sequence')
+    const query = new $parse.Query(Sequence)
+    query.limit(200)
+    const results = await query.find()
+    sequences.value = results.map(s => ({
+      id: s.id,
+      nom: s.get('nom'),
+      _parse: s
+    }))
   } catch (error) {
-    console.error('Erreur lors de la création des relances:', error)
-    toast.add({ title: 'Erreur', description: error.message || 'Erreur lors de la création des relances.', color: 'red' })
-  } finally {
-    creatingRelances.value = false
+    console.error('Erreur chargement séquences:', error)
   }
 }
 
-async function annulerRelance(row) {
-  try {
-    row._parse.set('statut', 'annulé')
-    await row._parse.save()
-    row.statut = 'annulé'
-    toast.add({ title: 'Relance annulée', color: 'green' })
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  }
+// Options de filtres
+const statutOptions = [
+  { value: 'tous', label: 'Tous les statuts' },
+  { value: 'pending', label: 'En attente' },
+  { value: 'envoyé', label: 'Envoyé' },
+  { value: 'échec', label: 'Échec' },
+  { value: 'optimisee', label: 'Optimisée' }
+]
+
+const sequenceOptions = computed(() => [
+  { value: 'tous', label: 'Toutes les séquences' },
+  ...sequences.value.map(s => ({ value: s.id, label: s.nom }))
+])
+
+// Configuration des statuts pour le calendrier
+const STATUT_CONFIG = {
+  'pending': { label: 'En attente', color: 'gray' },
+  'envoyé': { label: 'Envoyé', color: 'green' },
+  'échec': { label: 'Échec', color: 'red' },
+  'optimisee': { label: 'Optimisée', color: 'blue' }
 }
 
-async function reessayerRelance(row) {
-  try {
-    row._parse.set('statut', 'pending')
-    row._parse.set('dateEnvoi', new Date())
-    await row._parse.save()
-    row.statut = 'pending'
-    row.dateEnvoi = new Date()
-    toast.add({ title: 'Relance remise en attente', color: 'green' })
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  }
+function statutCalColor(statut) {
+  return STATUT_CONFIG[statut]?.color === 'gray' ? '#9ca3af' :
+         STATUT_CONFIG[statut]?.color === 'green' ? '#22c55e' :
+         STATUT_CONFIG[statut]?.color === 'red' ? '#ef4444' :
+         STATUT_CONFIG[statut]?.color === 'blue' ? '#3b82f6' :
+         '#9ca3af'
 }
 
-async function annulerGroupe() {
-  annulantGroupe.value = true
-  try {
-    // Grouper les relances par ID pour éviter les doublons
-    const relancesParId = {}
-    selection.value.forEach(row => {
-      if (!relancesParId[row.id]) {
-        relancesParId[row.id] = row
-      }
-    })
+// Options du calendrier
+const calendarOptions = computed(() => ({
+  plugins: [dayGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,dayGridWeek,dayGridDay'
+  },
+  events: relancesFiltrees.value.map(r => ({
+    id: r.id,
+    title: r.objet || '(sans objet)',
+    start: r.dateEnvoi,
+    color: !r.valide ? '#f97316' : statutCalColor(r.statut),
+    textColor: '#ffffff',
+    borderColor: !r.valide ? '#f97316' : statutCalColor(r.statut),
+    className: !r.valide ? 'bg-orange-500' : ''
+  })),
+  dateClick: (info) => {
+    jourSelectionne.value = info.dateStr
+  },
+  eventClick: (info) => {
+    jourSelectionne.value = info.event.startStr
+    info.jsEvent.preventDefault()
+  },
+  locale: 'fr',
+  buttonText: {
+    today: "Aujourd'hui",
+    month: 'Mois',
+    week: 'Semaine',
+    day: 'Jour'
+  },
+  height: 'auto'
+}))
 
-    const relancesAAnnuler = Object.values(relancesParId)
+// Chargement initial
+onMounted(async () => {
+  await charger()
+  await chargerSequences()
+  await impayesStore.fetchAllImpayes()
+})
 
-    // Appels individuels au lieu de saveAll (batch)
-    await Promise.all(relancesAAnnuler.map(async (r) => {
-      r._parse.set('statut', 'annulé')
-      await r._parse.save()
-      r.statut = 'annulé'
-    }))
-
-    toast.add({ title: `${relancesAAnnuler.length} relance(s) annulée(s)`, color: 'green' })
-    selection.value = []
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    annulantGroupe.value = false
-  }
+// Rafraîchir les données
+function refresh() {
+  charger()
+  chargerSequences()
+  impayesStore.fetchAllImpayes()
 }
 
-async function validerGroupe() {
-  validantGroupe.value = true
-  try {
-    // Grouper les relances par ID pour éviter les doublons
-    const relancesParId = {}
-    selection.value.forEach(row => {
-      if (!relancesParId[row.id] && !row.valide) {
-        relancesParId[row.id] = row
-      }
-    })
-
-    const relancesAValider = Object.values(relancesParId)
-
-    if (relancesAValider.length === 0) {
-      toast.add({ title: 'Aucune relance à valider', color: 'yellow' })
-      return
-    }
-
-    // Appels individuels au lieu de saveAll (batch)
-    await Promise.all(relancesAValider.map(async (r) => {
-      r._parse.set('valide', true)
-      await r._parse.save()
-      r.valide = true
-    }))
-
-    toast.add({ title: `${relancesAValider.length} relance(s) validée(s)`, color: 'green' })
-    selection.value = []
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    validantGroupe.value = false
-  }
-}
-
-// ── Drawer ────────────────────────────────────────────────────
-function ouvrirDrawer(row, readonly) {
-  // Gérer les deux cas: row.original (vue tableau) ou row direct (vue calendrier)
-  const relance = row.original || row
-
-  drawerRow.value = relance
+// Ouvrir le drawer pour modifier/voir une relance
+function ouvrirDrawer(row, readonly = false) {
+  drawerRow.value = row
   drawerReadonly.value = readonly
-  drawerDateEnvoi.value = toDateInput(relance.dateEnvoi)
-  drawerTo.value = relance.to
-  drawerCc.value = relance.cc
-  drawerObjet.value = relance.objet
-  drawerCorps.value = relance.corps
-  originalToValue.value = relance.to // Stocker la valeur originale
-  applyToAllFollowing.value = false // Réinitialiser l'état de la case à cocher
-  editorVisible.value = false
+  drawerDateEnvoi.value = row.dateEnvoi ? new Date(row.dateEnvoi).toISOString().split('T')[0] : ''
+  drawerTo.value = row.to || ''
+  drawerCc.value = row.cc || ''
+  drawerObjet.value = row.objet || ''
+  drawerCorps.value = row.corps || ''
+  editorVisible.value = true
   showDrawer.value = true
-  console.log('[ouvrirDrawer] drawerCorps:', drawerCorps.value?.slice(0, 80))
-  console.log('[ouvrirDrawer] impayes:', relance.impayes)
-  // Attendre la fin de l'animation du slideover avant de monter l'éditeur
-  setTimeout(() => { editorVisible.value = true }, 300)
 }
 
+// Enregistrer les modifications du drawer
 async function enregistrerDrawer() {
+  if (!relanceDrawer.value) return
+  
   savingDrawer.value = true
   try {
-    const row = drawerRow.value
-    const r = row._parse
-
-    r.set('dateEnvoi', drawerDateEnvoi.value ? new Date(drawerDateEnvoi.value) : r.get('dateEnvoi'))
-    r.set('to', drawerTo.value)
-    r.set('cc', drawerCc.value)
-    r.set('objet', drawerObjet.value)
-    if (editorDrawerRef.value) {
-      try { r.set('corps', editorDrawerRef.value.getInstance().getHTML()) } catch {}
-    }
-    await r.save()
-
-    // Si la case est cochée, appliquer le changement à tous les emails suivants
-    if (applyToAllFollowing.value) {
-      await appliquerToAuxRelancesSuivantes(row, drawerTo.value)
-    }
-
-    showDrawer.value = false
-    toast.add({ title: 'Relance enregistrée', color: 'green' })
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceDrawer.value.id)
+    
+    relance.set('dateEnvoi', drawerDateEnvoi.value)
+    relance.set('to', drawerTo.value)
+    relance.set('cc', drawerCc.value)
+    relance.set('objet', drawerObjet.value)
+    relance.set('corps', drawerCorps.value)
+    
+    await relance.save()
+    toast.add({ title: 'Succès', description: 'Relance enregistrée', color: 'green' })
     await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+    showDrawer.value = false
+  } catch (error) {
+    console.error('Erreur enregistrement relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible d\'enregistrer la relance', color: 'red' })
   } finally {
     savingDrawer.value = false
   }
 }
 
-// Fonction pour appliquer le changement de destinataire à toutes les relances suivantes
-async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
-  try {
-    // Trouver toutes les relances avec la même facture (impaye) qui ont une date postérieure
-    const relancesAAppliquer = relances.value.filter(r => {
-      // Vérifier si c'est une relance suivante (même facture, date postérieure)
-      const memeFacture = r.impayelId && relanceCourante.impayelId &&
-                         r.impayelId.some(id => relanceCourante.impayelId.includes(id))
-      const datePosterieure = new Date(r.dateEnvoi) > new Date(relanceCourante.dateEnvoi)
-      const differentId = r.id !== relanceCourante.id
-
-      return memeFacture && datePosterieure && differentId
-    })
-
-    if (relancesAAppliquer.length > 0) {
-      // Appels individuels au lieu de saveAll (batch)
-      await Promise.all(relancesAAppliquer.map(async (r) => {
-        r._parse.set('to', nouveauTo)
-        await r._parse.save()
-        r.to = nouveauTo // Mettre à jour localement
-      }))
-
-      toast.add({
-        title: `Destinataire appliqué à ${relancesAAppliquer.length} relance(s) suivante(s)`,
-        color: 'blue'
-      })
-    }
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: 'Échec de la mise à jour des relances suivantes: ' + err.message, color: 'red' })
-  }
-}
-
+// Valider une relance depuis le drawer
 async function validerRelanceDrawer() {
+  if (!relanceDrawer.value) return
+  
   validantDrawer.value = true
   try {
-    const row = drawerRow.value
-    const r = row._parse
-
-    r.set('valide', true)
-    row.valide = true
-
-    await r.save()
-    showDrawer.value = false
-    toast.add({ title: 'Relance validée', color: 'green' })
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceDrawer.value.id)
+    
+    relance.set('valide', true)
+    await relance.save()
+    toast.add({ title: 'Succès', description: 'Relance validée', color: 'green' })
     await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+    showDrawer.value = false
+  } catch (error) {
+    console.error('Erreur validation relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de valider la relance', color: 'red' })
   } finally {
     validantDrawer.value = false
   }
 }
 
-// ── Workflow de validation ────────────────────────────────────
+// Sélectionner une relance pour validation
 function selectionnerRelancePourValidation(relance) {
-  // F-009: Vérifier s'il y a des modifications non sauvegardées
   if (hasUnsavedChanges.value) {
     pendingRelanceSelection.value = relance
     showUnsavedChangesModal.value = true
     return
   }
   
-  setRelanceCourante(relance)
+  relanceCourante.value = { ...relance }
+  originalRelanceData.value = { ...relance }
 }
 
-// F-009: Définir la relance courante et sauvegarder les données originales
-function setRelanceCourante(relance) {
-  relanceCourante.value = relance
-  // Sauvegarder les données originales pour détecter les modifications
-  if (relance) {
-    originalRelanceData.value = {
-      objet: relance.objet,
-      corps: relance.corps,
-      cc: relance.cc,
-      dateEnvoi: relance.dateEnvoi
-    }
-  } else {
-    originalRelanceData.value = null
+// Gérer les modifications non sauvegardées
+function handleUnsavedChangesAction(action) {
+  showUnsavedChangesModal.value = false
+  
+  if (action === 'save') {
+    enregistrerRelance()
+    return
   }
+  
+  if (action === 'discard') {
+    if (pendingRelanceSelection.value) {
+      relanceCourante.value = { ...pendingRelanceSelection.value }
+      originalRelanceData.value = { ...pendingRelanceSelection.value }
+      pendingRelanceSelection.value = null
+    }
+    return
+  }
+  
+  // Cancel - ne rien faire
+  pendingRelanceSelection.value = null
 }
 
-// F-009: Enregistrer les modifications sans valider
+// Enregistrer la relance courante (workflow de validation)
 async function enregistrerRelance() {
   if (!relanceCourante.value) return
-
-  console.log('[CHECKPOINT] enregistrer-relance:start', { relanceId: relanceCourante.value.id })
-  saving.value = true
   
+  saving.value = true
   try {
-    const row = relanceCourante.value
-    const r = row._parse
-
-    // Récupérer le contenu HTML depuis l'éditeur si disponible
-    let corpsHtml = row.corps
-    if (editorValidationRef.value) {
-      try {
-        corpsHtml = editorValidationRef.value.getInstance().getHTML()
-        console.log('[CHECKPOINT] enregistrer-relance:editor-read', { length: corpsHtml.length })
-      } catch (e) {
-        console.warn('Impossible de lire le contenu de l\'éditeur:', e)
-      }
-    }
-
-    console.log('[CHECKPOINT] enregistrer-relance:parse-save', { 
-      sujet: row.objet, 
-      cc: row.cc, 
-      contenuLength: corpsHtml.length 
-    })
-
-    // Mise à jour des champs modifiables
-    r.set('sujet', row.objet)
-    r.set('contenu', corpsHtml)
-    r.set('cc', row.cc)
-    r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
-    // NOTE: on ne touche PAS à 'valide'
-
-    await r.save()
-
-    // Mettre à jour l'état local
-    row.corps = corpsHtml
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceCourante.value.id)
     
-    // Mettre à jour les données originales
-    originalRelanceData.value = {
-      objet: row.objet,
-      corps: corpsHtml,
-      cc: row.cc,
-      dateEnvoi: row.dateEnvoi
-    }
-
-    console.log('[CHECKPOINT] enregistrer-relance:success', { relanceId: row.id })
-
-    toast.add({
-      title: 'Modifications enregistrées',
-      color: 'green'
-    })
-
-  } catch (err) {
-    console.error('[CHECKPOINT] enregistrer-relance:error', { 
-      relanceId: relanceCourante.value?.id, 
-      error: err.message 
-    })
+    relance.set('dateEnvoi', dateEnvoiInput.value)
+    relance.set('cc', relanceCourante.value.cc)
+    relance.set('objet', relanceCourante.value.objet)
+    relance.set('corps', relanceCourante.value.corps)
     
-    toast.add({
-      title: 'Erreur',
-      description: err.message,
-      color: 'red'
-    })
+    await relance.save()
+    toast.add({ title: 'Succès', description: 'Relance enregistrée', color: 'green' })
+    originalRelanceData.value = { ...relanceCourante.value }
+  } catch (error) {
+    console.error('Erreur enregistrement relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible d\'enregistrer la relance', color: 'red' })
   } finally {
     saving.value = false
   }
 }
 
-// F-009: Gérer le modal de changements non sauvegardées
-async function handleUnsavedChangesAction(action) {
-  showUnsavedChangesModal.value = false
-  
-  if (action === 'save') {
-    await enregistrerRelance()
-    if (pendingRelanceSelection.value) {
-      setRelanceCourante(pendingRelanceSelection.value)
-      pendingRelanceSelection.value = null
-    }
-  } else if (action === 'discard') {
-    // Abandonner les modifications et changer de relance
-    if (pendingRelanceSelection.value) {
-      setRelanceCourante(pendingRelanceSelection.value)
-      pendingRelanceSelection.value = null
-    }
-  }
-  // Si 'cancel', ne rien faire (rester sur la relance actuelle)
-}
-
+// Valider la relance courante (workflow de validation)
 async function validerRelanceWorkflow() {
   if (!relanceCourante.value) return
-
+  
   validantWorkflow.value = true
   try {
-    const row = relanceCourante.value
-    const r = row._parse
-
-    // F-009: Sauvegarder d'abord les modifications si présentes
-    if (hasUnsavedChanges.value) {
-      let corpsHtml = row.corps
-      if (editorValidationRef.value) {
-        try { corpsHtml = editorValidationRef.value.getInstance().getHTML() } catch {}
-      }
-      r.set('sujet', row.objet)
-      r.set('contenu', corpsHtml)
-      r.set('cc', row.cc)
-      r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
-    }
-
-    r.set('valide', true)
-    row.valide = true
-
-    await r.save()
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceCourante.value.id)
     
-    // F-009: Mettre à jour les données originales
-    originalRelanceData.value = {
-      objet: row.objet,
-      corps: row.corps,
-      cc: row.cc,
-      dateEnvoi: row.dateEnvoi
-    }
-
-    toast.add({ title: 'Relance validée !', color: 'green' })
-
+    relance.set('valide', true)
+    await relance.save()
+    
+    toast.add({ title: 'Succès', description: 'Relance validée', color: 'green' })
+    
     // Passer à la relance suivante
+    const currentIndex = relancesAValider.value.findIndex(r => r.id === relanceCourante.value.id)
+    if (currentIndex < relancesAValider.value.length - 1) {
+      relanceCourante.value = { ...relancesAValider.value[currentIndex + 1] }
+      originalRelanceData.value = { ...relancesAValider.value[currentIndex + 1] }
+    } else {
+      relanceCourante.value = null
+      originalRelanceData.value = null
+    }
+    
     await charger()
-    passerARelanceSuivante()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } catch (error) {
+    console.error('Erreur validation relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de valider la relance', color: 'red' })
   } finally {
     validantWorkflow.value = false
   }
 }
 
-// Validation en masse (appels unitaires)
-async function validateAllSelected() {
-  if (selectedRelancesForBulk.value.length === 0) {
-    toast.add({ title: 'Aucune relance sélectionnée', color: 'yellow' })
-    return
-  }
-
-  bulkValidating.value = true
-  let successCount = 0
-  let errorCount = 0
-
-  try {
-    // Convertir les IDs sélectionnés en chaînes pour comparaison
-    const selectedIds = selectedRelancesForBulk.value.map(id => String(id))
-
-    // Filtrer les relances qui ne sont pas encore validées
-    const relancesToValidate = relancesAValider.value
-      .filter(r => selectedIds.includes(String(r.id)) && !r.valide)
-
-    if (relancesToValidate.length === 0) {
-      toast.add({ title: 'Toutes les relances sélectionnées sont déjà validées', color: 'yellow' })
+// Passer à la relance suivante
+function passerRelanceWorkflow() {
+  if (!relanceCourante.value) return
+  
+  const currentIndex = relancesAValider.value.findIndex(r => r.id === relanceCourante.value.id)
+  if (currentIndex < relancesAValider.value.length - 1) {
+    if (hasUnsavedChanges.value) {
+      pendingRelanceSelection.value = relancesAValider.value[currentIndex + 1]
+      showUnsavedChangesModal.value = true
       return
     }
+    relanceCourante.value = { ...relancesAValider.value[currentIndex + 1] }
+    originalRelanceData.value = { ...relancesAValider.value[currentIndex + 1] }
+  }
+}
 
-    // Boucle d'appels unitaires
-    for (const r of relancesToValidate) {
-      try {
-        r._parse.set('valide', true)
-        await r._parse.save()
-        r.valide = true
-        successCount++
-      } catch (saveErr) {
-        console.error(`Erreur validation relance ${r.id}:`, saveErr)
-        errorCount++
-      }
-    }
-
-    // Toast de résultat
-    if (successCount > 0 && errorCount === 0) {
-      toast.add({
-        title: `${successCount} relance(s) validée(s)`,
-        color: 'green'
-      })
-    } else if (successCount > 0 && errorCount > 0) {
-      toast.add({
-        title: `${successCount} validée(s), ${errorCount} échec(s)`,
-        color: 'yellow'
-      })
-    } else {
-      toast.add({
-        title: 'Erreur',
-        description: `Aucune relance validée (${errorCount} échec(s))`,
-        color: 'red'
-      })
-    }
-
-    // Réinitialiser la sélection
-    selectedRelancesForBulk.value = []
-
-    // Recharger les données
+// Blacklister et supprimer les relances
+async function blacklistEtSupprimerRelances() {
+  if (!relanceCourante.value) return
+  
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceCourante.value.id)
+    
+    // Supprimer la relance
+    await relance.destroy()
+    
+    toast.add({ title: 'Succès', description: 'Relance supprimée', color: 'green' })
     await charger()
+    relanceCourante.value = null
+    originalRelanceData.value = null
+  } catch (error) {
+    console.error('Erreur suppression relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de supprimer la relance', color: 'red' })
+  }
+}
 
-    // Si la relance courante a été validée, passer à la première non validée
-    if (relanceCourante.value?.valide) {
-      relanceCourante.value = relancesAValider.value[0] || null
-    }
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+// Supprimer une relance
+async function supprimerRelance() {
+  if (!relanceCourante.value) return
+  
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(relanceCourante.value.id)
+    
+    await relance.destroy()
+    
+    toast.add({ title: 'Succès', description: 'Relance supprimée', color: 'green' })
+    await charger()
+    relanceCourante.value = null
+    originalRelanceData.value = null
+  } catch (error) {
+    console.error('Erreur suppression relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de supprimer la relance', color: 'red' })
+  }
+}
+
+// Réessayer une relance en échec
+async function reessayerRelance(row) {
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    const relance = await new $parse.Query(Relance).get(row.id)
+    
+    relance.set('statut', 'pending')
+    await relance.save()
+    
+    toast.add({ title: 'Succès', description: 'Relance réessayée', color: 'green' })
+    await charger()
+  } catch (error) {
+    console.error('Erreur réessayer relance:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de réessayer la relance', color: 'red' })
+  }
+}
+
+// Valider un groupe de relances
+async function validerGroupe() {
+  if (selection.value.length === 0) return
+  
+  validantGroupe.value = true
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    
+    await $parse.Object.saveAll(
+      selection.value.map(r => {
+        const relance = Relance.createWithoutData(r.id)
+        relance.set('valide', true)
+        return relance
+      })
+    )
+    
+    toast.add({ title: 'Succès', description: `${selection.value.length} relance(s) validée(s)`, color: 'green' })
+    selection.value = []
+    await charger()
+  } catch (error) {
+    console.error('Erreur validation groupe:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de valider les relances', color: 'red' })
+  } finally {
+    validantGroupe.value = false
+  }
+}
+
+// Annuler un groupe de relances
+async function annulerGroupe() {
+  if (selection.value.length === 0) return
+  
+  annulantGroupe.value = true
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    
+    await $parse.Object.destroyAll(
+      selection.value.map(r => Relance.createWithoutData(r.id))
+    )
+    
+    toast.add({ title: 'Succès', description: `${selection.value.length} relance(s) annulée(s)`, color: 'green' })
+    selection.value = []
+    await charger()
+  } catch (error) {
+    console.error('Erreur annulation groupe:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible d\'annuler les relances', color: 'red' })
+  } finally {
+    annulantGroupe.value = false
+  }
+}
+
+// Créer des relances pour toutes les séquences actives
+async function createRelancesForAllActiveSequences() {
+  creatingRelances.value = true
+  try {
+    const { $parse } = useNuxtApp()
+    const result = await $parse.Cloud.run('createRelancesForAllActiveSequences')
+    
+    toast.add({ title: 'Succès', description: `Relances créées: ${result.created} nouvelle(s) relance(s)`, color: 'green' })
+    await charger()
+  } catch (error) {
+    console.error('Erreur création relances:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de créer les relances', color: 'red' })
+  } finally {
+    creatingRelances.value = false
+  }
+}
+
+// Valider toutes les relances sélectionnées en masse
+async function validateAllSelected() {
+  if (selectedRelancesForBulk.value.length === 0) return
+  
+  bulkValidating.value = true
+  try {
+    const { $parse } = useNuxtApp()
+    const Relance = $parse.Object.extend('Relance')
+    
+    await $parse.Object.saveAll(
+      selectedRelancesForBulk.value.map(relanceId => {
+        const relance = Relance.createWithoutData(relanceId)
+        relance.set('valide', true)
+        return relance
+      })
+    )
+    
+    toast.add({ title: 'Succès', description: `${selectedRelancesForBulk.value.length} relance(s) validée(s)`, color: 'green' })
+    selectedRelancesForBulk.value = []
+    await charger()
+  } catch (error) {
+    console.error('Erreur validation en masse:', error)
+    toast.add({ title: 'Erreur', description: 'Impossible de valider les relances', color: 'red' })
   } finally {
     bulkValidating.value = false
   }
 }
 
-function passerRelanceWorkflow() {
-  passerARelanceSuivante()
+// Formater une date
+function formatDate(date) {
+  if (!date) return '—'
+  const d = date instanceof Date ? date : new Date(date)
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
-function passerARelanceSuivante() {
-  if (relancesAValider.value.length === 0) {
-    relanceCourante.value = null
-    return
-  }
+// Colonnes du tableau
+const colonnes = [
+  { accessorKey: 'dateEnvoi', header: 'Date', enableSorting: true },
+  { accessorKey: 'objet', header: 'Objet' },
+  { accessorKey: 'to', header: 'Destinataire' },
+  { accessorKey: 'nfacture', header: 'Facture' },
+  { accessorKey: 'statut', header: 'Statut' }
+]
 
-  // Trouver l'index courant
-  const indexCourant = relancesAValider.value.findIndex(r => r.id === relanceCourante.value?.id)
+// Tri initial
+const sorting = ref([
+  { id: 'dateEnvoi', desc: true }
+])
 
-  // Si on est au dernier élément ou si aucune relance n'est sélectionnée, prendre la première
-  const indexSuivant = indexCourant === relancesAValider.value.length - 1 || indexCourant === -1
-    ? 0
-    : indexCourant + 1
-
-  relanceCourante.value = relancesAValider.value[indexSuivant]
-}
-
-/**
- * Met le contact de la relance courante à la blacklist et supprime toutes ses relances
- */
-async function blacklistEtSupprimerRelances() {
-  if (!relanceCourante.value) return
-
-  // Récupérer le contact de la relance courante
-  const contact = relanceCourante.value._parse.get('contact')
-  if (!contact?.id) {
-    toast.add({ title: 'Erreur', description: 'Contact introuvable pour cette relance', color: 'red' })
-    return
-  }
-
+// Charger les liens PDF pour les impayés
+async function chargerPdfLinks() {
   try {
-    const result = await blacklistStore.addToBlacklistWithOptions(
-      [contact.id],
-      true // deleteRelances: true
-    )
-
-    toast.add({
-      title: 'Succès',
-      description: `${result.contactsAdded} contact(s) blacklisté(s), ${result.relancesDeleted} relance(s) supprimée(s)`,
-      color: 'green'
-    })
-
-    // Rafraîchir la liste des relances
-    await charger()
-
-    // Si la relance courante a été supprimée, passer à la première disponible
-    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
-      relanceCourante.value = relancesAValider.value[0] || null
+    const { $parse } = useNuxtApp()
+    const impayes = impayesStore.allImpayes
+    
+    for (const impaye of impayes) {
+      if (impaye.url_pdf && !pdfLinks.value[impaye.objectId]) {
+        try {
+          const result = await $parse.Cloud.run('generateSignedPdfLink', { impayeId: impaye.objectId })
+          pdfLinks.value[impaye.objectId] = result.url
+        } catch (error) {
+          console.error(`Erreur génération lien PDF pour ${impaye.nfacture}:`, error)
+        }
+      }
     }
   } catch (error) {
-    toast.add({ title: 'Erreur', description: error.message || 'Impossible de blacklister le contact', color: 'red' })
+    console.error('Erreur chargement liens PDF:', error)
   }
 }
 
-async function supprimerRelance() {
-  if (!relanceCourante.value) return
-
-  supprimantRelance.value = true
-  try {
-    await relanceCourante.value._parse.destroy()
-    toast.add({ title: 'Succès', description: 'Relance supprimée avec succès', color: 'green' })
-
-    // Rafraîchir la liste des relances
-    await charger()
-
-    // Si la relance courante a été supprimée, passer à la première disponible
-    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
-      relanceCourante.value = relancesAValider.value[0] || null
-    }
-  } catch (error) {
-    toast.add({ title: 'Erreur', description: error.message || 'Impossible de supprimer la relance', color: 'red' })
-  } finally {
-    supprimantRelance.value = false
+// Charger les liens PDF après le chargement initial
+watch(() => impayesStore.allImpayes, (newImpayes) => {
+  if (newImpayes.length > 0) {
+    chargerPdfLinks()
   }
-}
+}, { immediate: true })
 
-// Auto-sélectionner la première relance quand on arrive sur la vue validation
-watch(vue, (newVue) => {
-  if (newVue === 'validation' && relancesAValider.value.length > 0) {
-    setRelanceCourante(relancesAValider.value[0])
-  }
-})
-
-// Générer les liens PDF quand on change de relance courante
-watch(relanceCourante, async (newRelance) => {
-  if (newRelance?.impayes?.length > 0) {
-    const impayeIds = newRelance.impayes.map(imp => imp.id).filter(Boolean)
-    if (impayeIds.length > 0) {
-      await generatePdfLinks(impayeIds)
-    }
-  }
-})
-
-// Watcher pour détecter les changements dans le champ To
-watch(drawerTo, (newVal, oldVal) => {
-  if (newVal !== originalToValue.value && newVal !== oldVal) {
-    // Le champ To a été modifié
-    // La case à cocher est maintenant toujours visible en mode édition
-  }
-})
-
-onMounted(() => {
+// Rafraîchir les données quand on revient à la page
+onActivated(() => {
   charger()
   chargerSequences()
+  impayesStore.fetchAllImpayes()
 })
 </script>
-
-<style scoped>
-/* Overflow pour les cases du calendrier quand il y a beaucoup de relances */
-:deep(.fc-daygrid-day-events) {
-  overflow-y: auto;
-  max-height: 150px;
-}
-:deep(.fc-daygrid-day-cell) {
-  overflow: hidden;
-}
-</style>
