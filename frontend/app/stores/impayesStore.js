@@ -36,6 +36,7 @@ export const useImpayesStore = defineStore("impayes", {
                 query.include("sequence");
                 query.descending("date_piece");
                 query.equalTo("facture_soldee", false);
+                query.equalTo("isBlacklisted", false); // Exclure les impayés suspendus
 
                 const results = await query.find();
                 this.allImpayes = results.map(this.rowToPlain);
@@ -81,6 +82,9 @@ export const useImpayesStore = defineStore("impayes", {
             sortDirection = "desc",
         ) {
             let data = [...this.allImpayes];
+
+            // Exclure les impayés suspendus
+            data = data.filter(i => !i.isBlacklisted);
 
             // Filtre par séquence
             if (filtreSequence === "none") {
@@ -199,6 +203,7 @@ export const useImpayesStore = defineStore("impayes", {
                 url_pdf: r.get("url_pdf"),
                 sequenceNom: seq ? seq.get("nom") : null,
                 sequenceId: seq ? seq.id : null,
+                isBlacklisted: r.get("isBlacklisted") || false, // Ajout du champ isBlacklisted
             };
         },
 
