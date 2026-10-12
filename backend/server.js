@@ -177,8 +177,6 @@ const parseServer = new ParseServer({
         process.env.PARSE_PUBLIC_URL ||
         process.env.PARSE_SERVER_URL ||
         "https://dev.markidiags.com/api/parse",
-    // Timeout des cloud functions (10 minutes)
-    cloudFunctionTimeout: 600,
 });
 
 // Configuration Parse Dashboard
@@ -475,6 +473,36 @@ const SftpClient = require("ssh2-sftp-client");
 const PDF_SIGNING_SECRET =
     process.env.PDF_SIGNING_SECRET || "marki16-default-pdf-secret-change-me";
 
+// Helper : envoyer une erreur en JSON ou HTML selon le client
+function sendPdfError(req, res, statusCode, title, message) {
+    const accept = req.headers.accept || "";
+    if (accept.includes("text/html")) {
+        return res.status(statusCode).send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<style>
+body { font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+.card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 480px; text-align: center; }
+h1 { color: #dc2626; font-size: 1.25rem; margin-bottom: 0.5rem; }
+p { color: #4b5563; line-height: 1.5; }
+.icon { font-size: 3rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+<div class="card">
+<div class="icon">⚠️</div>
+<h1>${title}</h1>
+<p>${message}</p>
+</div>
+</body>
+</html>`);
+    }
+    return res.status(statusCode).json({ error: message });
+}
+
 // Endpoint pour accéder au PDF (vérifie la signature)
 app.get("/api/pdf/:impayelId", async (req, res) => {
     const { impayelId } = req.params;
@@ -482,16 +510,12 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
 
     // Vérifier la signature et l'expiration
     if (!sig || !expires) {
-        return res.status(403).json({
-            error: "Lien invalide ou expiré. Veuillez réutiliser le lien envoyé par email.",
-        });
+        return sendPdfError(req, res, 403, "Lien invalide", "Lien invalide ou expiré. Veuillez réutiliser le lien envoyé par email.");
     }
 
     const now = Math.floor(Date.now() / 1000);
     if (parseInt(expires) < now) {
-        return res.status(403).json({
-            error: "Ce lien a expiré. Veuillez réutiliser le lien envoyé par email.",
-        });
+        return sendPdfError(req, res, 403, "Lien expiré", "Ce lien a expiré. Veuillez réutiliser le lien envoyé par email.");
     }
 
     // Vérifier la signature
@@ -502,9 +526,7 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
         .digest("hex");
 
     if (sig !== expectedSig) {
-        return res.status(403).json({
-            error: "Lien invalide. Veuillez réutiliser le lien envoyé par email.",
-        });
+        return sendPdfError(req, res, 403, "Lien invalide", "Lien invalide. Veuillez réutiliser le lien envoyé par email.");
     }
 
     // Récupérer l'impayé depuis Parse
@@ -514,7 +536,7 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
         const q = new Parse.Query(Impaye);
         impaye = await q.get(impayelId, { useMasterKey: true });
     } catch {
-        return res.status(404).json({ error: "Impayé introuvable" });
+        return sendPdfError(req, res, 404, "Introuvable", "Impayé introuvable");
     }
 
     const source = impaye.get("source");
@@ -523,18 +545,14 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
     if (source === "upload") {
         const localPath = impaye.get("pdf_local_path");
         if (!localPath)
-            return res
-                .status(404)
-                .json({ error: "Chemin PDF local non renseigné" });
+            return sendPdfError(req, res, 404, "PDF manquant", "Chemin PDF local non renseigné");
 
         // Sécurité : vérifier que le fichier est bien dans UPLOAD_PATH
         if (!localPath.startsWith(UPLOAD_PATH)) {
-            return res.status(403).json({ error: "Accès refusé" });
+            return sendPdfError(req, res, 403, "Accès refusé", "Accès refusé");
         }
         if (!fs.existsSync(localPath)) {
-            return res
-                .status(404)
-                .json({ error: "Fichier PDF introuvable sur le serveur" });
+            return sendPdfError(req, res, 404, "PDF introuvable", "Fichier PDF introuvable sur le serveur");
         }
 
         const filename = path.basename(localPath);
@@ -549,9 +567,7 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
     // ── PDF SFTP (sync db_externe) ─────────────────────────────────────────────
     const urlPdf = impaye.get("url_pdf");
     if (!urlPdf)
-        return res
-            .status(404)
-            .json({ error: "Aucun PDF associé à cet impayé" });
+        return sendPdfError(req, res, 404, "PDF manquant", "Aucun PDF associé à cet impayé");
 
     const sftp = new SftpClient();
     try {
@@ -562,6 +578,13 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
             password: process.env.FTP_PASSWORD,
         });
 
+        // Vérifier que le fichier existe avant de streamer
+        const exists = await sftp.exists(urlPdf);
+        if (!exists) {
+            await sftp.end();
+            return sendPdfError(req, res, 404, "PDF introuvable", "Fichier PDF introuvable sur le serveur. Il est possible que le document ne soit pas encore généré. Veuillez réessayer ultérieurement.");
+        }
+
         try {
             const stream = await sftp.createReadStream(urlPdf);
             res.setHeader("Content-Type", "application/pdf");
@@ -570,10 +593,10 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
                 `inline; filename="${encodeURIComponent(urlPdf.split("/").pop())}"`,
             );
             stream.pipe(res);
-            stream.on("end", () => sftp.end());
+            stream.on("end", () => sftp.end().catch(() => {}));
             stream.on("error", (err) => {
                 console.error("[pdf-proxy] Stream error:", err.message);
-                sftp.end();
+                sftp.end().catch(() => {});
                 if (!res.headersSent)
                     res.status(500).json({ error: "Erreur lecture PDF" });
             });
@@ -581,14 +604,12 @@ app.get("/api/pdf/:impayelId", async (req, res) => {
             console.error("[pdf-proxy] File not found:", err.message);
             sftp.end().catch(() => {});
             if (!res.headersSent)
-                res.status(404).json({
-                    error: "Fichier PDF introuvable sur le serveur",
-                });
+                sendPdfError(req, res, 404, "PDF introuvable", "Fichier PDF introuvable sur le serveur");
         }
     } catch (err) {
         console.error("[pdf-proxy] SFTP connection error:", err.message);
         sftp.end().catch(() => {});
-        res.status(500).json({ error: "Erreur connexion SFTP" });
+        sendPdfError(req, res, 500, "Erreur technique", "Erreur connexion SFTP");
     }
 });
 
@@ -691,7 +712,7 @@ app.post("/api/smtp/test", express.json(), async (req, res) => {
 // ─── Démarrage async : Parse Server v7+ requiert start() avant montage
 (async () => {
     await parseServer.start();
-    app.use("/parse", parseServer.app);
+    app.use("/api/parse", parseServer.app);
     app.listen(PORT, "0.0.0.0", () => {
         console.log(`Server running on port ${PORT}`);
         console.log(

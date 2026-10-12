@@ -24,6 +24,7 @@ const QUERY_PIECES = `
   SELECT
     p.idpiece,
     p.nfacture,
+    p.datecre,
     p.datepiece,
     p.dateecheance,
     p.totalhtnet,
@@ -75,7 +76,7 @@ const QUERY_PIECES = `
   LEFT JOIN _GCO__GcoPieceMetier pm ON p.idpiece = pm.idpiece
   LEFT JOIN _ADN_DIAG__Dossier d ON pm.idmetier = d.idDossier
   WHERE p.nfacture IS NOT NULL
-  AND p.datemaj >= datetime('now', '-24 hours')
+  AND p.datemaj >= datetime('now', '-7 days')
   -- AND p.nfacture > 44432
   AND p.resteapayer >= 0
   AND p.valide = 1

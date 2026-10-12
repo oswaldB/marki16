@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détail impayé — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="impayesdetailPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-6">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <a href="../impayes/index.html" id="btn-retour" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors">
+              <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <div>
+              <h1 class="text-xl font-semibold text-gray-900">
+                <span x-text="impaye?.nfacture || '…'"></span>
+                <span x-show="impaye?.numero_dossier" class="text-gray-400 font-normal"> — <span x-text="impaye.numero_dossier"></span></span>
+              </h1>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- Badge blacklist -->
+            <div x-show="impaye && isBlacklisted" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200" title="Relances automatiques suspendues">
+              <i class="fas fa-shield-halved text-xs"></i>
+              <span>Relances suspendues</span>
+            </div>
+            <div x-show="impaye && !isBlacklisted" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200" title="Les relances automatiques sont activées pour cet impayé">
+              <i class="fas fa-shield-check text-xs"></i>
+              <span>Relances actives</span>
+            </div>
+
+            <!-- Statut -->
+            <span x-show="impaye" class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200" x-text="statutLabel"></span>
+
+            <!-- Bouton suspendre (blacklist) -->
+            <button x-show="impaye && !isBlacklisted" id="btn-toggle-blacklist" @click="toggleBlacklistForm()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-amber-700 bg-white border border-amber-300 rounded-md hover:bg-amber-50 transition-colors">
+              <i class="fas fa-pause-circle"></i>
+              <span x-text="showBlacklistForm ? 'Annuler' : 'Suspendre'"></span>
+            </button>
+
+            <!-- Bouton réactiver -->
+            <button x-show="impaye && isBlacklisted" id="btn-unblacklist" @click="handleUnblacklist()" :disabled="blacklistSaving" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 transition-colors disabled:opacity-50">
+              <i class="fas fa-play-circle"></i> Réactiver
+            </button>
+
+            <!-- Bouton PDF -->
+            <button id="btn-voir-pdf" @click="ouvrirPdfDrawer()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              <i class="fas fa-file"></i> Voir PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulaire blacklist inline -->
+        <div x-show="showBlacklistForm && impaye && !isBlacklisted" class="border border-amber-200 bg-amber-50/50 rounded-lg shadow-sm overflow-hidden">
+          <div class="px-4 py-3 border-b border-amber-100 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-amber-800 uppercase tracking-wider">Suspendre les relances</h2>
+            <button @click="showBlacklistForm = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <i class="fas fa-xmark"></i>
+            </button>
+          </div>
+          <div class="p-4 space-y-4">
+            <p class="text-sm text-gray-600">La suspension empêchera la génération de nouvelles relances pour cette facture.</p>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">Motif de suspension <span class="text-red-500">*</span></label>
+              <select x-model="blacklistForm.motifType" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                <option value="">Choisir un motif...</option>
+                <template x-for="opt in blacklistMotifOptions" :key="opt.value">
+                  <option :value="opt.value" x-text="opt.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">Détail (optionnel)</label>
+              <textarea x-model="blacklistForm.motifDetail" rows="3" placeholder="Précisez si nécessaire..." class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 min-w-[400px]"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button @click="showBlacklistForm = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Annuler</button>
+              <button id="btn-confirm-blacklist" @click="handleBlacklistSubmit()" :disabled="!canSubmitBlacklist || blacklistSaving" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50">
+                <span x-show="blacklistSaving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span> Confirmer la suspension
+              </button>
+            </div>
+            <div x-show="blacklistError" class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800 flex items-start gap-2">
+              <i class="fas fa-exclamation-circle mt-0.5"></i>
+              <span x-text="blacklistError"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div x-show="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+
+        <!-- Content -->
+        <template x-if="impaye && !loading">
+          <div class="space-y-6">
+
+            <!-- Grille FACTURE + BIEN/DOSSIER -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+              <!-- FACTURE -->
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Facture</h2>
+                </div>
+                <div class="p-4">
+                  <dl class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">N° facture</dt>
+                      <dd class="font-medium text-gray-900" x-text="impaye.nfacture"></dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Réf pièce</dt>
+                      <dd class="text-gray-700" x-text="impaye.ref_piece || '—'"></dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Date pièce</dt>
+                      <dd class="text-gray-700" x-text="formatDate(impaye.date_piece)"></dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Retard</dt>
+                      <dd class="font-semibold" :class="retard > 30 ? 'text-red-600' : retard > 7 ? 'text-orange-500' : 'text-gray-700'">
+                        <span x-text="retard"></span> jour<span x-show="retard > 1">s</span>
+                      </dd>
+                    </div>
+                    <hr class="border-gray-100" />
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Total HT</dt>
+                      <dd class="text-gray-700" x-text="formatMontant(impaye.total_ht)"></dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Total TTC</dt>
+                      <dd class="text-gray-700" x-text="formatMontant(impaye.total_ttc)"></dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Reste à payer</dt>
+                      <dd class="font-bold text-gray-900 text-base" x-text="formatMontant(impaye.reste_a_payer)"></dd>
+                    </div>
+                    <div x-show="impaye.commentaire_piece" class="flex justify-between text-sm">
+                      <dt class="text-gray-500">Commentaire</dt>
+                      <dd class="text-gray-700 text-right max-w-xs" x-text="impaye.commentaire_piece"></dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+
+              <!-- BIEN + DOSSIER -->
+              <div class="space-y-4">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Bien</h2>
+                  </div>
+                  <div class="p-4">
+                    <dl class="space-y-2">
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Adresse</dt>
+                        <dd class="text-gray-900 font-medium text-right" x-text="impaye.adresse_bien || '—'"></dd>
+                      </div>
+                      <div x-show="impaye.entree || impaye.escalier || impaye.etage || impaye.porte || impaye.numero_lot" class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Détail</dt>
+                        <dd class="text-gray-700 text-right">
+                          <span x-show="impaye.entree">Ent. <span x-text="impaye.entree"></span> </span>
+                          <span x-show="impaye.escalier">Esc. <span x-text="impaye.escalier"></span> </span>
+                          <span x-show="impaye.etage">Ét. <span x-text="impaye.etage"></span> </span>
+                          <span x-show="impaye.porte">Porte <span x-text="impaye.porte"></span> </span>
+                          <span x-show="impaye.numero_lot">Lot <span x-text="impaye.numero_lot"></span></span>
+                        </dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">CP / Ville</dt>
+                        <dd class="text-gray-700" x-text="[impaye.code_postal, impaye.ville].filter(Boolean).join(' ') || '—'"></dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Dossier</h2>
+                  </div>
+                  <div class="p-4">
+                    <dl class="space-y-2">
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">N° dossier</dt>
+                        <dd class="font-medium text-gray-900" x-text="impaye.numero_dossier || '—'"></dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Référence</dt>
+                        <dd class="text-gray-700" x-text="impaye.reference || '—'"></dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Réf externe</dt>
+                        <dd class="text-gray-700" x-text="impaye.reference_externe || '—'"></dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Statut dossier</dt>
+                        <dd class="text-gray-700" x-text="impaye.statut_dossier || '—'"></dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Intervention</dt>
+                        <dd class="text-gray-700" x-text="formatDate(impaye.date_debut_mission)"></dd>
+                      </div>
+                      <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Intervenant</dt>
+                        <dd class="text-gray-700" x-text="impaye.employe_intervention || '—'"></dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTERLOCUTEURS -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Interlocuteurs</h2>
+              </div>
+              <div class="p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <!-- Payeur -->
+                  <div x-show="impaye.payeur_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <div class="flex items-center gap-2">
+                      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Payeur</p>
+                      <span x-show="impaye.payeur_type" class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-sky-50 text-sky-700" x-text="impaye.payeur_type"></span>
+                    </div>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.payeur_nom"></p>
+                    <p x-show="impaye.payeur_type_personne === 'M' && impaye.payeur_contact_nom" class="text-xs text-gray-500">Contact : <span x-text="impaye.payeur_contact_nom"></span> <span x-show="impaye.payeur_contact_email"> · <span x-text="impaye.payeur_contact_email"></span></span></p>
+                    <p x-show="impaye.payeur_email" class="text-xs text-gray-600" x-text="impaye.payeur_email"></p>
+                    <p x-show="impaye.payeur_telephone" class="text-xs text-gray-600" x-text="impaye.payeur_telephone"></p>
+                  </div>
+                  <!-- Apporteur -->
+                  <div x-show="impaye.apporteur_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Apporteur d'affaire</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.apporteur_nom"></p>
+                    <p x-show="impaye.apporteur_contact_nom" class="text-xs text-gray-500">Contact : <span x-text="impaye.apporteur_contact_nom"></span> <span x-show="impaye.apporteur_contact_email"> · <span x-text="impaye.apporteur_contact_email"></span></span></p>
+                    <p x-show="impaye.apporteur_email" class="text-xs text-gray-600" x-text="impaye.apporteur_email"></p>
+                    <p x-show="impaye.apporteur_telephone" class="text-xs text-gray-600" x-text="impaye.apporteur_telephone"></p>
+                  </div>
+                  <!-- Propriétaire -->
+                  <div x-show="impaye.proprietaire_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Propriétaire</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.proprietaire_nom"></p>
+                    <p x-show="impaye.proprietaire_contact_nom" class="text-xs text-gray-500">Contact : <span x-text="impaye.proprietaire_contact_nom"></span></p>
+                    <p x-show="impaye.proprietaire_email" class="text-xs text-gray-600" x-text="impaye.proprietaire_email"></p>
+                    <p x-show="impaye.proprietaire_telephone" class="text-xs text-gray-600" x-text="impaye.proprietaire_telephone"></p>
+                  </div>
+                  <!-- Locataire entrant -->
+                  <div x-show="impaye.locataire_entrant_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Locataire entrant</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.locataire_entrant_nom"></p>
+                    <p x-show="impaye.locataire_entrant_email" class="text-xs text-gray-600" x-text="impaye.locataire_entrant_email"></p>
+                    <p x-show="impaye.locataire_entrant_telephone" class="text-xs text-gray-600" x-text="impaye.locataire_entrant_telephone"></p>
+                  </div>
+                  <!-- Locataire sortant -->
+                  <div x-show="impaye.locataire_sortant_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Locataire sortant</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.locataire_sortant_nom"></p>
+                    <p x-show="impaye.locataire_sortant_email" class="text-xs text-gray-600" x-text="impaye.locataire_sortant_email"></p>
+                    <p x-show="impaye.locataire_sortant_telephone" class="text-xs text-gray-600" x-text="impaye.locataire_sortant_telephone"></p>
+                  </div>
+                  <!-- Acquéreur -->
+                  <div x-show="impaye.acquereur_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Acquéreur</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.acquereur_nom"></p>
+                    <p x-show="impaye.acquereur_email" class="text-xs text-gray-600" x-text="impaye.acquereur_email"></p>
+                    <p x-show="impaye.acquereur_telephone" class="text-xs text-gray-600" x-text="impaye.acquereur_telephone"></p>
+                  </div>
+                  <!-- Donneur d'ordre -->
+                  <div x-show="impaye.donneur_ordre_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Donneur d'ordre</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.donneur_ordre_nom"></p>
+                    <p x-show="impaye.donneur_ordre_email" class="text-xs text-gray-600" x-text="impaye.donneur_ordre_email"></p>
+                    <p x-show="impaye.donneur_ordre_telephone" class="text-xs text-gray-600" x-text="impaye.donneur_ordre_telephone"></p>
+                  </div>
+                  <!-- Notaire -->
+                  <div x-show="impaye.notaire_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Notaire</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.notaire_nom"></p>
+                    <p x-show="impaye.notaire_email" class="text-xs text-gray-600" x-text="impaye.notaire_email"></p>
+                    <p x-show="impaye.notaire_telephone" class="text-xs text-gray-600" x-text="impaye.notaire_telephone"></p>
+                  </div>
+                  <!-- Syndic -->
+                  <div x-show="impaye.syndic_nom" class="border border-gray-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Syndic</p>
+                    <p class="font-medium text-gray-900 text-sm" x-text="impaye.syndic_nom"></p>
+                    <p x-show="impaye.syndic_email" class="text-xs text-gray-600" x-text="impaye.syndic_email"></p>
+                    <p x-show="impaye.syndic_telephone" class="text-xs text-gray-600" x-text="impaye.syndic_telephone"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SÉQUENCE -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Séquence</h2>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Email relance -->
+                    <div x-show="impaye.email_relance || impaye.relanceContact" class="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
+                      <span class="text-gray-400">Email relances :</span>
+                      <span class="font-medium text-gray-700">
+                        <span x-text="impaye.email_relance?.nom || ''"></span> <span x-text="impaye.email_relance?.prenom || impaye.relanceContact?.prenom || ''"></span>
+                      </span>
+                      <span x-show="impaye.email_relance?.email || impaye.relanceContact?.email" class="text-gray-500">· <span x-text="impaye.email_relance?.email || impaye.relanceContact?.email"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button id="btn-email-relance" @click="ouvrirModalRelanceContact()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        <span x-text="impaye.email_relance || impaye.relanceContact ? 'Changer l\'email de relances' : 'Attribuer un email de relances par défaut'"></span>
+                      </button>
+                      <button x-show="impaye.email_relance || impaye.relanceContact" id="btn-retirer-email-relance" @click="retirerEmailRelance()" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+                        <i class="fas fa-xmark"></i> Retirer
+                      </button>
+                    </div>
+                    <button x-show="sequenceActive" id="btn-change-sequence" @click="ouvrirModalSequence()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Changer</button>
+                    <button x-show="sequenceActive" id="btn-retirer-sequence" @click="retirerSequence()" :disabled="retirantSequence" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50">
+                      <span x-show="retirantSequence"><i class="fas fa-circle-notch fa-spin mr-1"></i></span> Retirer
+                    </button>
+                    <button x-show="!sequenceActive" id="btn-assigner-sequence" @click="ouvrirModalSequence()" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors">Assigner une séquence</button>
+                  </div>
+                </div>
+              </div>
+              <div class="p-4">
+                <p x-show="sequenceActive" class="text-gray-900 font-medium" x-text="sequenceActive.nom"></p>
+                <p x-show="!sequenceActive" class="text-gray-400 text-sm italic">Aucune séquence assignée à cet impayé.</p>
+              </div>
+            </div>
+
+            <!-- RELANCES -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Relances</h2>
+                  <div class="flex items-center gap-2">
+                    <button id="btn-pause-relances" @click="ouvrirPauseDrawer()" :disabled="isBlacklisted" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-amber-700 bg-white border border-amber-300 rounded-md hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Les relances sont suspendues pour cet impayé">
+                      <i class="fas fa-pause-circle"></i> Mettre en pause
+                    </button>
+                    <button id="btn-create-relance" @click="ouvrirRelanceCreate()" :disabled="isBlacklisted" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      <i class="fas fa-plus"></i> Créer une relance
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="p-4">
+                <div x-show="relances.length === 0" class="text-center py-4 text-gray-400 text-sm italic">Aucune relance planifiée.</div>
+                <div x-show="relances.length > 0" class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date d'envoi</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Objet</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <template x-for="row in relances" :key="row.objectId">
+                        <tr>
+                          <td class="px-4 py-2 text-sm text-gray-700" x-text="formatDate(row.dateEnvoi)"></td>
+                          <td class="px-4 py-2 text-sm text-gray-700" x-text="row.objet"></td>
+                          <td class="px-4 py-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                              :class="statutRelanceColor(row.statut) === 'green' ? 'bg-green-100 text-green-700' : statutRelanceColor(row.statut) === 'red' ? 'bg-red-100 text-red-700' : statutRelanceColor(row.statut) === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'"
+                              x-text="statutRelanceLabel(row.statut)"></span>
+                          </td>
+                          <td class="px-4 py-2 text-sm text-gray-700">
+                            <span x-show="row.manuelle" title="Relance manuelle">✋</span>
+                          </td>
+                          <td class="px-4 py-2">
+                            <div class="flex items-center gap-1">
+                              <button :id="'btn-edit-relance-' + row.objectId" @click="ouvrirRelanceEdit(row)" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
+                                <i class="fas fa-pen-to-square"></i>
+                              </button>
+                              <button x-show="row.statut === 'pending'" :id="'btn-delete-relance-' + row.objectId" @click="supprimerRelance(row)" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- HISTORIQUE -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Historique</h2>
+              </div>
+              <div class="p-4">
+                <ul class="space-y-3">
+                  <template x-for="(evt, i) in historique" :key="i">
+                    <li class="flex items-start gap-3">
+                      <div class="mt-1 w-2 h-2 rounded-full bg-sky-400 shrink-0"></div>
+                      <div>
+                        <p class="text-sm text-gray-900" x-text="evt.label"></p>
+                        <p class="text-xs text-gray-400" x-text="formatDatetime(evt.date)"></p>
+                      </div>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Modal sélection séquence -->
+        <div x-show="modalSequenceOuvert" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="modalSequenceOuvert = false">
+          <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 class="text-base font-semibold text-gray-900">Choisir une séquence</h3>
+              <button @click="modalSequenceOuvert = false" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="p-4">
+              <select x-model="sequenceChoisie" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                <option value="">Sélectionner une séquence...</option>
+                <template x-for="opt in sequenceOptions" :key="opt.value">
+                  <option :value="opt.value" x-text="opt.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+              <button @click="modalSequenceOuvert = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Annuler</button>
+              <button id="btn-assigner-sequence-modal" @click="assignerSequence()" :disabled="!sequenceChoisie || assignantSequence" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+                <span x-show="assignantSequence"><i class="fas fa-circle-notch fa-spin mr-1"></i></span> Assigner
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal attribution email de relances -->
+        <div x-show="modalRelanceContactOuvert" class="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/50" @click.self="modalRelanceContactOuvert = false">
+          <div class="bg-white rounded-l-lg shadow-lg w-full sm:w-1/3 sm:max-w-md h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-semibold text-gray-900">Définir un email de relance</h3>
+                <p class="mt-1 text-sm text-gray-500">Sélectionnez un email existant ou créez-en un nouveau pour cet impayé.</p>
+              </div>
+              <button @click="modalRelanceContactOuvert = false" class="text-gray-400 hover:text-gray-600 transition-colors ml-2"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 space-y-6">
+              <!-- Recherche -->
+              <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Rechercher un email de relance existant</h3>
+                <div class="relative">
+                  <i class="fas fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                  <input x-model="emailSearchQuery" @input="searchEmails()" type="text" placeholder="Rechercher un email de relance..." class="w-full rounded-md border border-gray-300 bg-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                </div>
+                <div x-show="emailLoading" class="mt-4 text-center text-gray-400">
+                  <i class="fas fa-arrow-rotate-right fa-spin text-lg"></i>
+                  <span class="text-sm block mt-1">Recherche...</span>
+                </div>
+                <div x-show="!emailLoading && filteredEmails.length > 0" class="mt-2 space-y-1">
+                  <template x-for="email in filteredEmails" :key="email.id">
+                    <button @click="selectEmail(email)" class="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-gray-100 transition-colors">
+                      <span class="font-medium" x-text="email.email"></span>
+                      <span x-show="email.name" class="text-xs text-gray-500 ml-1">— <span x-text="email.name"></span></span>
+                    </button>
+                  </template>
+                </div>
+                <div x-show="!emailLoading && emailSearchQuery && filteredEmails.length === 0" class="mt-4 text-center text-gray-400 text-sm">Aucun email de relance trouvé</div>
+                <div x-show="!emailLoading && !emailSearchQuery && allEmails.length === 0" class="mt-4 text-center text-gray-400 text-sm">Aucun email de relance disponible. Créez-en un nouveau ci-dessous.</div>
+              </div>
+              <div class="border-t border-gray-200"></div>
+              <!-- Création -->
+              <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-4">Ou créer un nouvel email de relance</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Adresse email <span class="text-red-500">*</span></label>
+                    <input x-model="newEmail.email" type="email" placeholder="exemple@domaine.com" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom (optionnel)</label>
+                    <input x-model="newEmail.name" placeholder="Nom ou description" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                  </div>
+                  <button id="btn-create-email-relance" @click="createNewEmail()" :disabled="creatingEmail" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+                    <span x-show="creatingEmail"><i class="fas fa-circle-notch fa-spin mr-1"></i></span> Créer et utiliser cet email de relance
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+              <button @click="modalRelanceContactOuvert = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Annuler</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal pause relances -->
+        <div x-show="pauseDrawerOuvert" class="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/50" @click.self="pauseDrawerOuvert = false">
+          <div class="bg-white rounded-l-lg shadow-lg w-full sm:w-96 h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 class="text-base font-semibold text-gray-900">Mettre en pause les relances</h3>
+              <button @click="pauseDrawerOuvert = false" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto flex-1">
+              <p class="text-sm text-gray-500">Toutes les relances en attente seront décalées de la durée choisie.</p>
+              <div class="space-y-2">
+                <template x-for="opt in pauseOptions" :key="opt.value">
+                  <button @click="pauseChoix = opt.value" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors text-left"
+                    :class="pauseChoix === opt.value ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 hover:border-gray-300 text-gray-700'">
+                    <i class="fas fa-calendar text-lg shrink-0"></i>
+                    <span class="font-medium text-sm" x-text="opt.label"></span>
+                  </button>
+                </template>
+              </div>
+              <div x-show="pauseChoix === 'custom'" class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Reprendre les relances à partir du</label>
+                <input x-model="pauseDateCustom" type="date" :min="minPauseDate" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+              </div>
+              <div x-show="pauseResume" class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800" x-text="pauseResume"></div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+              <button @click="pauseDrawerOuvert = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Annuler</button>
+              <button id="btn-confirm-pause" @click="soumettrePause()" :disabled="!peutSoumettrePause || pauseSaving" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+                <span x-show="pauseSaving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span> <i class="fas fa-pause-circle"></i> Appliquer la pause
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal relance create/edit -->
+        <div x-show="relanceDrawerOuvert" class="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/50" @click.self="relanceDrawerOuvert = false">
+          <div class="bg-white rounded-l-lg shadow-lg w-full sm:w-1/2 sm:max-w-lg h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 class="text-base font-semibold text-gray-900" x-text="relanceDrawerMode === 'create' ? 'Nouvelle relance' : 'Modifier la relance'"></h3>
+              <button @click="relanceDrawerOuvert = false" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto flex-1">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Destinataires (To)</label>
+                <input x-model="relanceForm.to" placeholder="email1@example.com, email2@example.com" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date d'envoi <span class="text-red-500">*</span></label>
+                <input x-model="relanceForm.dateEnvoi" type="date" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Objet</label>
+                <input x-model="relanceForm.objet" placeholder="Objet du message" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Corps du message</label>
+                <textarea x-model="relanceForm.corps" rows="6" placeholder="Corps du message..." class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono"></textarea>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+              <button @click="relanceDrawerOuvert = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Annuler</button>
+              <button id="btn-save-relance" @click="soumettreRelance()" :disabled="relanceSaving" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+                <span x-show="relanceSaving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+                <span x-text="relanceDrawerMode === 'create' ? 'Créer' : 'Enregistrer'"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal/Drawer PDF -->
+        <div x-show="pdfDrawerOuvert" class="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/50" @click.self="pdfDrawerOuvert = false">
+          <div class="bg-white rounded-l-lg shadow-lg w-full sm:w-[50vw] h-full overflow-hidden flex flex-col" @click.stop>
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 class="text-base font-semibold text-gray-900">Aperçu PDF</h3>
+              <div class="flex items-center gap-2">
+                <a x-show="signedPdfUrl" :href="signedPdfUrl" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                  <i class="fas fa-arrow-down-to-bracket"></i> Télécharger
+                </a>
+                <button @click="pdfDrawerOuvert = false" class="text-gray-400 hover:text-gray-600 transition-colors p-1"><i class="fas fa-xmark text-lg"></i></button>
+              </div>
+            </div>
+            <div class="relative flex-1 bg-gray-50">
+              <div x-show="pdfLoading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                <i class="fas fa-arrow-rotate-right text-gray-400 text-2xl animate-spin"></i>
+              </div>
+              <div x-show="pdfErreur" class="flex items-center justify-center h-full">
+                <p class="text-gray-500 text-sm" x-text="pdfErreur"></p>
+              </div>
+              <iframe x-show="signedPdfUrl && !pdfErreur" :src="signedPdfUrl" class="w-full h-full border-0" style="min-height: calc(100vh - 80px);"></iframe>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

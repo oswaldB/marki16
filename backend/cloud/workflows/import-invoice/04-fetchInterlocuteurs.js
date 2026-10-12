@@ -89,15 +89,72 @@ async function fetchInterlocuteurs({ pieces }) {
             });
         }
 
+        // ── Contacts par défaut (ERP) ─────────────────────────────────────
+        // Source de vérité : _ADN_RG_Contact.isDefaut = 1, c.-à-d. le contact
+        // « par défaut » d'un interlocuteur (une seule ligne par interlocuteur).
+        // On résout l'email/téléphone sur la ligne _ADN_RG_Contact, puis en
+        // repli sur l'interlocuteur lié via idMigrationInterlocuteur (l'email
+        // de la ligne Contact est souvent vide alors que l'interlocuteur l'a).
+        const contactsDefautInterlocuteur = {};
+        const contactsDefautRows = db
+            .prepare(
+                `
+        SELECT
+          c.idInterlocuteur,
+          c.idContact,
+          c.nomContact,
+          c.prenomContact,
+          c.email,
+          c.telephoneFixe,
+          c.telephonePortable,
+          c.idMigrationInterlocuteur,
+          iloc.nom AS interlocuteur_nom,
+          iloc.prenom AS interlocuteur_prenom,
+          iloc.email AS interlocuteur_email,
+          iloc.telephoneMobile AS interlocuteur_telephone_mobile,
+          iloc.telephoneFixe AS interlocuteur_telephone_fixe
+        FROM _ADN_RG_Contact c
+        LEFT JOIN _ADN_RG_Interlocuteur iloc
+          ON iloc.idInterlocuteur = c.idMigrationInterlocuteur
+        WHERE c.isDefaut = 1
+          AND (c.dateFin IS NULL OR c.dateFin = '')
+      `,
+            )
+            .all();
+
+        contactsDefautRows.forEach((row) => {
+            contactsDefautInterlocuteur[String(row.idInterlocuteur)] = {
+                externe_id: String(
+                    row.idMigrationInterlocuteur || row.idContact,
+                ),
+                nom: row.nomContact || row.interlocuteur_nom || null,
+                prenom: row.prenomContact || row.interlocuteur_prenom || null,
+                email: row.email || row.interlocuteur_email || null,
+                telephone:
+                    row.telephonePortable ||
+                    row.telephoneFixe ||
+                    row.interlocuteur_telephone_mobile ||
+                    row.interlocuteur_telephone_fixe ||
+                    null,
+            };
+        });
+
         info(
             `Interlocuteurs chargés: ${Object.keys(interlocuteursByDossier).length} dossiers`,
             "import-invoice",
             "fetchInterlocuteurs",
             { dossiersCount: Object.keys(interlocuteursByDossier).length },
         );
+        info(
+            `Contacts par défaut chargés: ${Object.keys(contactsDefautInterlocuteur).length}`,
+            "import-invoice",
+            "fetchInterlocuteurs",
+            { contactsDefautCount: Object.keys(contactsDefautInterlocuteur).length },
+        );
 
         return {
             interlocuteursByDossier,
+            contactsDefautInterlocuteur,
         };
     } catch (err) {
         error(

@@ -253,32 +253,6 @@
           </div>
         </UCard>
 
-        <!-- Relances à valider -->
-        <UCard>
-          <template #header>
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-semibold text-gray-700">Relances à valider</p>
-              <NuxtLink to="/relances?validation=true" class="text-xs text-sky-600 hover:underline">Voir tout →</NuxtLink>
-            </div>
-          </template>
-          <div v-if="relancesAValider.length === 0" class="text-sm text-gray-400 py-4 text-center">
-            Aucune relance à valider
-          </div>
-          <div v-else class="divide-y divide-gray-100">
-            <div
-              v-for="rel in relancesAValider"
-              :key="rel.id"
-              class="flex items-center justify-between py-2.5"
-            >
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">F°{{ rel.nfacture }} · D°{{ rel.dossier }}</p>
-                <p class="text-xs text-gray-500">{{ rel.payeur_nom }}</p>
-                <p class="text-xs text-gray-400">relance {{ rel.numero }}</p>
-              </div>
-            </div>
-          </div>
-        </UCard>
-
         <!-- Contacts sans email -->
         <UCard>
           <template #header>
@@ -371,7 +345,6 @@ const aging = ref({
 })
 const relancesJour = ref([])
 const impayes_recents = ref([])
-const relancesAValider = ref([])
 const contactsSansEmail = ref([])
 
 // ── Chargement ────────────────────────────────────────────────
@@ -383,7 +356,6 @@ onMounted(async () => {
       chargerMontantsMois(),
       chargerRelancesJour(),
       chargerImpayes(),
-      chargerRelancesAValider(),
       chargerContactsSansEmail(),
 
     ])
@@ -657,34 +629,6 @@ async function chargerImpayes() {
   }))
 }
 
-async function chargerRelancesAValider() {
-  if (!$parse.User.current()) return
-  const q = new $parse.Query('Relance')
-  q.equalTo('valide', false)
-  q.notEqualTo('manuel', true)
-  q.include('contact')
-  q.include('impayes')
-  q.ascending('dateEnvoi')
-  q.limit(5)
-
-  const results = await q.find()
-
-  relancesAValider.value = results.map(r => {
-    const impayes = r.get('impayes') || []
-    const contact = r.get('contact')
-    const d = r.get('dateEnvoi') || r.get('date_envoi_prevue')
-    const firstImpaye = impayes[0] || null
-    
-    return {
-      id:           r.id,
-      payeur_nom:   firstImpaye ? firstImpaye.get('payeur_nom') || '—' : '—',
-      nfacture:     firstImpaye ? firstImpaye.get('nfacture') || '—' : '—',
-      dossier:      firstImpaye ? firstImpaye.get('numero_dossier') || '—' : '—',
-      date:         d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—',
-      numero:       r.get('email_index') || '—',
-    }
-  })
-}
 async function chargerContactsSansEmail() {
   if (!$parse.User.current()) return
   const q = new $parse.Query('Contact')

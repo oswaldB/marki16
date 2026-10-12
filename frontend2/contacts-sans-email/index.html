@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts sans email — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="contactssansemailPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <!-- contacts-sans-email screen -->
+      <div class="p-6">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-2">Contacts sans email</h1>
+        <p class="text-sm text-gray-500">Cette page est en cours de développement.</p>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

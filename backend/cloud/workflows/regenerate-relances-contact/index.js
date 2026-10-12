@@ -16,8 +16,118 @@ const USE_OLLAMA = true;
 // Configuration Frontend URL
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
 
-// Fichier de prompt
+// Base des prompts par scénario
+const PROMPT_BASE_PATH = "/home/ubuntu/prod/adti/configuration/prompts/scenarios";
+
+// Fichier de prompt legacy (pour fallback)
 const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt";
+
+/**
+ * Récupère le chemin du fichier de prompt selon le scénario
+ * @param {string} scenarioType - Type de scénario (single, multiple, broker, both)
+ * @returns {string} - Chemin du fichier de prompt
+ */
+function getPromptFile(scenarioType) {
+    return path.join(PROMPT_BASE_PATH, `relance-${scenarioType}-prompt.txt`);
+}
+
+/**
+ * Récupère les impayés où le contact est apporteur d'affaires (mais pas payeur)
+ * @param {Parse.Object} contact - Le contact
+ * @param {Array} currentImpayes - Les impayés déjà sélectionnés (à exclure)
+ * @returns {Promise<Array>} - Liste des impayés où le contact est apporteur
+ */
+async function getBrokerImpayes(contact, currentImpayes) {
+    const currentImpayeIds = new Set(currentImpayes.map((i) => i.id));
+    
+    const Impaye = Parse.Object.extend("Impaye");
+    const query = new Parse.Query(Impaye);
+    query.equalTo("facture_soldee", false);
+    query.greaterThan("reste_a_payer", 0);
+    
+    // Le contact est l'apporteur
+    query.equalTo("apporteur", contact);
+    
+    // Mais PAS le payeur (sinon c'est ses propres impayés)
+    query.notEqualTo("payeur", contact);
+    query.notEqualTo("contact_relance", contact);
+    
+    // Exclure les impayés déjà dans le groupe courant
+    if (currentImpayeIds.size > 0) {
+        query.notContainedIn("objectId", Array.from(currentImpayeIds));
+    }
+    
+    query.limit(999999);
+    
+    try {
+        const brokerImpayes = await query.find({ useMasterKey: true });
+        return brokerImpayes;
+    } catch (error) {
+        log("ERROR", `Erreur récupération broker impayés: ${error.message}`);
+        return [];
+    }
+}
+
+/**
+ * Construit le JSON des impayés broker pour le prompt
+ * @param {Array} brokerImpayes - Liste des impayés où le contact est apporteur
+ * @returns {string} - JSON sérialisé
+ */
+function buildBrokerImpayesJson(brokerImpayes) {
+    const data = brokerImpayes.map((i) => ({
+        id: i.id,
+        nfacture: i.get("nfacture"),
+        reference: i.get("reference"),
+        numero_dossier: i.get("numero_dossier"),
+        date_piece: i.get("date_piece"),
+        date_echeance: i.get("date_echeance"),
+        total_ttc: i.get("total_ttc"),
+        reste_a_payer: i.get("reste_a_payer"),
+        adresse_bien: i.get("adresse_bien"),
+        ville: i.get("ville"),
+        code_postal: i.get("code_postal"),
+        // Payeur de cet impayé (pas le contact courant)
+        payeur_nom: i.get("payeur_nom"),
+        payeur_prenom: i.get("payeur_prenom"),
+        payeur_email: i.get("payeur_email"),
+        // Apporteur = contact courant
+        apporteur_nom: i.get("apporteur_nom"),
+        apporteur_prenom: i.get("apporteur_prenom"),
+        apporteur_societe: i.get("apporteur_societe"),
+    }));
+
+    return JSON.stringify(data);
+}
+
+/**
+ * Détermine le type de scénario selon le contact et les impayés
+ * @param {Parse.Object} contact - Le contact
+ * @param {Array} impayes - Les impayés du groupe
+ * @param {Array} brokerImpayes - Les impayés où le contact est apporteur
+ * @returns {string} - Type de scénario (single, multiple, broker, both)
+ */
+function determineScenarioType(contact, impayes, brokerImpayes) {
+    const nombreImpayes = impayes.length;
+    
+    // Détecter si le contact est un apporteur d'affaires
+    const contactType = contact.get("type_personne");
+    const isBroker = contactType === "Apporteur d'affaire" || 
+                     contactType === "Apporteur" ||
+                     contactType === "apporteur" ||
+                     contactType === "apporteur d'affaire";
+    
+    const hasBrokerImpayes = brokerImpayes && brokerImpayes.length > 0;
+    
+    if (isBroker && hasBrokerImpayes) {
+        return "both";
+    } else if (isBroker) {
+        return "broker";
+    } else if (nombreImpayes === 1) {
+        return "single";
+    } else {
+        return "multiple";
+    }
+}
 
 /**
  * Écrit un checkpoint dans les logs
@@ -352,14 +462,7 @@ async function regenerateRelancesContact(contactId, excludeImpayeId = null) {
             return { success: true, createdCount: 0, message: "Contact sans email valide" };
         }
 
-        // Charger le template de prompt
-        let promptTemplate;
-        try {
-            promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
-        } catch (err) {
-            log("ERROR", `Impossible de charger le fichier de prompt: ${err.message}`);
-            throw err;
-        }
+        // Charger le template de prompt spécifique au scénario (sera déterminé plus bas)
 
         // Regrouper les impayés par séquence
         const groupedBySequence = new Map();
@@ -385,10 +488,14 @@ async function regenerateRelancesContact(contactId, excludeImpayeId = null) {
             const emails = fullSequence.get("emails") || [];
             const validationObligatoire = fullSequence.get("validation_obligatoire") || false;
 
+            // Récupérer les impayés où ce contact est apporteur (pour scénarios broker/both)
+            const brokerImpayes = await getBrokerImpayes(contact, groupImpayes);
+            
+            // Détermination automatique du scénario
             const nombreImpayes = groupImpayes.length;
-            const scenarioType = nombreImpayes === 1 ? "single" : "multiple";
+            const scenarioType = determineScenarioType(contact, groupImpayes, brokerImpayes);
 
-            log("INFO", `Traitement séquence ${sequenceId} - ${nombreImpayes} impayé(s) - scénario: ${scenarioType}`);
+            log("INFO", `Traitement séquence ${sequenceId} - ${nombreImpayes} impayé(s), ${brokerImpayes.length} en tant qu'apporteur - scénario: ${scenarioType}`);
 
             for (const emailConfig of emails) {
                 const emailIndex = emailConfig.email_index;
@@ -448,6 +555,23 @@ async function regenerateRelancesContact(contactId, excludeImpayeId = null) {
                     // Récupérer l'historique
                     const history = await getHistory(contact, fullSequence, groupImpayes);
 
+                    // Charger le prompt spécifique au scénario
+                    let promptTemplate;
+                    try {
+                        const promptFile = getPromptFile(scenarioType);
+                        promptTemplate = fs.readFileSync(promptFile, "utf-8");
+                        log("INFO", `Prompt chargé: relance-${scenarioType}-prompt.txt`);
+                    } catch (promptErr) {
+                        log("ERROR", `Erreur chargement prompt spécifique: ${promptErr.message}`);
+                        // Fallback sur le prompt legacy
+                        try {
+                            promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+                            log("INFO", "Fallback sur prompt legacy");
+                        } catch (legacyErr) {
+                            throw new Error(`Impossible de charger le prompt: ${legacyErr.message}`);
+                        }
+                    }
+
                     // Construire le prompt
                     const objetTemplate = scenarioActif.objet || emailConfig.objet || "";
                     const corpsTemplate = scenarioActif.corps || emailConfig.corps || "";
@@ -463,14 +587,30 @@ async function regenerateRelancesContact(contactId, excludeImpayeId = null) {
                         type_personne: contact.get("type_personne"),
                     });
 
-                    const prompt = promptTemplate
+                    const now = new Date();
+                    const dateJour = now.toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+
+                    let prompt = promptTemplate
                         .replace(/{{objetTemplate}}/g, objetTemplate)
                         .replace(/{{corpsTemplate}}/g, corpsTemplate)
                         .replace(/{{impayesJson}}/g, impayesJson)
                         .replace(/{{historyJson}}/g, historyJson)
                         .replace(/{{emailIndex}}/g, String(emailIndex))
                         .replace(/{{contactJson}}/g, contactJson)
-                        .replace(/{{scenarioType}}/g, scenarioType);
+                        .replace(/{{scenarioType}}/g, scenarioType)
+                        .replace(/{{nombreImpayes}}/g, String(groupImpayes.length))
+                        .replace(/{{dateJour}}/g, dateJour);
+
+                    // Ajouter les données broker pour les scénarios broker et both
+                    if (scenarioType === "broker" || scenarioType === "both") {
+                        const brokerImpayesJson = buildBrokerImpayesJson(brokerImpayes);
+                        prompt = prompt.replace(/{{brokerImpayesJson}}/g, brokerImpayesJson);
+                        log("INFO", `Données broker ajoutées: ${brokerImpayes.length} impayés`);
+                    }
 
                     // Génération avec Ollama
                     let generatedContent;

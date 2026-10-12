@@ -30,6 +30,17 @@
         >
           Impayés sans payeur
         </button>
+        <button
+          @click="activeTab = 'apporteurs'"
+          :class="[
+            activeTab === 'apporteurs'
+              ? 'border-sky-500 text-sky-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+            'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+          ]"
+        >
+          Apporteurs sans contact par défaut
+        </button>
       </nav>
     </div>
 
@@ -44,7 +55,7 @@
     </div>
 
     <!-- Impayés sans payeur -->
-    <div v-else class="space-y-4">
+    <div v-else-if="activeTab === 'impayes'" class="space-y-4">
       <UCard>
         <UTable :data="impayesSansPayeur" :columns="impayeColumns">
           <!-- Numéro de facture -->
@@ -72,6 +83,16 @@
         </UTable>
       </UCard>
     </div>
+
+    <!-- Apporteurs sans contact par défaut -->
+    <div v-else class="space-y-4">
+      <UCard>
+        <div v-if="apporteursSansContactDefaut.length === 0" class="text-center py-8 text-gray-400">
+          Aucun apporteur sans contact par défaut avec facture en cours
+        </div>
+        <UTable v-else :data="apporteursSansContactDefaut" :columns="apporteurColumns" />
+      </UCard>
+    </div>
   </div>
 </template>
 
@@ -86,6 +107,7 @@ const loading = ref(false)
 const activeTab = ref('contacts')
 const contactsSansEmail = ref([])
 const impayesSansPayeur = ref([])
+const apporteursSansContactDefaut = ref([])
 
 // Columns definitions
 const contactColumns = [
@@ -98,6 +120,11 @@ const contactColumns = [
     }, row.original.nom || '(sans nom)')
   },
   {
+    accessorKey: 'code_interlocuteur',
+    header: 'Code interlocuteur',
+    cell: ({ row }) => h('span', { class: 'text-sm font-mono text-gray-600' }, row.original.code_interlocuteur || '—')
+  },
+  {
     accessorKey: 'email',
     header: 'Email',
     cell: ({ row }) => h('span', { class: 'text-sm text-gray-400 italic' }, '(aucun email)')
@@ -106,6 +133,21 @@ const contactColumns = [
     accessorKey: 'telephone',
     header: 'Téléphone',
     cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.telephone || '—')
+  },
+  {
+    accessorKey: 'nb_impayes',
+    header: 'Impayés actifs',
+    cell: ({ row }) => h('span', { class: 'text-sm font-semibold text-red-600' }, row.original.nb_impayes || 0)
+  },
+  {
+    accessorKey: 'numero_dossier',
+    header: 'N° dossier',
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.numero_dossier || '—')
+  },
+  {
+    accessorKey: 'nfacture',
+    header: 'Factures',
+    cell: ({ row }) => h('span', { class: 'text-sm font-mono' }, row.original.nfacture || '—')
   },
 ]
 
@@ -117,11 +159,76 @@ const impayeColumns = [
   { accessorKey: 'dateEcheance', header: 'Échéance' }
 ]
 
+const apporteurColumns = [
+  {
+    accessorKey: 'nom',
+    header: 'Apporteur',
+    cell: ({ row }) => h(NuxtLink, {
+      to: `/contacts/${row.original.id}`,
+      class: 'text-sky-700 hover:underline text-sm'
+    }, `${row.original.nom || '(sans nom)'}${row.original.prenom ? ` ${row.original.prenom}` : ''}`)
+  },
+  {
+    accessorKey: 'code_interlocuteur',
+    header: 'Code interlocuteur',
+    cell: ({ row }) => h('span', { class: 'text-sm font-mono text-gray-600' }, row.original.code_interlocuteur || '—')
+  },
+  {
+    accessorKey: 'email',
+    header: 'Email',
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.email || '—')
+  },
+  {
+    accessorKey: 'telephone',
+    header: 'Téléphone',
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.telephone || '—')
+  },
+  {
+    accessorKey: 'motif',
+    header: 'Motif',
+    cell: ({ row }) => h(
+      'span',
+      {
+        class: row.original.motif === 'aucun'
+          ? 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700'
+          : 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700'
+      },
+      row.original.motif === 'aucun' ? 'Aucun contact par défaut' : 'Défaut sans email'
+    )
+  },
+  {
+    accessorKey: 'nb_impayes',
+    header: 'Impayés en cours',
+    cell: ({ row }) => h('span', { class: 'text-sm font-semibold text-red-600' }, row.original.nb_impayes || 0)
+  },
+  {
+    accessorKey: 'total_reste',
+    header: 'Reste à payer',
+    cell: ({ row }) => h('span', { class: 'text-sm font-medium' }, formatMontant(row.original.total_reste))
+  },
+  {
+    accessorKey: 'numero_dossier',
+    header: 'N° dossier',
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.numero_dossier || '—')
+  },
+  {
+    accessorKey: 'nfacture',
+    header: 'Factures',
+    cell: ({ row }) => h('span', { class: 'text-sm font-mono' }, row.original.nfacture || '—')
+  },
+]
+
 // Helper functions
 function formatDate(val) {
   if (!val) return '—'
   const d = val instanceof Date ? val : new Date(val)
   return isNaN(d) ? '—' : d.toLocaleDateString('fr-FR', { dateStyle: 'short' })
+}
+
+function formatMontant(val) {
+  const n = Number(val)
+  if (val === null || val === undefined || Number.isNaN(n)) return '—'
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 }
 
 function parseContact(c) {
@@ -140,6 +247,8 @@ function parseContact(c) {
     email: getValue('email') || getValue('Email') || '',
     telephone: getValue('telephone') || getValue('telephone') || '',
     type: getValue('type') || getValue('Type') || '—',
+    externe_id: getValue('externe_id') || getValue('externeId') || getValue('code_interlocuteur') || '',
+    nb_impayes: 0,
   }
 }
 
@@ -195,22 +304,56 @@ async function chargerContactsSansEmail() {
       return true
     })
 
+    // Récupérer les impayés actifs liés à ces contacts
+    const Contact = $parse.Object.extend('Contact')
+    const contactPointers = uniqueResults.map(c => Contact.createWithoutData(c.id))
+    const impayesMap = new Map() // contactId -> { count, numero_dossiers: Set, nfactures: Set }
+
+    const batchSize = 100
+    for (let i = 0; i < contactPointers.length; i += batchSize) {
+      const batch = contactPointers.slice(i, i + batchSize)
+      const impayeQ = new $parse.Query('Impaye')
+      impayeQ.containedIn('payeur', batch)
+      impayeQ.greaterThan('reste_a_payer', 0)
+      impayeQ.limit(10000)
+      const impayes = await impayeQ.find()
+      for (const impaye of impayes) {
+        const payeur = impaye.get('payeur')
+        if (payeur && payeur.id) {
+          const data = impayesMap.get(payeur.id) || { count: 0, numero_dossiers: new Set(), nfactures: new Set() }
+          data.count++
+          const nd = impaye.get('numero_dossier')
+          if (nd) data.numero_dossiers.add(nd)
+          const nf = impaye.get('nfacture')
+          if (nf) data.nfactures.add(nf)
+          impayesMap.set(payeur.id, data)
+        }
+      }
+    }
+
     contactsSansEmail.value = uniqueResults
+      .map(parseContact)
+      .map(c => {
+        const data = impayesMap.get(c.id) || { count: 0, numero_dossiers: new Set(), nfactures: new Set() }
+        return {
+          ...c,
+          code_interlocuteur: c.externe_id || '',
+          nb_impayes: data.count,
+          numero_dossier: Array.from(data.numero_dossiers).join(', '),
+          nfacture: Array.from(data.nfactures).join(', '),
+        }
+      })
+      .filter(c => c.nb_impayes > 0)
       .sort((a, b) => {
-        const nomA = (a.get ? a.get('nom') : a.nom) || ''
-        const nomB = (b.get ? b.get('nom') : b.nom) || ''
+        const nomA = a.nom || ''
+        const nomB = b.nom || ''
         return nomA.localeCompare(nomB, 'fr', { sensitivity: 'base' })
       })
-      .map(parseContact)
 
     // Debug: log count and first contact to see the structure
-    console.log(`Contacts sans email trouvés: ${uniqueResults.length}`)
-    if (uniqueResults.length > 0) {
-      console.log('First contact:', {
-        id: uniqueResults[0].id,
-        nom: uniqueResults[0].get ? uniqueResults[0].get('nom') : uniqueResults[0].nom,
-        email: uniqueResults[0].get ? uniqueResults[0].get('email') : uniqueResults[0].email
-      })
+    console.log(`Contacts sans email avec impayés actifs: ${contactsSansEmail.value.length}`)
+    if (contactsSansEmail.value.length > 0) {
+      console.log('First contact:', contactsSansEmail.value[0])
     }
   } catch (err) {
     toast.add({ title: 'Erreur', description: err.message, color: 'red' })
@@ -248,23 +391,78 @@ async function chargerImpayesSansPayeur() {
   }
 }
 
+async function chargerApporteursSansContactDefaut() {
+  loading.value = true
+  try {
+    const q = new $parse.Query('Impaye')
+    q.greaterThan('reste_a_payer', 0)
+    q.exists('apporteur')
+    q.include('apporteur')
+    q.limit(10000)
+
+    const results = await q.find()
+
+    const map = new Map()
+    for (const impaye of results) {
+      const apporteur = impaye.get('apporteur')
+      if (!apporteur) continue
+
+      const entry = map.get(apporteur.id) || {
+        id: apporteur.id,
+        nom: apporteur.get('nom') || '(sans nom)',
+        prenom: apporteur.get('prenom') || '',
+        code_interlocuteur: apporteur.get('externe_id') || '',
+        email: apporteur.get('email') || '',
+        telephone: apporteur.get('telephone') || '',
+        a_contact_defaut: apporteur.get('a_contact_defaut') === true,
+        contact_defaut_email: apporteur.get('contact_defaut_email') || '',
+        nb_impayes: 0,
+        total_reste: 0,
+        numero_dossiers: new Set(),
+        nfactures: new Set(),
+      }
+
+      entry.nb_impayes++
+      const reste = impaye.get('reste_a_payer')
+      if (typeof reste === 'number') entry.total_reste += reste
+      const nd = impaye.get('numero_dossier')
+      if (nd) entry.numero_dossiers.add(nd)
+      const nf = impaye.get('nfacture')
+      if (nf) entry.nfactures.add(nf)
+
+      map.set(apporteur.id, entry)
+    }
+
+    // Périmètre : aucun contact par défaut OU défaut sans email exploitable
+    apporteursSansContactDefaut.value = Array.from(map.values())
+      .filter((a) => !a.a_contact_defaut || !String(a.contact_defaut_email).trim())
+      .map((a) => ({
+        ...a,
+        motif: a.a_contact_defaut ? 'sans_email' : 'aucun',
+        numero_dossier: Array.from(a.numero_dossiers).join(', '),
+        nfacture: Array.from(a.nfactures).join(', '),
+      }))
+      .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' }))
+
+    console.log(`Apporteurs sans contact par défaut: ${apporteursSansContactDefaut.value.length}`)
+  } catch (err) {
+    console.error('Erreur chargement apporteurs:', err)
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  } finally {
+    loading.value = false
+  }
+}
+
 // Load data when tab changes
 watch(activeTab, (newTab) => {
   if (newTab === 'contacts') {
     chargerContactsSansEmail()
-  } else {
+  } else if (newTab === 'impayes') {
     chargerImpayesSansPayeur()
+  } else {
+    chargerApporteursSansContactDefaut()
   }
 }, { immediate: true })
-
-onMounted(() => {
-  // Load initial data based on active tab
-  if (activeTab.value === 'contacts') {
-    chargerContactsSansEmail()
-  } else {
-    chargerImpayesSansPayeur()
-  }
-})
 </script>
 
 <style scoped>

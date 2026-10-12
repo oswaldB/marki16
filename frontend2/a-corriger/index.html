@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>À corriger — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <style>
+    .force-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .force-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+    [x-cloak] { display: none !important; }
+  </style>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="acorrigerPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-white shadow-sm hidden md:flex flex-col shrink-0 sticky top-0 h-screen">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+          <img src="/2/assets/img/marki-logo.png" alt="Marki" class="h-8 w-auto" />
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+          <ul class="space-y-1 px-3">
+            <li><a href="../dashboard/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-house size-5 shrink-0"></i> Dashboard</a></li>
+            <li><a href="../audit/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-filter size-5 shrink-0"></i> Audit</a></li>
+          </ul>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Impayés</p>
+            <ul class="space-y-1">
+              <li><a href="../impayes/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Unitaire</a></li>
+              <li><a href="../impayes/index.html?vue=payeur" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user-group size-5 shrink-0"></i> Par payeur</a></li>
+              <li><a href="../impayes/index.html?vue=contact" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user size-5 shrink-0"></i> Par contact</a></li>
+              <li><a href="../impayes/index.html?vue=sans-sequence" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-file-minus size-5 shrink-0"></i> Sans séquence</a></li>
+              <li><a href="../impayes-suspendus/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-pause-circle size-5 shrink-0"></i> Suspendus</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Relances</p>
+            <ul class="space-y-1">
+              <li><a href="../relances/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Tableau</a></li>
+              <li><a href="../relances/index.html?vue=calendrier" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-calendar-days size-5 shrink-0"></i> Calendrier</a></li>
+              <li><a href="../relances-manuelles/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-paper-plane size-5 shrink-0"></i> Relances manuelles</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacts</p>
+            <ul class="space-y-1">
+              <li><a href="../contacts/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-users size-5 shrink-0"></i> Contacts</a></li>
+              <li><a href="../blacklist/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-ban size-5 shrink-0"></i> Blacklist</a></li>
+              <li><a href="../a-corriger/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium bg-sky-50 text-sky-700 ml-4"><i class="fa-solid fa-wrench size-5 shrink-0"></i> À corriger</a></li>
+              <li><a href="../recalcitrants/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-triangle-exclamation size-5 shrink-0"></i> Récalcitrants</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paramètres</p>
+            <ul class="space-y-1">
+              <li><a href="../sequences/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-list size-5 shrink-0"></i> Séquences</a></li>
+              <li><a href="../settings-smtp/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-envelope size-5 shrink-0"></i> Profils SMTP</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 bg-white shadow-sm flex items-center px-6 shrink-0">
+          <h2 class="text-base font-semibold text-gray-700">À corriger</h2>
+        </header>
+        <main class="flex-1 p-6 overflow-auto">
+          <div class="p-6 space-y-6">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <h1 class="text-2xl font-semibold text-gray-900">À corriger</h1>
+            </div>
+
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+              <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button
+                  id="btn-tab-contacts"
+                  @click="setTab('contacts')"
+                  :class="[
+                    activeTab === 'contacts'
+                      ? 'border-sky-500 text-sky-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+                  ]"
+                >
+                  Contacts sans email
+                </button>
+                <button
+                  id="btn-tab-impayes"
+                  @click="setTab('impayes')"
+                  :class="[
+                    activeTab === 'impayes'
+                      ? 'border-sky-500 text-sky-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+                  ]"
+                >
+                  Impayés sans payeur
+                </button>
+              </nav>
+            </div>
+
+            <!-- Loading state -->
+            <div x-show="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+
+            <!-- Contacts sans email -->
+            <div x-show="!loading && activeTab === 'contacts'" x-cloak class="space-y-4">
+              <div x-show="contactsSansEmail.length === 0" class="text-center py-8 text-gray-400">Aucun contact sans email avec impayés actifs</div>
+              <div x-show="contactsSansEmail.length > 0" class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div class="overflow-x-auto force-scrollbar">
+                  <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700">
+                      <tr class="border-b border-gray-200">
+                        <th class="p-3 whitespace-nowrap font-medium">Nom</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Code interlocuteur</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Email</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Téléphone</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Impayés actifs</th>
+                        <th class="p-3 whitespace-nowrap font-medium">N° dossier</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Factures</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                      <template x-for="contact in contactsSansEmail" :key="contact.id">
+                        <tr class="hover:bg-gray-50">
+                          <td class="p-3">
+                            <a :href="'../contacts/index.html?id=' + contact.id" class="text-sky-700 hover:underline text-sm" x-text="contact.nom || '(sans nom)'"></a>
+                          </td>
+                          <td class="p-3 text-sm font-mono text-gray-600" x-text="contact.code_interlocuteur || '—'"></td>
+                          <td class="p-3 text-sm text-gray-400 italic">(aucun email)</td>
+                          <td class="p-3 text-sm" x-text="contact.telephone || '—'"></td>
+                          <td class="p-3 text-sm font-semibold text-red-600" x-text="contact.nb_impayes || 0"></td>
+                          <td class="p-3 text-sm" x-text="contact.numero_dossier || '—'"></td>
+                          <td class="p-3 text-sm font-mono" x-text="contact.nfacture || '—'"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Impayés sans payeur -->
+            <div x-show="!loading && activeTab === 'impayes'" x-cloak class="space-y-4">
+              <div x-show="impayesSansPayeur.length === 0" class="text-center py-8 text-gray-400">Aucun impayé sans payeur</div>
+              <div x-show="impayesSansPayeur.length > 0" class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div class="overflow-x-auto force-scrollbar">
+                  <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700">
+                      <tr class="border-b border-gray-200">
+                        <th class="p-3 whitespace-nowrap font-medium">Facture</th>
+                        <th class="p-3 whitespace-nowrap font-medium">N° dossier</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Montant</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Payeur</th>
+                        <th class="p-3 whitespace-nowrap font-medium">Échéance</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                      <template x-for="imp in impayesSansPayeur" :key="imp.id">
+                        <tr class="hover:bg-gray-50">
+                          <td class="p-3 font-mono">
+                            <a :href="'../impayes-detail/index.html?id=' + imp.id" class="text-sky-700 hover:underline" x-text="imp.nfacture || '—'"></a>
+                          </td>
+                          <td class="p-3 text-sm" x-text="imp.numero_dossier || '—'"></td>
+                          <td class="p-3 text-sm font-medium" x-text="imp.montant ? (imp.montant + ' €') : '—'"></td>
+                          <td class="p-3 text-sm text-gray-400 italic">(aucun payeur)</td>
+                          <td class="p-3 text-sm" x-text="formatDate(imp.dateEcheance)"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toast -->
+            <div x-show="toast.show" class="fixed bottom-4 right-4 z-50" style="display: none;">
+              <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white" :class="toast.color === 'green' ? 'bg-green-600' : 'bg-red-600'">
+                <i class="fa-solid" :class="toast.color === 'green' ? 'fa-check-circle' : 'fa-circle-exclamation'"></i>
+                <div>
+                  <div class="font-medium text-sm" x-text="toast.title"></div>
+                  <div x-show="toast.description" class="text-xs opacity-90" x-text="toast.description"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

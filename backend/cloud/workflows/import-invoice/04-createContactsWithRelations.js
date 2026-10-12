@@ -82,7 +82,11 @@ async function fetchRelInterlocuteurContact() {
  * @param {Map} existingContactsMap - Map des contacts existants (externe_id -> Parse.Object)
  * @returns {Parse.Object} Le contact préparé
  */
-function prepareContactFromInterlocuteur(interloc, existingContactsMap) {
+function prepareContactFromInterlocuteur(
+    interloc,
+    existingContactsMap,
+    contactsDefautInterlocuteur = {},
+) {
     const externeId = String(interloc.idInterlocuteur);
     const Contact = Parse.Object.extend("Contact");
     let contact = existingContactsMap.get(externeId);
@@ -119,6 +123,31 @@ function prepareContactFromInterlocuteur(interloc, existingContactsMap) {
     if (interloc.codePostal) contact.set("code_postal", interloc.codePostal);
     if (interloc.ville) contact.set("ville", interloc.ville);
 
+    // Contact par défaut ERP (_ADN_RG_Contact.isDefaut = 1)
+    // Stocké sur le Contact pour permettre la détection « apporteur sans
+    // contact par défaut » sans requêter sync.db depuis le front.
+    const contactDefaut = interloc.idInterlocuteur
+        ? contactsDefautInterlocuteur[String(interloc.idInterlocuteur)]
+        : null;
+
+    contact.set("a_contact_defaut", Boolean(contactDefaut));
+    if (contactDefaut) {
+        contact.set("contact_defaut_externe_id", contactDefaut.externe_id || null);
+        contact.set("contact_defaut_nom", contactDefaut.nom || null);
+        contact.set("contact_defaut_prenom", contactDefaut.prenom || null);
+        contact.set("contact_defaut_email", contactDefaut.email || null);
+        contact.set(
+            "contact_defaut_telephone",
+            contactDefaut.telephone || null,
+        );
+    } else {
+        contact.unset("contact_defaut_externe_id");
+        contact.unset("contact_defaut_nom");
+        contact.unset("contact_defaut_prenom");
+        contact.unset("contact_defaut_email");
+        contact.unset("contact_defaut_telephone");
+    }
+
     return contact;
 }
 
@@ -127,7 +156,10 @@ function prepareContactFromInterlocuteur(interloc, existingContactsMap) {
  * @param {Object} param0 - { interlocuteursByDossier: {} }
  * @returns {Promise<Object>} { contactsMap, relInterlocuteurContactMap, stats }
  */
-async function createContactsWithRelations({ interlocuteursByDossier }) {
+async function createContactsWithRelations({
+    interlocuteursByDossier,
+    contactsDefautInterlocuteur = {},
+}) {
     const stats = {
         contacts_created: 0,
         contacts_updated: 0,
@@ -224,7 +256,11 @@ async function createContactsWithRelations({ interlocuteursByDossier }) {
     const contactsToSave = [];
 
     for (const [externeId, interloc] of Object.entries(allInterlocuteursMap)) {
-        const contact = prepareContactFromInterlocuteur(interloc, existingContactsMap);
+        const contact = prepareContactFromInterlocuteur(
+            interloc,
+            existingContactsMap,
+            contactsDefautInterlocuteur,
+        );
 
         if (!existingContactsMap.has(externeId)) {
             stats.contacts_created++;

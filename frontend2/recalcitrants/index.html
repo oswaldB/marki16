@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients récalcitrants — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <style>
+    .force-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .force-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+  </style>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="recalcitrantsPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-white shadow-sm hidden md:flex flex-col shrink-0 sticky top-0 h-screen">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+          <img src="/2/assets/img/marki-logo.png" alt="Marki" class="h-8 w-auto" />
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+          <ul class="space-y-1 px-3">
+            <li><a href="../dashboard/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-house size-5 shrink-0"></i> Dashboard</a></li>
+            <li><a href="../audit/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-filter size-5 shrink-0"></i> Audit</a></li>
+          </ul>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Impayés</p>
+            <ul class="space-y-1">
+              <li><a href="../impayes/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Unitaire</a></li>
+              <li><a href="../impayes/index.html?vue=payeur" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user-group size-5 shrink-0"></i> Par payeur</a></li>
+              <li><a href="../impayes/index.html?vue=contact" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user size-5 shrink-0"></i> Par contact</a></li>
+              <li><a href="../impayes/index.html?vue=sans-sequence" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-file-minus size-5 shrink-0"></i> Sans séquence</a></li>
+              <li><a href="../impayes-suspendus/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-pause-circle size-5 shrink-0"></i> Suspendus</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Relances</p>
+            <ul class="space-y-1">
+              <li><a href="../relances/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Tableau</a></li>
+              <li><a href="../relances/index.html?vue=calendrier" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-calendar-days size-5 shrink-0"></i> Calendrier</a></li>
+              <li><a href="../relances-manuelles/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-paper-plane size-5 shrink-0"></i> Relances manuelles</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacts</p>
+            <ul class="space-y-1">
+              <li><a href="../contacts/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-users size-5 shrink-0"></i> Contacts</a></li>
+              <li><a href="../blacklist/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-ban size-5 shrink-0"></i> Blacklist</a></li>
+              <li><a href="../a-corriger/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-wrench size-5 shrink-0"></i> À corriger</a></li>
+              <li><a href="../recalcitrants/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium bg-sky-50 text-sky-700 ml-4"><i class="fa-solid fa-triangle-exclamation size-5 shrink-0"></i> Récalcitrants</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paramètres</p>
+            <ul class="space-y-1">
+              <li><a href="../sequences/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-list size-5 shrink-0"></i> Séquences</a></li>
+              <li><a href="../settings-smtp/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-envelope size-5 shrink-0"></i> Profils SMTP</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 bg-white shadow-sm flex items-center px-6 shrink-0">
+          <h2 class="text-base font-semibold text-gray-700">Récalcitrants</h2>
+        </header>
+        <main class="flex-1 p-6 overflow-auto">
+          <div class="p-6 space-y-4">
+
+            <!-- Titre -->
+            <h1 class="text-2xl font-semibold text-gray-900">Clients récalcitrants</h1>
+
+            <!-- Description -->
+            <p class="text-sm text-gray-500">
+              Un récalcitrant est un contact dont tous les impayés sont non réglés et qui a reçu
+              l'intégralité de sa séquence de relances. Les impayés suspendus et les contacts
+              suspendus sont exclus.
+            </p>
+
+            <!-- Barre de recherche -->
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+              <div class="flex items-center gap-3 flex-wrap">
+                <div class="relative w-80">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                  <input
+                    id="btn-search"
+                    type="text"
+                    x-model="search"
+                    placeholder="Rechercher (nom, email, n° facture, adresse...)"
+                    class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+              <div class="text-sm text-gray-500">
+                <span x-text="recalcitrants.length"></span> récalcitrant<span x-show="recalcitrants.length > 1">s</span>
+              </div>
+            </div>
+
+            <!-- Loading / Empty -->
+            <div x-show="loading" class="text-center py-8 text-gray-400">Chargement…</div>
+            <div x-show="!loading && recalcitrants.length === 0" class="text-center py-8 text-gray-400">Aucun client récalcitrant trouvé</div>
+
+            <!-- Tableau groupé -->
+            <div x-show="!loading && recalcitrants.length > 0" class="border border-gray-200 rounded-lg overflow-hidden bg-white max-h-[70vh] overflow-x-auto overflow-y-auto force-scrollbar">
+              <div>
+                <template x-for="group in groupedData" :key="group.contactId">
+                  <div class="border-b border-gray-200 last:border-b-0">
+                    <!-- Group header -->
+                    <div class="flex items-center gap-2 p-3 bg-gray-50 cursor-pointer hover:bg-gray-100" @click="toggleGroup(group.contactId)">
+                      <i class="fa-solid text-gray-500 text-xs w-4" :class="expandedGroups[group.contactId] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                      <span class="font-semibold text-gray-900 truncate" x-text="group.contactNom || '(inconnu)'"></span>
+                      <span x-show="group.contactEmail" class="text-xs text-gray-400 truncate max-w-[200px]" x-text="group.contactEmail"></span>
+                      <span class="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full" x-text="group.impayes.length + ' facture' + (group.impayes.length > 1 ? 's' : '')"></span>
+                      <span class="text-sm text-sky-700 ml-2 max-w-[200px] truncate" x-text="group.uniqueSequences"></span>
+                      <span class="text-sm text-gray-500 ml-2" x-text="formatDate(group.derniereRelance)"></span>
+                      <span class="font-bold text-gray-900 ml-auto" x-text="formatMontant(group.totalReste)"></span>
+                      <button
+                        id="btn-mark-paid-group"
+                        class="ml-2 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded transition-colors"
+                        @click.stop="marquerPayeGroupe(group)"
+                      >
+                        <i class="fa-solid fa-check-circle"></i> Tout marquer payé
+                      </button>
+                    </div>
+                    <!-- Group rows -->
+                    <template x-if="expandedGroups[group.contactId]">
+                      <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 sticky top-0 z-10">
+                          <tr class="border-b border-gray-200">
+                            <th class="p-3 whitespace-nowrap">N° Facture</th>
+                            <th class="p-3 whitespace-nowrap">Date pièce</th>
+                            <th class="p-3 whitespace-nowrap">Échéance</th>
+                            <th class="p-3 whitespace-nowrap">Reste à payer</th>
+                            <th class="p-3 whitespace-nowrap">Adresse du bien</th>
+                            <th class="p-3 whitespace-nowrap">Séquence</th>
+                            <th class="p-3 whitespace-nowrap">Dernière relance</th>
+                            <th class="p-3 w-20"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <template x-for="imp in group.impayes" :key="imp.id">
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                              <td class="p-3 font-mono" x-text="imp.nfacture"></td>
+                              <td class="p-3 whitespace-nowrap" x-text="formatDate(imp.date_piece)"></td>
+                              <td class="p-3 whitespace-nowrap" x-text="formatDate(imp.date_echeance)"></td>
+                              <td class="p-3 font-medium" x-text="formatMontant(imp.reste_a_payer)"></td>
+                              <td class="p-3" x-text="imp.adresse_bien || '—'"></td>
+                              <td class="p-3">
+                                <span x-show="imp.sequenceNom" class="text-sm text-sky-700" x-text="imp.sequenceNom"></span>
+                                <span x-show="!imp.sequenceNom" class="text-gray-400 text-sm">—</span>
+                              </td>
+                              <td class="p-3 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(imp.contact_derniere_relance)"></td>
+                              <td class="p-3">
+                                <div class="flex items-center gap-1">
+                                  <button class="p-1.5 text-gray-500 hover:text-gray-700 rounded" title="Voir PDF" @click="ouvrirPdf(imp)">
+                                    <i class="fa-solid fa-file"></i>
+                                  </button>
+                                  <div class="relative" x-data="{ open: false }">
+                                    <button class="p-1.5 text-gray-500 hover:text-gray-700 rounded" @click="open = !open">
+                                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <div
+                                      x-show="open"
+                                      @click.away="open = false"
+                                      x-cloak
+                                      class="absolute right-0 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+                                    >
+                                      <a
+                                        :href="'../impayes-detail/index.html?id=' + imp.id"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 block no-underline text-gray-900"
+                                      >
+                                        <i class="fa-solid fa-eye text-gray-400 w-4"></i> Voir le détail
+                                      </a>
+                                      <button
+                                        id="btn-mark-paid"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-green-700"
+                                        @click="open = false; marquerPaye(imp)"
+                                      >
+                                        <i class="fa-solid fa-check-circle text-green-500 w-4"></i> Marquer payé
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </table>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Modal PDF -->
+            <div x-show="pdfOuvert" class="fixed inset-0 z-50 flex" style="display: none;">
+              <div class="absolute inset-0 bg-black/50" @click="pdfOuvert = false"></div>
+              <div class="relative ml-auto w-[50vw] h-full bg-white shadow-2xl flex flex-col">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h3 class="text-base font-semibold text-gray-900">Aperçu PDF</h3>
+                  <div class="flex items-center gap-2">
+                    <a id="btn-pdf-download" x-show="pdfSignedUrl" :href="pdfSignedUrl" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded">
+                      <i class="fa-solid fa-download"></i> Télécharger
+                    </a>
+                    <button id="btn-pdf-modal-close" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded" @click="pdfOuvert = false">
+                      <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex-1 relative overflow-hidden">
+                  <div x-show="pdfLoading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-gray-400"></i>
+                  </div>
+                  <div x-show="pdfErreur" class="flex items-center justify-center h-full">
+                    <p class="text-gray-500 text-sm" x-text="pdfErreur"></p>
+                  </div>
+                  <iframe x-show="pdfSignedUrl && !pdfErreur" :src="pdfSignedUrl" class="w-full h-full border-0" @load="pdfLoading = false"></iframe>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toast -->
+            <div x-show="toast.show" class="fixed bottom-4 right-4 z-50" style="display: none;">
+              <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white" :class="toast.color === 'green' ? 'bg-green-600' : 'bg-red-600'">
+                <i class="fa-solid" :class="toast.color === 'green' ? 'fa-check-circle' : 'fa-circle-exclamation'"></i>
+                <div>
+                  <div class="font-medium text-sm" x-text="toast.title"></div>
+                  <div x-show="toast.description" class="text-xs opacity-90" x-text="toast.description"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

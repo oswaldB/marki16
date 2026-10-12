@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impayés suspendus — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="impayesSuspendusPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <div class="min-h-screen flex">
+      <!-- Sidebar placeholder -->
+      <aside class="w-64 bg-white shadow-sm hidden md:flex flex-col shrink-0 sticky top-0 h-screen">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+          <img src="/2/assets/img/marki-logo.png" alt="Marki" class="h-8 w-auto" />
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+          <ul class="space-y-1 px-3">
+            <li><a href="../dashboard/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-house size-5 shrink-0"></i> Dashboard</a></li>
+            <li><a href="../audit/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"><i class="fa-solid fa-filter size-5 shrink-0"></i> Audit</a></li>
+          </ul>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Impayés</p>
+            <ul class="space-y-1">
+              <li><a href="../impayes/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Unitaire</a></li>
+              <li><a href="../impayes/index.html?vue=payeur" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user-group size-5 shrink-0"></i> Par payeur</a></li>
+              <li><a href="../impayes/index.html?vue=contact" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-user size-5 shrink-0"></i> Par contact</a></li>
+              <li><a href="../impayes/index.html?vue=sans-sequence" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-file-minus size-5 shrink-0"></i> Sans séquence</a></li>
+              <li><a href="../impayes-suspendus/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium bg-sky-50 text-sky-700 ml-4"><i class="fa-solid fa-pause-circle size-5 shrink-0"></i> Suspendus</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Relances</p>
+            <ul class="space-y-1">
+              <li><a href="../relances/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-table-cells size-5 shrink-0"></i> Tableau</a></li>
+              <li><a href="../relances/index.html?vue=calendrier" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-calendar-days size-5 shrink-0"></i> Calendrier</a></li>
+              <li><a href="../relances-manuelles/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-paper-plane size-5 shrink-0"></i> Relances manuelles</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacts</p>
+            <ul class="space-y-1">
+              <li><a href="../contacts/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-users size-5 shrink-0"></i> Contacts</a></li>
+              <li><a href="../blacklist/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-ban size-5 shrink-0"></i> Blacklist</a></li>
+              <li><a href="../a-corriger/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-wrench size-5 shrink-0"></i> À corriger</a></li>
+              <li><a href="../recalcitrants/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-triangle-exclamation size-5 shrink-0"></i> Récalcitrants</a></li>
+            </ul>
+          </div>
+          <div class="mt-6 px-3">
+            <p class="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paramètres</p>
+            <ul class="space-y-1">
+              <li><a href="../sequences/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-list size-5 shrink-0"></i> Séquences</a></li>
+              <li><a href="../settings-smtp/index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 ml-4"><i class="fa-solid fa-envelope size-5 shrink-0"></i> Profils SMTP</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 bg-white shadow-sm flex items-center px-6 shrink-0">
+          <h2 class="text-base font-semibold text-gray-700">Impayés suspendus</h2>
+        </header>
+        <main class="flex-1 p-6 overflow-auto">
+          <div class="p-6 space-y-4">
+            <!-- Header -->
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+              <h1 class="text-2xl font-semibold text-gray-900">Impayés suspendus</h1>
+              <div class="flex items-center gap-2">
+                <button id="btn-refresh" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors" :disabled="loading" @click="refresh">
+                  <i class="fa-solid fa-arrow-rotate-right" :class="loading ? 'animate-spin' : ''"></i>
+                  Rafraîchir
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white rounded-lg shadow-sm border border-red-200 p-4 bg-red-50">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-red-600" x-text="stats.total"></div>
+                  <div class="text-sm text-red-700">Impayés suspendus</div>
+                </div>
+              </div>
+              <div class="bg-white rounded-lg shadow-sm border border-amber-200 p-4 bg-amber-50">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-amber-600" x-text="stats.litige"></div>
+                  <div class="text-sm text-amber-700">Litiges</div>
+                </div>
+              </div>
+              <div class="bg-white rounded-lg shadow-sm border border-blue-200 p-4 bg-blue-50">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-blue-600" x-text="formatMontant(stats.totalMontant)"></div>
+                  <div class="text-sm text-blue-700">Montant total suspendu</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="relative w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input id="btn-search" type="text" x-model="searchQuery" placeholder="Rechercher (facture, client, référence...)" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+              </div>
+              <select id="btn-motif-filter" x-model="motifFilter" class="w-48 border border-gray-300 rounded-md text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                <option value="">Tous les motifs</option>
+                <template x-for="opt in motifOptions" :key="opt.value">
+                  <option :value="opt.value" x-text="opt.label"></option>
+                </template>
+              </select>
+            </div>
+
+            <!-- Tableau -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facture</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motif</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depuis</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-if="loading && filteredRows.length === 0">
+                      <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                          <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Chargement...
+                        </td>
+                      </tr>
+                    </template>
+                    <template x-if="!loading && filteredRows.length === 0">
+                      <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun impayé suspendu</td>
+                      </tr>
+                    </template>
+                    <template x-for="row in filteredRows" :key="row.id">
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <a :href="'../impayes-detail/index.html?id=' + row.id" class="font-medium text-sky-600 hover:text-sky-800 hover:underline" x-text="row.nfacture"></a>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <div class="text-sm">
+                            <div class="font-medium text-gray-900" x-text="row.payeurNom"></div>
+                            <div x-show="row.contactEmail" class="text-gray-500 text-xs" x-text="row.contactEmail"></div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <span class="font-medium" x-text="formatMontant(row.montant)"></span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <div class="space-y-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                              :class="getMotifBadgeClass(row.motifType)"
+                              x-text="row.motifLabel"></span>
+                            <div x-show="row.motifDetail" class="text-xs text-gray-500 truncate max-w-xs" x-text="row.motifDetail"></div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <div class="text-sm">
+                            <div x-text="formatDate(row.blacklistedAt)"></div>
+                            <div class="text-xs text-gray-500" x-text="formatRelativeDate(row.blacklistedAt)"></div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                          <button :id="'btn-reactivate-' + row.id" class="inline-flex items-center gap-1 text-xs font-medium text-green-600 hover:text-green-800 px-2 py-1 rounded hover:bg-green-50 transition-colors" :disabled="saving" @click="reactiver(row)">
+                            <i class="fa-solid fa-play-circle"></i>
+                            Réactiver
+                          </button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal de réactivation -->
+    <div x-show="modalOuvert" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
+      <div class="absolute inset-0 bg-black bg-opacity-50" @click="closeModal"></div>
+      <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900">Réactiver les relances</h3>
+          <button id="btn-close-modal" class="text-gray-400 hover:text-gray-600" @click="closeModal">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-6">
+          <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+            <div class="text-sm text-gray-500">Facture</div>
+            <div class="font-medium text-gray-900" x-text="selectedImpaye?.nfacture || '—'"></div>
+            <div class="text-sm text-gray-500 mt-2">Montant restant</div>
+            <div class="font-medium text-gray-900" x-text="formatMontant(selectedImpaye?.montant)"></div>
+            <div class="text-sm text-gray-500 mt-2">Client</div>
+            <div class="font-medium text-gray-900" x-text="selectedImpaye?.payeurNom || '—'"></div>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+            <div>
+              <div class="font-medium text-amber-800">Confirmation</div>
+              <div class="text-sm text-amber-700">Les relances automatiques vont être réactivées pour cet impayé.</div>
+            </div>
+          </div>
+          <div x-show="modalError" class="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+            <i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5"></i>
+            <div class="text-sm text-red-700" x-text="modalError"></div>
+          </div>
+        </div>
+        <div class="flex gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50">
+          <button id="btn-cancel-reactivation" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors" :disabled="saving" @click="closeModal">Annuler</button>
+          <button id="btn-confirm-reactivation" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="saving" @click="confirmReactivation">
+            <template x-if="saving">
+              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-circle-notch fa-spin"></i> Réactivation en cours...</span>
+            </template>
+            <template x-if="!saving">
+              <span>Réactiver les relances</span>
+            </template>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div x-show="toast.show" class="fixed bottom-4 right-4 z-50" style="display: none;">
+      <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white" :class="toast.color === 'green' ? 'bg-green-600' : 'bg-red-600'">
+        <i class="fa-solid" :class="toast.color === 'green' ? 'fa-check-circle' : 'fa-circle-exclamation'"></i>
+        <div>
+          <div class="font-medium text-sm" x-text="toast.title"></div>
+          <div x-show="toast.description" class="text-xs opacity-90" x-text="toast.description"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

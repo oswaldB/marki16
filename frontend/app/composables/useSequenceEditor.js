@@ -566,7 +566,7 @@ export function useSequenceEditor(
             sequence.value.set(
                 "emails",
                 emails.value.map((email) => {
-                    const { _key, activeScenario, ...rest } = email;
+                    const { _key, ...rest } = email;
                     // Pour les séquences de suivi, exclure delai qui n'est pas utilisé
                     if (type.value === "suivi") {
                         const { delai, ...emailData } = rest;

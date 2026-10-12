@@ -83,10 +83,9 @@ module.exports = generatePdfLinksMaster;
 const PDF_SIGNING_SECRET =
     process.env.PDF_SIGNING_SECRET || "marki16-default-pdf-secret-change-me";
 
-const API_BASE_URL =
-    process.env.API_BASE_URL ||
-    process.env.PARSE_SERVER_URL?.replace("/parse", "") ||
-    "https://dev.api.markidiags.com:8444";
+const FRONTEND_URL =
+    process.env.FRONTEND_URL ||
+    "https://adti.markidiags.com";
 
 /**
  * Génère un lien signé pour accéder au PDF d'un impayé
@@ -128,7 +127,7 @@ async function generatePdfLinkMaster(options = {}) {
         .digest("hex");
 
     // Construire l'URL complète vers l'API
-    const url = `${API_BASE_URL}/api/pdf/${impayelId}?sig=${sig}&expires=${expires}`;
+    const url = `${FRONTEND_URL}/api/pdf/${impayelId}?sig=${sig}&expires=${expires}`;
 
     info(
         `[generate-pdf-links/generatePdfLink] Lien généré avec succès`,

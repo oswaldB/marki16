@@ -5,6 +5,8 @@
 require("./workflows/import-invoice/00-master");
 require("./workflows/generate-relances/index");
 require("./workflows/generate-suivi/index");
+require("./workflows/generate-suivis-du-jour/index");
+require("./workflows/generate-relances-manuelles/index");
 require("./workflows/test-single/00-master.js");
 require("./workflows/test-single-suivi/00-master.js");
 require("./workflows/verify-paid-invoices/00-master");
@@ -12,6 +14,11 @@ require("./workflows/generate-pdf-links/00-master");
 require("./workflows/generate-contact-token/00-master");
 require("./workflows/get-contact-impayes/00-master");
 require("./workflows/cleanup-relances-contact-blackliste/index");
+require("./workflows/cleanup-all-relances-contact-blackliste/index");
+require("./workflows/cleanup-all-relances-paid-impayes/index");
+require("./workflows/regenerate-relances-with-status/index");
+require("./workflows/get-recalcitrants/index");
+require("./workflows/get-audit-phases/index");
 
 // Importer les workflows utilitaires
 require("./workflows/appliquer-regles-attribution/00-master");
@@ -20,7 +27,7 @@ require("./workflows/appliquer-regles-attribution/00-master");
 require("./workflows/users/00-master");
 
 // Importer le workflow de synchronisation des contacts
-require("./workflows/sync-contacts/00-master");
+require("./workflows/sync-contacts/index");
 
 // Exposer les workflows pour qu'ils soient accessibles depuis d'autres parties de l'application
 global.importInvoicesMaster = require("./workflows/import-invoice/00-master");
@@ -31,5 +38,5 @@ global.updateDynamicOptionsMaster = require("./workflows/update-dynamic-options/
 global.verifyPaidInvoicesMaster = require("./workflows/verify-paid-invoices/00-master");
 
 console.log(
-    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes, cleanup-relances-contact-blackliste)",
+    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes, get-recalcitrants, get-audit-phases, cleanup-relances-contact-blackliste, cleanup-all-relances-contact-blackliste, cleanup-all-relances-paid-impayes, regenerate-relances-with-status)",
 );

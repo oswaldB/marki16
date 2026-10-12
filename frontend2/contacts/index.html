@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="contactsPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-4">
+
+        <!-- ── Header ── -->
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <h1 class="text-2xl font-semibold text-gray-900">Contacts</h1>
+          <button
+            id="btn-sync"
+            @click="lancerSync"
+            :disabled="syncing"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <i class="fas fa-sync-alt" :class="syncing ? 'fa-spin' : ''"></i>
+            <span x-text="syncing ? 'Sync...' : 'Synchroniser'"></span>
+          </button>
+        </div>
+
+        <!-- ── Résultat sync ── -->
+        <div
+          x-show="syncResult"
+          x-transition
+          class="rounded-lg px-4 py-3 text-sm"
+          :class="syncResult && syncResult.errors && syncResult.errors.length ? 'bg-orange-50 text-orange-800 border border-orange-200' : 'bg-green-50 text-green-800 border border-green-200'"
+        >
+          <div class="font-semibold" x-text="syncResult && syncResult.errors && syncResult.errors.length ? 'Sync terminée avec erreurs' : 'Sync réussie'"></div>
+          <div x-text="syncResultMessage"></div>
+        </div>
+
+        <!-- ── Onglets ── -->
+        <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide bg-gray-50 rounded-lg p-1 shadow-sm">
+          <button
+            @click="switchTab('tous')"
+            class="relative flex-1 flex min-w-0 items-center gap-2 whitespace-nowrap py-2 px-3 text-sm font-medium rounded-md transition-all duration-200"
+            :class="ongletActif === 'tous' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          >
+            <i class="fas fa-users text-xs"></i>
+            <span class="truncate">Tous les contacts</span>
+            <span x-show="totalCount > 0" class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600" x-text="totalCount"></span>
+          </button>
+          <button
+            @click="switchTab('sans-email')"
+            class="relative flex-1 flex min-w-0 items-center gap-2 whitespace-nowrap py-2 px-3 text-sm font-medium rounded-md transition-all duration-200"
+            :class="ongletActif === 'sans-email' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          >
+            <i class="fas fa-envelope-open text-xs"></i>
+            <span class="truncate">Sans email</span>
+            <span x-show="sansEmailTotalCount > 0" class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600" x-text="sansEmailTotalCount"></span>
+          </button>
+          <button
+            @click="switchTab('par-entite')"
+            class="relative flex-1 flex min-w-0 items-center gap-2 whitespace-nowrap py-2 px-3 text-sm font-medium rounded-md transition-all duration-200"
+            :class="ongletActif === 'par-entite' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          >
+            <i class="fas fa-building text-xs"></i>
+            <span class="truncate">Par entité</span>
+          </button>
+          <button
+            @click="switchTab('par-groupe-particuliers')"
+            class="relative flex-1 flex min-w-0 items-center gap-2 whitespace-nowrap py-2 px-3 text-sm font-medium rounded-md transition-all duration-200"
+            :class="ongletActif === 'par-groupe-particuliers' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          >
+            <i class="fas fa-user-friends text-xs"></i>
+            <span class="truncate">Par groupe de particuliers</span>
+          </button>
+        </div>
+
+        <!-- ── Vue tous / sans-email ── -->
+        <div x-show="ongletActif === 'tous' || ongletActif === 'sans-email'">
+          <div class="flex items-center gap-3 flex-wrap mb-4">
+            <div class="relative w-64">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input
+                x-model="globalFilter"
+                type="text"
+                placeholder="Rechercher par nom, email..."
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+            </div>
+            <select
+              x-model="filtreSource"
+              class="w-40 py-2 px-3 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+            >
+              <option value="all">Toutes les sources</option>
+              <option value="db_externe">BD externe</option>
+              <option value="upload">Upload</option>
+            </select>
+          </div>
+
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0">
+                  <tr>
+                    <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('nom')">
+                      <div class="flex items-center gap-1">
+                        Nom
+                        <i class="fas text-gray-400 text-xs" :class="sortColumn === 'nom' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                      </div>
+                    </th>
+                    <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('prenom')">
+                      <div class="flex items-center gap-1">
+                        Prénom
+                        <i class="fas text-gray-400 text-xs" :class="sortColumn === 'prenom' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                      </div>
+                    </th>
+                    <th class="px-4 py-3 font-medium">Email</th>
+                    <th class="px-4 py-3 font-medium">Téléphone</th>
+                    <th class="px-4 py-3 font-medium">Source</th>
+                    <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('nb_impayes')">
+                      <div class="flex items-center gap-1">
+                        Impayés
+                        <i class="fas text-gray-400 text-xs" :class="sortColumn === 'nb_impayes' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                      </div>
+                    </th>
+                    <th class="px-4 py-3 font-medium">Email de relance</th>
+                    <th class="px-4 py-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-if="loading">
+                    <tr>
+                      <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Chargement...
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="!loading && paginatedRows.length === 0">
+                    <tr>
+                      <td colspan="8" class="px-4 py-8 text-center text-gray-400" x-text="ongletActif === 'sans-email' ? 'Aucun contact sans email' : 'Aucun contact trouvé'"></td>
+                    </tr>
+                  </template>
+                  <template x-for="row in paginatedRows" :key="row.id">
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td class="px-4 py-3 font-medium text-gray-900" x-text="row.nom"></td>
+                      <td class="px-4 py-3 text-gray-700">
+                        <span x-show="row.prenom" x-text="row.prenom"></span>
+                        <span x-show="!row.prenom" class="text-gray-400 italic">—</span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span x-show="row.email" x-text="row.email" class="text-gray-700"></span>
+                        <span x-show="!row.email" class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Manquant</span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-700" x-text="row.telephone"></td>
+                      <td class="px-4 py-3">
+                        <span
+                          class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+                          :class="row.source === 'db_externe' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'"
+                          x-text="row.source === 'db_externe' ? 'BD externe' : 'Upload'"
+                        ></span>
+                      </td>
+                      <td class="px-4 py-3" :class="row.nb_impayes > 0 ? 'font-semibold text-gray-900' : 'text-gray-400'" x-text="row.nb_impayes"></td>
+                      <td class="px-4 py-3 text-gray-700">
+                        <span x-show="row.email_relance" x-text="row.email_relance"></span>
+                        <span x-show="!row.email_relance" class="text-gray-400 italic">—</span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <button
+                            @click="ouvrirSlideoverEmailPourContact(row.id)"
+                            title="Définir un email de relance"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <i class="fas fa-envelope text-xs"></i>
+                            Définir email
+                          </button>
+                          <button
+                            @click="toggleContactBlacklist(row)"
+                            :disabled="blacklistLoading"
+                            :title="row.isBlacklisted ? 'Retirer de la blacklist' : 'Blacklister le contact'"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-transform duration-200 hover:scale-105"
+                            :class="row.isBlacklisted ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'"
+                          >
+                            <i class="fas text-xs" :class="row.isBlacklisted ? 'fa-check-circle' : 'fa-ban'"></i>
+                            <span x-text="row.isBlacklisted ? 'Blacklisté' : 'Blacklister'"></span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div x-show="totalCount > 0" class="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+              <div class="flex items-center gap-2">
+                <select
+                  x-model="pageSize"
+                  @change="changerTaillePage(pageSize)"
+                  class="py-1.5 px-2 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                >
+                  <option value="10">10 par page</option>
+                  <option value="25">25 par page</option>
+                  <option value="50">50 par page</option>
+                  <option value="100">100 par page</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">
+                  Affichage <span x-text="(currentPage - 1) * pageSize + 1"></span> - <span x-text="Math.min(currentPage * pageSize, totalCount)"></span> sur <span x-text="totalCount"></span>
+                </span>
+                <div class="flex items-center gap-1">
+                  <button
+                    @click="goToPage(currentPage - 1)"
+                    :disabled="currentPage <= 1"
+                    class="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <i class="fas fa-chevron-left text-xs"></i>
+                  </button>
+                  <template x-for="p in pageNumbers" :key="p">
+                    <button
+                      @click="typeof p === 'number' ? goToPage(p) : null"
+                      class="min-w-[2rem] h-8 px-2 rounded-md text-sm font-medium transition-colors"
+                      :class="p === currentPage ? 'bg-blue-600 text-white' : (typeof p === 'number' ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-default')"
+                      x-text="p"
+                    ></button>
+                  </template>
+                  <button
+                    @click="goToPage(currentPage + 1)"
+                    :disabled="currentPage >= totalPages"
+                    class="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <i class="fas fa-chevron-right text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Vue par entité ── -->
+        <div x-show="ongletActif === 'par-entite'">
+          <div class="flex items-center gap-3 flex-wrap mb-4">
+            <div class="relative w-64">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input
+                x-model="globalFilter"
+                type="text"
+                placeholder="Rechercher par nom..."
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0">
+                  <tr>
+                    <th class="px-4 py-3 font-medium">Nom</th>
+                    <th class="px-4 py-3 font-medium">Prénom</th>
+                    <th class="px-4 py-3 font-medium">Email</th>
+                    <th class="px-4 py-3 font-medium">Téléphone</th>
+                    <th class="px-4 py-3 font-medium">Email de relance</th>
+                    <th class="px-4 py-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-if="loadingEntites">
+                    <tr>
+                      <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Chargement...
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="!loadingEntites && entitesFiltrees.length === 0">
+                    <tr>
+                      <td colspan="6" class="px-4 py-8 text-center text-gray-400">Aucune entité trouvée</td>
+                    </tr>
+                  </template>
+                  <template x-for="entite in entitesFiltrees" :key="entite.id">
+                    <!-- Ligne entreprise -->
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors bg-gray-50/50">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                          <button
+                            @click="toggleExpanded('entites', entite.id)"
+                            x-show="entite.subRows && entite.subRows.length"
+                            class="p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <i class="fas fa-chevron-right text-xs transition-transform" :class="isExpanded('entites', entite.id) ? 'rotate-90' : ''"></i>
+                          </button>
+                          <span x-show="!entite.subRows || !entite.subRows.length" class="w-5"></span>
+                          <i class="fas fa-building text-blue-600 text-xs"></i>
+                          <span class="font-semibold text-gray-900" x-text="entite.nom"></span>
+                          <span x-show="entite.subRows && entite.subRows.length" class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600" x-text="entite.subRows.length + ' employé' + (entite.subRows.length > 1 ? 's' : '')"></span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-gray-400 italic">—</td>
+                      <td class="px-4 py-3 text-gray-700" x-text="entite.email || '—'"></td>
+                      <td class="px-4 py-3 text-gray-700" x-text="entite.telephone"></td>
+                      <td class="px-4 py-3 text-gray-700" x-text="entite.email_relance || '—'"></td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <button
+                            @click="ouvrirSlideoverEmailPourContact(entite.id)"
+                            title="Définir un email de relance"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <i class="fas fa-envelope text-xs"></i>
+                            Définir email
+                          </button>
+                          <button
+                            @click="toggleContactBlacklist(entite)"
+                            :disabled="blacklistLoading"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-transform duration-200 hover:scale-105"
+                            :class="entite.isBlacklisted ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'"
+                          >
+                            <i class="fas text-xs" :class="entite.isBlacklisted ? 'fa-check-circle' : 'fa-ban'"></i>
+                            <span x-text="entite.isBlacklisted ? 'Blacklisté' : 'Blacklister'"></span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Lignes employés -->
+                    <template x-for="emp in entite.subRows" :key="emp.id">
+                      <tr
+                        x-show="isExpanded('entites', entite.id)"
+                        x-transition
+                        class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                      >
+                        <td class="px-4 py-2.5">
+                          <div class="flex items-center gap-2" style="padding-left: 1.5rem;">
+                            <i class="fas fa-user-circle text-gray-400 text-xs"></i>
+                            <span class="text-gray-700" x-text="emp.nom"></span>
+                          </div>
+                        </td>
+                        <td class="px-4 py-2.5 text-gray-700">
+                          <span x-show="emp.prenom" x-text="emp.prenom"></span>
+                          <span x-show="!emp.prenom" class="text-gray-400 italic">—</span>
+                        </td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="emp.email || '—'"></td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="emp.telephone"></td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="emp.email_relance || '—'"></td>
+                        <td class="px-4 py-2.5">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <button
+                              @click="ouvrirSlideoverEmailPourContact(emp.id)"
+                              title="Définir un email de relance"
+                              class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            >
+                              <i class="fas fa-envelope text-xs"></i>
+                              Définir email
+                            </button>
+                            <button
+                              @click="toggleContactBlacklist(emp)"
+                              :disabled="blacklistLoading"
+                              class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-transform duration-200 hover:scale-105"
+                              :class="emp.isBlacklisted ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'"
+                            >
+                              <i class="fas text-xs" :class="emp.isBlacklisted ? 'fa-check-circle' : 'fa-ban'"></i>
+                              <span x-text="emp.isBlacklisted ? 'Blacklisté' : 'Blacklister'"></span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Vue par groupe de particuliers ── -->
+        <div x-show="ongletActif === 'par-groupe-particuliers'">
+          <div class="flex items-center gap-3 flex-wrap mb-4">
+            <div class="relative w-64">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input
+                x-model="globalFilter"
+                type="text"
+                placeholder="Rechercher par nom..."
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0">
+                  <tr>
+                    <th class="px-4 py-3 font-medium">Nom</th>
+                    <th class="px-4 py-3 font-medium">Prénom</th>
+                    <th class="px-4 py-3 font-medium">Email</th>
+                    <th class="px-4 py-3 font-medium">Téléphone</th>
+                    <th class="px-4 py-3 font-medium">Email de relance</th>
+                    <th class="px-4 py-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-if="loadingParticuliers">
+                    <tr>
+                      <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Chargement...
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="!loadingParticuliers && particuliersFiltres.length === 0">
+                    <tr>
+                      <td colspan="6" class="px-4 py-8 text-center text-gray-400">Aucun groupe de particuliers trouvé</td>
+                    </tr>
+                  </template>
+                  <template x-for="groupe in particuliersFiltres" :key="groupe.id">
+                    <!-- Ligne chef -->
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors bg-gray-50/50">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                          <button
+                            @click="toggleExpanded('particuliers', groupe.id)"
+                            x-show="groupe.subRows && groupe.subRows.length"
+                            class="p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <i class="fas fa-chevron-right text-xs transition-transform" :class="isExpanded('particuliers', groupe.id) ? 'rotate-90' : ''"></i>
+                          </button>
+                          <span x-show="!groupe.subRows || !groupe.subRows.length" class="w-5"></span>
+                          <i class="fas fa-user-group text-green-600 text-xs"></i>
+                          <span class="font-semibold text-gray-900" x-text="groupe.nom"></span>
+                          <span x-show="groupe.subRows && groupe.subRows.length" class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600" x-text="groupe.subRows.length + ' membre' + (groupe.subRows.length > 1 ? 's' : '')"></span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-gray-700">
+                        <span x-show="groupe.prenom" x-text="groupe.prenom"></span>
+                        <span x-show="!groupe.prenom" class="text-gray-400 italic">—</span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-700" x-text="groupe.email || '—'"></td>
+                      <td class="px-4 py-3 text-gray-700" x-text="groupe.telephone"></td>
+                      <td class="px-4 py-3 text-gray-700" x-text="groupe.email_relance || '—'"></td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <button
+                            @click="ouvrirSlideoverEmailPourContact(groupe.id)"
+                            title="Définir un email de relance"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <i class="fas fa-envelope text-xs"></i>
+                            Définir email
+                          </button>
+                          <button
+                            @click="toggleContactBlacklist(groupe)"
+                            :disabled="blacklistLoading"
+                            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-transform duration-200 hover:scale-105"
+                            :class="groupe.isBlacklisted ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'"
+                          >
+                            <i class="fas text-xs" :class="groupe.isBlacklisted ? 'fa-check-circle' : 'fa-ban'"></i>
+                            <span x-text="groupe.isBlacklisted ? 'Blacklisté' : 'Blacklister'"></span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Lignes membres -->
+                    <template x-for="membre in groupe.subRows" :key="membre.id">
+                      <tr
+                        x-show="isExpanded('particuliers', groupe.id)"
+                        x-transition
+                        class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                      >
+                        <td class="px-4 py-2.5">
+                          <div class="flex items-center gap-2" style="padding-left: 1.5rem;">
+                            <i class="fas fa-user-circle text-gray-400 text-xs"></i>
+                            <span class="text-gray-700" x-text="membre.nom"></span>
+                          </div>
+                        </td>
+                        <td class="px-4 py-2.5 text-gray-700">
+                          <span x-show="membre.prenom" x-text="membre.prenom"></span>
+                          <span x-show="!membre.prenom" class="text-gray-400 italic">—</span>
+                        </td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="membre.email || '—'"></td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="membre.telephone"></td>
+                        <td class="px-4 py-2.5 text-gray-700" x-text="membre.email_relance || '—'"></td>
+                        <td class="px-4 py-2.5">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <button
+                              @click="ouvrirSlideoverEmailPourContact(membre.id)"
+                              title="Définir un email de relance"
+                              class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            >
+                              <i class="fas fa-envelope text-xs"></i>
+                              Définir email
+                            </button>
+                            <button
+                              @click="toggleContactBlacklist(membre)"
+                              :disabled="blacklistLoading"
+                              class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-transform duration-200 hover:scale-105"
+                              :class="membre.isBlacklisted ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'"
+                            >
+                              <i class="fas text-xs" :class="membre.isBlacklisted ? 'fa-check-circle' : 'fa-ban'"></i>
+                              <span x-text="membre.isBlacklisted ? 'Blacklisté' : 'Blacklister'"></span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ── Slideover Email ── -->
+    <div
+      x-show="showEmailSlideover"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      class="fixed inset-0 z-50"
+    >
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/40" @click="closeEmailSlideover"></div>
+      <!-- Panel -->
+      <div
+        x-show="showEmailSlideover"
+        x-transition:enter="transform transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transform transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col"
+      >
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-lg text-gray-900">Définir un email de relance</h2>
+            <button @click="closeEmailSlideover" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-gray-500">Sélectionnez un email existant ou créez-en un nouveau pour ce contact.</p>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          <!-- Recherche -->
+          <div>
+            <h3 class="text-sm font-medium text-gray-900 mb-3">Rechercher un email de relance existant</h3>
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input
+                x-model="emailSlideover.searchQuery"
+                @input="searchEmails"
+                type="text"
+                placeholder="Rechercher un email de relance..."
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+            </div>
+
+            <div x-show="emailSlideover.loading" class="mt-4 text-center text-gray-400">
+              <i class="fas fa-circle-notch fa-spin mr-2"></i>
+              <span class="text-sm">Recherche...</span>
+            </div>
+
+            <div x-show="!emailSlideover.loading && emailSlideover.filteredEmails.length > 0" class="mt-4 space-y-1">
+              <template x-for="email in emailSlideover.filteredEmails" :key="email.id">
+                <button
+                  @click="selectEmail(email)"
+                  class="w-full text-left px-3 py-2.5 rounded-md text-sm hover:bg-gray-50 transition-colors"
+                >
+                  <span class="font-medium text-gray-900" x-text="email.email"></span>
+                  <span x-show="email.name" class="text-xs text-gray-500 ml-1" x-text="'- ' + email.name"></span>
+                </button>
+              </template>
+            </div>
+
+            <div x-show="!emailSlideover.loading && emailSlideover.searchQuery && emailSlideover.filteredEmails.length === 0" class="mt-4 text-center text-gray-400 text-sm">
+              Aucun email de relance trouvé
+            </div>
+            <div x-show="!emailSlideover.loading && !emailSlideover.searchQuery && emailSlideover.allEmails.length === 0" class="mt-4 text-center text-gray-400 text-sm">
+              Aucun email de relance disponible. Créez-en un nouveau ci-dessous.
+            </div>
+          </div>
+
+          <!-- Séparateur -->
+          <div class="border-t border-gray-200"></div>
+
+          <!-- Création -->
+          <div>
+            <h3 class="text-sm font-medium text-gray-900 mb-4">Ou créer un nouvel email de relance</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Adresse email <span class="text-red-500">*</span></label>
+                <input
+                  x-model="emailSlideover.newEmail.email"
+                  type="email"
+                  placeholder="exemple@domaine.com"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nom (optionnel)</label>
+                <input
+                  x-model="emailSlideover.newEmail.name"
+                  placeholder="Nom ou description de l'email de relance"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+              </div>
+              <button
+                id="btn-create-email-relance"
+                @click="createNewEmail"
+                :disabled="emailSlideover.creating || !emailSlideover.newEmail.email"
+                class="w-full py-2.5 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <span x-show="emailSlideover.creating"><i class="fas fa-circle-notch fa-spin mr-2"></i>Création...</span>
+                <span x-show="!emailSlideover.creating">Créer et utiliser cet email de relance</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+          <button
+            @click="closeEmailSlideover"
+            class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="fixed bottom-4 right-4 z-50 space-y-2" x-data="{ toasts: [], toastId: 0 }" @toast.window="toasts.push($event.detail); setTimeout(() => { toasts = toasts.filter(t => t.id !== $event.detail.id) }, 4000)">
+      <template x-for="toast in toasts" :key="toast.id">
+        <div
+          x-transition
+          class="px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm"
+          :class="toast.color === 'red' ? 'bg-red-50 text-red-800 border border-red-200' : toast.color === 'yellow' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' : toast.color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-green-50 text-green-800 border border-green-200'"
+        >
+          <div class="font-semibold" x-text="toast.title"></div>
+          <div x-text="toast.description"></div>
+        </div>
+      </template>
+    </div>
+
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

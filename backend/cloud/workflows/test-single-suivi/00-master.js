@@ -30,9 +30,21 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral-large-3:675b-cloud";
 const USE_OLLAMA = process.env.USE_OLLAMA !== "false" && !!OLLAMA_API_KEY;
 const MAX_RETRIES = 3;
 
-// Chemin du fichier de prompt (utiliser un prompt spécifique au suivi si disponible)
+// Chemin des prompts par scénario
+const PROMPT_BASE_PATH = "/home/ubuntu/prod/adti/configuration/prompts/scenarios";
+
+// Fichiers de prompt legacy (fallback)
 const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/suivi-email-prompt.txt";
 const FALLBACK_PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt";
+
+/**
+ * Récupère le chemin du fichier de prompt selon le scénario
+ * @param {string} scenarioType - Type de scénario (single, multiple, broker, both)
+ * @returns {string} - Chemin du fichier de prompt
+ */
+function getPromptFile(scenarioType) {
+    return path.join(PROMPT_BASE_PATH, `suivi-${scenarioType}-prompt.txt`);
+}
 
 // URL Frontend
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
@@ -148,13 +160,19 @@ function buildPrompt(
     const objetTemplate = scenarioActif?.objet || emailConfig.objet || "";
     const corpsTemplate = scenarioActif?.corps || emailConfig.corps || "";
 
-    // Charger le prompt depuis le fichier de configuration
+    // Charger le prompt spécifique au scénario avec fallback
     let promptTemplate;
     try {
-        promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+        const promptFile = getPromptFile(scenarioType);
+        promptTemplate = fs.readFileSync(promptFile, "utf-8");
     } catch (e) {
-        // Fallback sur le prompt de relance
-        promptTemplate = fs.readFileSync(FALLBACK_PROMPT_FILE, "utf-8");
+        // Fallback sur le prompt de suivi legacy
+        try {
+            promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+        } catch (e2) {
+            // Fallback final sur le prompt de relance
+            promptTemplate = fs.readFileSync(FALLBACK_PROMPT_FILE, "utf-8");
+        }
     }
 
     // Remplacer les variables dans le template
@@ -388,13 +406,25 @@ async function testSingleSuiviMaster(options = {}) {
         // Déterminer le scénario (single, multiple, both, broker)
         const scenarios = emailConfig.scenarios || [];
         
-        // Pour le suivi, on utilise activeScenario ou 'single' par défaut
-        const scenarioType = emailConfig.activeScenario || 'single';
+        // Pour le suivi, on utilise activeScenario ou le premier actif trouvé
+        let scenarioType = emailConfig.activeScenario;
+        if (!scenarioType) {
+            const firstActive = scenarios.find(s => s.active !== false);
+            scenarioType = firstActive?.format || 'single';
+        }
         
         // Trouver le scénario actif
-        const scenarioActif = scenarios.find(
+        let scenarioActif = scenarios.find(
             (s) => s.format === scenarioType && s.active !== false,
         );
+        
+        // Fallback : premier scénario actif disponible
+        if (!scenarioActif) {
+            scenarioActif = scenarios.find(s => s.active !== false);
+            if (scenarioActif) {
+                scenarioType = scenarioActif.format;
+            }
+        }
 
         info(
             `Scénario actif: ${scenarioType} - ${scenarioActif ? "trouvé" : "non trouvé (utilisation du template par défaut)"}`,

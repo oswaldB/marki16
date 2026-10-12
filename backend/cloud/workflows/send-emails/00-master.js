@@ -7,6 +7,8 @@ require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
+const Imap = require("imap");
+const { simpleParser } = require("mailparser");
 const { info, warn, error } = require("../../utils/logger");
 
 // Chemin du répertoire logs
@@ -145,12 +147,19 @@ async function sendEmailsMaster({
                 { relanceIds },
             );
         } else {
-            // Filtrer par statut "pret pour envoi" et date d'envoi <= maintenant
-            // Récupère les relances en attente (y compris celles des jours précédents)
+            // Filtrer par statut "pret pour envoi" et date d'envoi <= fin de journée (heure de Paris)
+            // => envoie toutes les relances du jour dès le premier cron, quelle que soit l'heure fixée
+            const nowParis = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+            const finJourParis = new Date(nowParis);
+            finJourParis.setHours(23, 59, 59, 999);
+            // convertir finJourParis en UTC Date pour Parse
+            const offsetMs = nowParis.getTime() - new Date().getTime();
+            const finJourUTC = new Date(finJourParis.getTime() - offsetMs);
+
             query.equalTo("statut", "pret pour envoi");
-            query.lessThanOrEqualTo("dateEnvoi", new Date());
+            query.lessThanOrEqualTo("dateEnvoi", finJourUTC);
             info(
-                "Requête pour toutes les relances avec statut 'pret pour envoi' et date d'envoi <= maintenant",
+                "Requête pour toutes les relances avec statut 'pret pour envoi' et date d'envoi <= fin de journée",
                 "send-emails",
                 "sendEmailsMaster",
             );
@@ -282,11 +291,11 @@ async function sendEmailsMaster({
 
                 // Préparer les données de l'email
                 const from =
-                    smtpProfil.get("fromEmail") || smtpProfil.get("username");
+                    smtpProfil.get("email_from") || smtpProfil.get("username");
                 const to = contactEmail;
                 const subject = relance.get("objet") || "Relance d'impayé";
                 const baseHtml = relance.get("corps") || "<p>Contenu de la relance...</p>";
-                const replyTo = smtpProfil.get("replyToEmail") || null;
+                const replyTo = smtpProfil.get("email_from") || null;
 
                 // DEBUG: Récupération de la signature
                 const signatureRaw = smtpProfil.get("signature_html");
@@ -336,7 +345,7 @@ async function sendEmailsMaster({
                 const transporter = nodemailer.createTransport({
                     host: smtpProfil.get("host"),
                     port: smtpProfil.get("port"),
-                    secure: smtpProfil.get("secure") === true,
+                    secure: smtpProfil.get("port") === 465,
                     auth: {
                         user: smtpProfil.get("username"),
                         pass: smtpProfil.get("password"),
@@ -585,33 +594,133 @@ async function sendEmailsMaster({
  * @returns {Promise<void>}
  */
 async function copyToSentFolder(smtpProfil, emailOptions, emailInfo) {
-    // Vérifier si IMAP est configuré dans le profil SMTP
-    // Pour l'instant, on utilise une approche simple avec Nodemailer
-    // Si un client IMAP dédié est nécessaire, il faudra installer un package comme 'imap'
-
-    try {
-        // Si le profil SMTP a des informations IMAP, on peut essayer de copier
-        // Cette implémentation utilise une approche alternative: envoyer une copie BCC
-        // ou utiliser le dossier Sent du serveur SMTP si disponible
-
-        // Pour les serveurs SMTP qui supportent la copie automatique vers Sent,
-        // on peut utiliser l'option 'sentFolder' de certains transporteurs
-        // Mais cela dépend du serveur SMTP
-
-        // Pour l'instant, on log simplement que la copie n'est pas implémentée
-        // Une implémentation complète nécessiterait un client IMAP séparé
-
-        // Note: Cette fonction est un placeholder. Pour une implémentation complète,
-        // il faudrait:
-        // 1. Installer un package IMAP comme 'imap' ou 'node-imap'
-        // 2. Se connecter au serveur IMAP avec les credentials du profil
-        // 3. Append le message dans le dossier Sent
-
-        // On retourne sans erreur pour ne pas bloquer l'envoi principal
-        return;
-    } catch (err) {
-        throw new Error(`Erreur lors de la copie vers Sent: ${err.message}`);
+    // Récupérer les informations IMAP du profil SMTP
+    let imapHost = smtpProfil.get("imapHost");
+    let imapPort = smtpProfil.get("imapPort");
+    const imapUsername = smtpProfil.get("imapUsername") || smtpProfil.get("username");
+    const imapPassword = smtpProfil.get("imapPassword") || smtpProfil.get("password");
+    const imapSecure = smtpProfil.get("imapSecure") !== false; // true par défaut
+    
+    // Si pas de config IMAP explicite, essayer de deviner à partir du host SMTP
+    if (!imapHost || !imapPort) {
+        const smtpHost = smtpProfil.get("host") || "";
+        
+        // Règles de conversion SMTP -> IMAP courantes
+        if (smtpHost.includes("smtp.")) {
+            imapHost = smtpHost.replace("smtp.", "imap.");
+            imapPort = 993;
+        } else if (smtpHost.includes("ionos")) {
+            imapHost = "imap.ionos.fr";
+            imapPort = 993;
+        } else if (smtpHost.includes("gmail")) {
+            imapHost = "imap.gmail.com";
+            imapPort = 993;
+        } else if (smtpHost.includes("outlook") || smtpHost.includes("office365")) {
+            imapHost = "outlook.office365.com";
+            imapPort = 993;
+        } else if (smtpHost) {
+            // Fallback: utiliser le même host que SMTP pour IMAP (port 993)
+            imapHost = smtpHost;
+            imapPort = 993;
+        } else {
+            info(
+                `IMAP non configuré et impossible à deviner pour ${smtpProfil.id} (host: ${smtpHost}), copie Sent ignorée`,
+                "send-emails",
+                "copyToSentFolder",
+            );
+            return;
+        }
+        
+        info(
+            `IMAP deviné à partir du SMTP: ${imapHost}:${imapPort}`,
+            "send-emails",
+            "copyToSentFolder",
+            { smtpHost, imapHost, imapPort },
+        );
     }
+    
+    return new Promise((resolve, reject) => {
+        const imap = new Imap({
+            host: imapHost,
+            port: imapPort,
+            tls: imapSecure,
+            user: imapUsername,
+            password: imapPassword,
+            tlsOptions: {
+                rejectUnauthorized: process.env.NODE_ENV === "production",
+            },
+        });
+        
+        function openSentFolder(cb) {
+            // Essayer différents noms de dossier Sent courants
+            const sentFolders = ["Sent", "Sent Items", "Sent Messages", "Envoyés", "&BB4EQgQ,BEAEMAQyBDsENQQ9BD0-"];
+            
+            function tryNextFolder(index) {
+                if (index >= sentFolders.length) {
+                    return cb(new Error("Dossier Sent introuvable"));
+                }
+                
+                const folderName = sentFolders[index];
+                imap.openBox(folderName, false, (err, box) => {
+                    if (err) {
+                        info(
+                            `Dossier '${folderName}' non trouvé, essai suivant...`,
+                            "send-emails",
+                            "copyToSentFolder",
+                        );
+                        return tryNextFolder(index + 1);
+                    }
+                    info(
+                        `Dossier Sent trouvé: '${folderName}'`,
+                        "send-emails",
+                        "copyToSentFolder",
+                    );
+                    cb(null, box);
+                });
+            }
+            
+            tryNextFolder(0);
+        }
+        
+        imap.once("ready", () => {
+            openSentFolder((err, box) => {
+                if (err) {
+                    imap.end();
+                    return reject(err);
+                }
+                
+                // Construire le message complet avec headers
+                const date = new Date().toUTCString();
+                const messageId = emailInfo.messageId || `<${Date.now()}@adti.fr>`;
+                
+                const fullMessage = [
+                    `Date: ${date}`,
+                    `Message-Id: ${messageId}`,
+                    `From: ${emailOptions.from}`,
+                    `To: ${emailOptions.to}`,
+                    `Subject: ${emailOptions.subject}`,
+                    `Content-Type: text/html; charset=utf-8`,
+                    `Mime-Version: 1.0`,
+                    `\n`,
+                    emailOptions.html,
+                ].join("\r\n");
+                
+                imap.append(fullMessage, { mailbox: box.name, flags: ["\\Seen"] }, (appendErr) => {
+                    imap.end();
+                    if (appendErr) {
+                        return reject(appendErr);
+                    }
+                    resolve();
+                });
+            });
+        });
+        
+        imap.once("error", (err) => {
+            reject(new Error(`Erreur IMAP: ${err.message}`));
+        });
+        
+        imap.connect();
+    });
 }
 
 /**
@@ -688,7 +797,7 @@ module.exports = sendEmailsMaster;
  * - relanceIds: string[] - IDs spécifiques de relances à envoyer
  * - trigger: string - Type de déclenchement (défaut: "cloud")
  */
-if (typeof Parse !== "undefined") {
+if (typeof Parse !== "undefined" && Parse.Cloud && typeof Parse.Cloud.define === "function") {
     Parse.Cloud.define("sendEmails", async (request) => {
         const { relanceIds = null, trigger = "cloud" } = request.params;
         

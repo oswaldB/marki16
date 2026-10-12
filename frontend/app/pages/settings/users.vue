@@ -78,7 +78,7 @@
     <UModal v-model:open="showCreateModal" title="Nouvel utilisateur">
       <template #body>
         <div class="space-y-4">
-          <UFormField label="Email" required>
+          <UFormField label="Email (identifiant de connexion)" required>
             <UInput v-model="form.email" type="email" placeholder="prenom.nom@exemple.fr" class="w-full" />
           </UFormField>
           <UFormField label="Mot de passe" required>
@@ -166,7 +166,7 @@ const form = reactive({
 
 // ── Table ──────────────────────────────────────────────────────
 const colonnes = [
-  { accessorKey: 'email',     header: 'Email' },
+  { accessorKey: 'identifiant', header: 'Identifiant' },
   { id: 'role',               header: 'Rôle' },
   { accessorKey: 'createdAt', header: 'Créé le' },
   { id: 'actions',            header: ' ' },
@@ -175,6 +175,9 @@ const colonnes = [
 const rows = computed(() =>
   users.value.map(u => ({
     ...u,
+    // L'identifiant de connexion est le username (les comptes historiques
+    // n'ont pas de champ `email`). L'email sert de repli.
+    identifiant: u.username || u.email || '—',
     createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '—',
   }))
 )
@@ -279,10 +282,9 @@ function confirmerSuppression(user) {
 async function supprimerUtilisateur() {
   saving.value = true
   try {
-    // Alternative Parse SDK au lieu de Cloud Function
-    const User = $parse.Object.extend('User')
-    const userToDelete = await User.createWithoutData(userEnAction.value.id).fetch()
-    await userToDelete.destroy({ useMasterKey: true })
+    await $parse.Cloud.run('deleteUser', {
+      userId: userEnAction.value.id,
+    })
     showDeleteModal.value = false
     toast.add({ title: 'Utilisateur supprimé', color: 'green' })
     await charger()

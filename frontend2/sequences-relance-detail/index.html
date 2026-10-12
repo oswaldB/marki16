@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détail séquence de relances — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="sequencesRelanceDetailPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-4 md:p-6 space-y-6">
+
+        <!-- ── Header ── -->
+        <div class="flex flex-col gap-4 md:flex-row md:items-center">
+          <div class="flex items-center gap-4">
+            <a href="../sequences/index.html" id="btn-retour" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+              <i class="fas fa-arrow-left text-xs"></i> Retour
+            </a>
+            <input x-model="nom" type="text" placeholder="Nom de la séquence" class="flex-1 text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-sky-500 focus:outline-none px-1 py-0.5" />
+          </div>
+          <div class="flex flex-wrap gap-2 justify-end">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Relances</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border"
+              :class="publiee ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'"
+              x-text="publiee ? 'Publiée' : 'Brouillon'"></span>
+            <button id="btn-toggle-publication" @click="togglePublication()" :disabled="publishing"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors disabled:opacity-50"
+              :class="publiee ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' : 'bg-green-600 text-white border-green-600 hover:bg-green-700'">
+              <i class="fas" :class="publiee ? 'fa-eye-slash' : 'fa-eye'"></i>
+              <span x-text="publiee ? 'Dépublier' : 'Publier'"></span>
+            </button>
+            <button id="btn-save" @click="sauvegarder()" :disabled="saving"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+              <i class="fas fa-floppy-disk"></i>
+              <span x-show="saving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+              Enregistrer
+            </button>
+            <button x-show="attributionAutomatique" id="btn-run-auto" @click="lancerAttributionAuto()" :disabled="runningAutoAssign"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+              <i class="fas fa-play"></i>
+              <span x-show="runningAutoAssign"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+              Lancer attribution auto
+            </button>
+            <button id="btn-regenerer" @click="regenererRelances()" :disabled="regenerating"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50">
+              <i class="fas fa-rotate"></i>
+              <span x-show="regenerating"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+              Régénérer les relances
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Toggle validation obligatoire ── -->
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+          <span class="text-sm font-medium text-gray-700 w-full md:w-36 shrink-0">Validation obligatoire</span>
+          <div class="flex items-center gap-4">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" x-model="validationObligatoire" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+            </label>
+            <span class="text-sm text-gray-500" x-text="validationObligatoire ? 'Validation obligatoire activée' : 'Validation obligatoire désactivée'"></span>
+          </div>
+        </div>
+
+        <!-- ── Emails de relance ── -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <span class="font-semibold text-gray-800 text-sm">EMAILS DE RELANCE</span>
+            <button id="btn-generate-ia" @click="showIaModal = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              <i class="fas fa-sparkles text-amber-500"></i> Générer par IA
+            </button>
+          </div>
+          <div class="p-4 space-y-4">
+            <div x-show="loading" class="text-center py-6 text-gray-400">Chargement…</div>
+
+            <template x-for="(email, idx) in emailsSorted" :key="email._key">
+              <div class="border border-gray-100 rounded-lg overflow-hidden">
+                <!-- Card header -->
+                <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                  <span class="font-medium text-sm text-gray-700">Email <span x-text="idx + 1"></span> — J+<span x-text="email.delai"></span></span>
+                  <div class="flex items-center gap-2">
+                    <button @click="toggleEmailVisibility(email._key)" class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors" :title="collapsedEmails[email._key] ? 'Déplier' : 'Replier'">
+                      <i class="fas" :class="collapsedEmails[email._key] ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                    <button :id="'btn-test-email-' + idx" @click="testerEmail(idx)" class="p-1.5 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded transition-colors" title="Tester cet email">
+                      <i class="fas fa-flask"></i>
+                    </button>
+                    <button :id="'btn-delete-email-' + idx" @click="supprimerEmail(email._key)" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors" title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div x-show="!collapsedEmails[email._key]" class="p-4 space-y-3">
+                  <!-- Délai -->
+                  <div>
+                    <label class="text-xs text-gray-500 mb-1 block">J+</label>
+                    <input x-model.number="email.delai" type="number" min="0" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                  </div>
+                  <!-- À -->
+                  <div>
+                    <label class="text-xs text-gray-500 mb-1 block">À</label>
+                    <input x-model="email.to" placeholder="[[payeur_email]]" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                  </div>
+
+                  <!-- Scénarios tabs -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label class="text-xs text-gray-500">Contenu par format</label>
+                    </div>
+                    <div class="flex border-b border-gray-200 mb-2">
+                      <template x-for="tab in scenarioTabs" :key="tab.value">
+                        <button @click="switchScenario(email, tab.value)"
+                          class="px-3 py-1.5 text-xs font-medium border-b-2 transition-colors"
+                          :class="email.activeScenario === tab.value ? 'border-sky-500 text-sky-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                          x-text="tab.label"></button>
+                      </template>
+                    </div>
+                    <div class="px-1 space-y-3">
+                      <!-- Toggle format actif -->
+                      <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-xs font-medium text-gray-600">Format actif</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" x-model="currentScenario(email).active" class="sr-only peer">
+                          <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
+                        </label>
+                      </div>
+
+                      <template x-if="currentScenario(email).active">
+                        <div class="space-y-3">
+                          <!-- Profil expéditeur -->
+                          <div>
+                            <div class="flex items-center justify-between mb-1">
+                              <label class="text-xs text-gray-500">Profil expéditeur</label>
+                            </div>
+                            <select x-model="currentScenario(email).smtp" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                              <option value="">Sélectionner…</option>
+                              <template x-for="opt in smtpOptions" :key="opt.value">
+                                <option :value="opt.value" x-text="opt.label"></option>
+                              </template>
+                            </select>
+                            <div x-show="smtpOptions.length === 0" class="mt-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                              Aucun profil expéditeur configuré. Créez-en un dans <a href="../settings-smtp/index.html" class="underline font-medium">Paramètres SMTP</a>.
+                            </div>
+                          </div>
+                          <!-- CC -->
+                          <div>
+                            <label class="text-xs text-gray-500 mb-1 block">CC</label>
+                            <input x-model="currentScenario(email).cc" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                          </div>
+                          <!-- Objet -->
+                          <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Objet</label>
+                            <input x-model="currentScenario(email).objet" placeholder="Relance — [[nfacture]]" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                          </div>
+                          <!-- Corps -->
+                          <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Corps</label>
+                            <textarea x-model="currentScenario(email).corps" rows="6" placeholder="Contenu de l'email…" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono"></textarea>
+                          </div>
+                        </div>
+                      </template>
+
+                      <div x-show="!currentScenario(email).active" class="text-xs text-gray-400 italic py-2 text-center">
+                        Ce format est désactivé — aucun email ne sera envoyé pour ce cas.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Variables -->
+                  <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="flex items-center justify-between p-2 bg-gray-50 border-b border-gray-200">
+                      <span class="text-xs font-semibold text-gray-600">Variables disponibles</span>
+                      <button @click="toggleVariablesCollapsed(email._key)" class="text-gray-500 hover:text-gray-700 transition-colors">
+                        <i class="fas" :class="variablesCollapsed[email._key] ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+                      </button>
+                    </div>
+                    <div x-show="!variablesCollapsed[email._key]" class="p-2">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <template x-for="group in variablesForEmail(idx)" :key="group.groupe">
+                          <div class="space-y-1">
+                            <div class="flex items-center gap-1">
+                              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide" x-text="group.groupe"></p>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                              <template x-for="v in group.vars" :key="v.name || v">
+                                <button @click="copyVariable(v)" class="text-xs bg-white hover:bg-sky-50 hover:text-sky-700 border border-gray-200 rounded px-1.5 py-0.5 font-mono transition-colors" x-text="v.name || v"></button>
+                              </template>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <button id="btn-add-email" @click="ajouterEmail()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              <i class="fas fa-plus"></i> Ajouter un email
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Règles d'attribution automatique ── -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <span class="font-semibold text-gray-800 text-sm">RÈGLES D'ATTRIBUTION AUTOMATIQUE</span>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-600">Activé</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" x-model="attributionAutomatique" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+              </label>
+            </div>
+          </div>
+          <div class="p-4 space-y-4">
+            <!-- Groupes -->
+            <template x-for="(groupe, groupeIdx) in groupesRegles" :key="groupeIdx">
+              <div class="border border-gray-200 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <select x-model="groupe.logique" class="w-20 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                      <option value="ET">ET</option>
+                      <option value="OU">OU</option>
+                    </select>
+                    <span class="text-sm font-medium">Groupe <span x-text="groupeIdx + 1"></span></span>
+                  </div>
+                  <button @click="supprimerGroupe(groupeIdx)" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                  </button>
+                </div>
+                <div class="space-y-2">
+                  <template x-for="(regle, regleIdx) in groupe.regles" :key="regleIdx">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <select x-model="regle.champ" @change="chargerOptionsPourChamp(regle)" class="w-44 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <template x-for="opt in champOptions" :key="opt.value">
+                          <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                      </select>
+                      <select x-model="regle.operateur" class="w-36 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <template x-for="opt in operateurOptions" :key="opt.value">
+                          <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                      </select>
+                      <select x-show="regle.options && regle.options.length > 0" x-model="regle.valeur" :multiple="regle.operateur === 'egal' || regle.operateur === 'different'"
+                        class="flex-1 min-w-32 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <template x-for="opt in regle.options" :key="opt.value">
+                          <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                      </select>
+                      <input x-show="!regle.options || regle.options.length === 0" x-model="regle.valeur" placeholder="Valeur" class="flex-1 min-w-24 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                      <button @click="supprimerRegle(groupeIdx, regleIdx)" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                        <i class="fas fa-trash text-xs"></i>
+                      </button>
+                    </div>
+                  </template>
+                  <button @click="ajouterRegleAuGroupe(groupeIdx)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-plus text-xs"></i> Ajouter une règle
+                  </button>
+                </div>
+              </div>
+            </template>
+            <button @click="ajouterGroupeRegles()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              <i class="fas fa-plus text-xs"></i> Ajouter un groupe
+            </button>
+
+            <!-- Aperçu -->
+            <div class="pt-2 flex items-center gap-4 text-sm flex-wrap">
+              <span class="text-green-600 font-medium"><i class="fas fa-check-circle text-xs mr-1"></i> <span x-text="apercuConcernes"></span> impayés concernés</span>
+              <span class="text-red-500 font-medium"><i class="fas fa-x-circle text-xs mr-1"></i> <span x-text="apercuExclus"></span> exclus</span>
+              <span class="text-yellow-600 font-medium"><i class="fas fa-envelope-open text-xs mr-1"></i> <span x-text="apercuSansEmail"></span> sans email</span>
+              <button x-show="apercuConcernes > 0" @click="showImpayesTable = !showImpayesTable" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                <span x-text="showImpayesTable ? 'Masquer' : 'Voir'"></span> les <span x-text="apercuConcernes"></span> impayés concernés
+              </button>
+            </div>
+
+            <!-- Tableau -->
+            <div x-show="showImpayesTable && apercuConcernes > 0" class="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-2 text-left font-medium text-gray-700">Facture</th>
+                      <th class="px-4 py-2 text-left font-medium text-gray-700">Payeur</th>
+                      <th class="px-4 py-2 text-left font-medium text-gray-700">Montant</th>
+                      <th class="px-4 py-2 text-left font-medium text-gray-700">Échéance</th>
+                      <th class="px-4 py-2 text-left font-medium text-gray-700">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-100">
+                    <template x-for="impaye in impayesConcernes" :key="impaye.id">
+                      <tr>
+                        <td class="px-4 py-2 text-gray-800" x-text="impaye.nfacture"></td>
+                        <td class="px-4 py-2 text-gray-600" x-text="impaye.payeur_nom"></td>
+                        <td class="px-4 py-2 text-gray-600"><span x-text="impaye.reste_a_payer"></span> €</td>
+                        <td class="px-4 py-2 text-gray-600" x-text="impaye.date_echeance"></td>
+                        <td class="px-4 py-2">
+                          <span class="px-2 py-1 rounded-full text-xs font-medium"
+                            :class="{
+                              'bg-green-100 text-green-800': impaye.statut === 'validé',
+                              'bg-yellow-100 text-yellow-800': impaye.statut === 'en attente',
+                              'bg-red-100 text-red-800': impaye.statut === 'impayé',
+                              'bg-gray-100 text-gray-800': !impaye.statut
+                            }" x-text="impaye.statut || 'inconnu'"></span>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div x-show="impayesConcernes.length === 0" class="p-4 text-center text-gray-400 text-sm">Aucun impayé trouvé correspondant aux critères</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

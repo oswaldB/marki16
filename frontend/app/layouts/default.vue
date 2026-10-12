@@ -206,6 +206,7 @@ const authStore = useAuthStore()
 
 const mainItems = [
   { to: '/', label: 'Dashboard', icon: 'i-heroicons-home' },
+  { to: '/audit', label: 'Audit', icon: 'i-heroicons-funnel' },
 ]
 
 const impayesItems = [
@@ -219,7 +220,7 @@ const impayesItems = [
 const relancesItems = [
   { to: '/relances', label: 'Tableau', icon: 'i-heroicons-table-cells' },
   { to: '/relances?vue=calendrier', label: 'Calendrier', icon: 'i-heroicons-calendar-days' },
-  { to: '/relances?vue=validation', label: 'Validation', icon: 'i-heroicons-check-circle' },
+  { to: '/relances-manuelles', label: 'Relances manuelles', icon: 'i-heroicons-paper-airplane' },
 ]
 
 const contactsItems = [

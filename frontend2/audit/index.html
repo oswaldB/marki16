@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="auditPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-6">
+
+        <!-- ── En-tête ── -->
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Audit du recouvrement</h1>
+            <p class="text-sm text-gray-500 mt-1">
+              Progression des impayés actifs dans les séquences de type « relances » :
+              en attente → relance 1, 2, 3… → récalcitrant.
+              Les séquences de suivi sont hors périmètre et comptées à part.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span x-show="data?.genereLe" class="text-xs text-gray-400"
+              x-text="'Généré le ' + formatDateHeure(data.genereLe)"></span>
+            <button id="btn-refresh" @click="charger" :disabled="loading"
+              class="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <i class="fas fa-arrow-rotate-right" :class="{'fa-spin': loading}"></i>
+              <span x-text="loading ? 'Chargement…' : 'Rafraîchir'"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Erreur ── -->
+        <div x-show="erreur" x-cloak
+          class="rounded-lg bg-red-50 border border-red-200 p-4 flex items-start gap-3">
+          <i class="fas fa-triangle-exclamation text-red-500 mt-0.5"></i>
+          <div>
+            <p class="text-sm font-medium text-red-800">Erreur de chargement</p>
+            <p class="text-sm text-red-600 mt-0.5" x-text="erreur"></p>
+          </div>
+        </div>
+
+        <!-- ── Loading ── -->
+        <div x-show="loading && !data" x-cloak class="text-center py-16 text-gray-400">Chargement…</div>
+
+        <!-- ── Contenu ── -->
+        <div x-show="data" x-cloak class="space-y-6">
+
+          <!-- ══ KPI ══ -->
+          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            <!-- Impayés en attente -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Impayés en attente</p>
+              <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums" x-text="data?.totaux?.actifs ?? 0"></p>
+              <p class="text-xs text-gray-400 mt-1" x-text="formatMontant(data?.totaux?.montantActif) + ' de reste à payer'"></p>
+            </div>
+
+            <!-- Avec email -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Avec email</p>
+              <p class="mt-1 text-3xl font-semibold text-sky-600 tabular-nums" x-text="data?.totaux?.avecEmail ?? 0"></p>
+              <p class="text-xs text-gray-400 mt-1">
+                <span x-text="formatMontant(data?.totaux?.montantAvecEmail)"></span> ·
+                <span x-text="formatPct(pctActifs(data?.totaux?.avecEmail)) + ' des actifs'"></span>
+              </p>
+            </div>
+
+            <!-- En séquence de relances -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">En séquence de relances</p>
+              <p class="mt-1 text-3xl font-semibold text-sky-700 tabular-nums" x-text="data?.totaux?.dansSequenceRelance ?? 0"></p>
+              <p class="text-xs text-gray-400 mt-1" x-text="formatMontant(data?.totaux?.montantDansSequenceRelance) + ' · périmètre de l\'audit'"></p>
+            </div>
+
+            <!-- En attente de relance -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">En attente de relance</p>
+              <p class="mt-1 text-3xl font-semibold text-amber-600 tabular-nums" x-text="phaseByKey('en_attente')?.count ?? 0"></p>
+              <p class="text-xs text-gray-400 mt-1">
+                <span x-text="formatMontant(phaseByKey('en_attente')?.montant ?? 0)"></span> ·
+                <span x-text="formatPct(phaseByKey('en_attente')?.pct) + ' du périmètre'"></span>
+              </p>
+            </div>
+
+            <!-- Séquence épuisée -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Séquence épuisée</p>
+              <p class="mt-1 text-3xl font-semibold text-red-600 tabular-nums" x-text="phaseByKey('recalcitrant')?.count ?? 0"></p>
+              <p class="text-xs text-gray-400 mt-1" x-text="formatMontant(phaseByKey('recalcitrant')?.montant ?? 0) + ' de reste à payer'"></p>
+            </div>
+
+            <!-- Hors périmètre -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Hors périmètre</p>
+              <p class="mt-1 text-3xl font-semibold text-gray-400 tabular-nums" x-text="(data?.horsPerimetre?.suivi ?? 0) + (data?.horsPerimetre?.sansSequence ?? 0)"></p>
+              <p class="text-xs text-gray-400 mt-1">
+                <span x-text="(data?.horsPerimetre?.suivi ?? 0) + ' en séquence de suivi · '"></span>
+                <span x-text="(data?.horsPerimetre?.sansSequence ?? 0) + ' sans séquence'"></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- ══ Entonnoir ══ -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 class="text-base font-semibold text-gray-900">Entonnoir des relances</h2>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  Largeur de barre et chiffre blanc = population de l'étape.
+                  Chaque étape ne conserve que les impayés ayant passé la précédente.
+                  Le chiffre coloré = impayés dont c'est la <strong>dernière étape atteinte</strong>.
+                </p>
+              </div>
+              <div class="text-xs text-gray-500 shrink-0">
+                Base : <span x-text="data?.totaux?.actifs ?? 0"></span> impayés actifs
+              </div>
+            </div>
+            <div class="p-4 space-y-2">
+              <template x-for="(stage, i) in entonnoir" :key="stage.key">
+                <div class="flex items-center gap-3">
+                  <!-- Libellé -->
+                  <div class="w-40 sm:w-52 shrink-0 text-right">
+                    <p class="text-sm font-medium text-gray-800 leading-tight" x-text="stage.label"></p>
+                    <p class="text-[11px] text-gray-400" x-text="formatPct(stage.pct) + ' des actifs'"></p>
+                    <template x-if="stage.key === 'dans_sequence' && (data?.totaux?.sequenceSansEmail ?? 0)">
+                      <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 mt-1">
+                        dont <span x-text="data.totaux.sequenceSansEmail"></span> sans email valide
+                      </span>
+                    </template>
+                  </div>
+
+                  <!-- Barre de l'entonnoir -->
+                  <div class="flex-1 h-11 flex items-center justify-center relative">
+                    <div
+                      class="h-9 rounded-md transition-all duration-500 flex items-center justify-center min-w-[2rem]"
+                      :style="{ width: stage.barWidth + '%', backgroundColor: stage.couleur, clipPath: stage.clipPath }"
+                    >
+                      <span class="text-xs font-semibold text-white tabular-nums drop-shadow" x-text="stage.count"></span>
+                    </div>
+                  </div>
+
+                  <!-- Détail phase -->
+                  <div class="w-40 sm:w-48 shrink-0 text-sm tabular-nums">
+                    <template x-if="stage.exclusif !== null">
+                      <div>
+                        <span class="font-semibold" :style="{ color: stage.couleur }" x-text="stage.exclusif"></span>
+                        <span class="text-gray-400 text-xs"> à cette étape</span>
+                        <p class="text-[11px] text-gray-400" x-text="formatMontant(stage.exclusifMontant)"></p>
+                      </div>
+                    </template>
+                    <template x-if="stage.exclusif === null">
+                      <div>
+                        <p class="text-gray-700" x-text="formatMontant(stage.montant)"></p>
+                        <p class="text-[11px] text-gray-400 leading-tight" x-text="stage.sousTitre || 'reste à payer'"></p>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- ══ Graphe + Tableau ══ -->
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <!-- Graphe -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Nombre d'impayés par phase</h2>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  Dernière phase atteinte par chaque impayé actif (répartition exclusive).
+                </p>
+              </div>
+              <div class="p-4 h-80">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Tableau récapitulatif -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Répartition par phase</h2>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  « Ont atteint » = cumul des phases suivantes incluses.
+                  % calculé sur les <span x-text="data?.totaux?.dansSequenceRelance ?? 0"></span> impayés en séquence de relances.
+                </p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                    <tr>
+                      <th class="text-left font-medium px-4 py-2">Phase</th>
+                      <th class="text-right font-medium px-3 py-2">À cette étape</th>
+                      <th class="text-right font-medium px-3 py-2">Ont atteint</th>
+                      <th class="text-right font-medium px-3 py-2">Montant</th>
+                      <th class="text-right font-medium px-4 py-2">%</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <template x-for="p in data?.phases" :key="p.key">
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">
+                          <span class="inline-flex items-center gap-2">
+                            <span class="size-2.5 rounded-full shrink-0" :style="{ backgroundColor: couleurPhase(p.key) }"></span>
+                            <span class="text-gray-800" x-text="p.label"></span>
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-right font-semibold tabular-nums text-gray-900" x-text="p.count"></td>
+                        <td class="px-3 py-2 text-right tabular-nums text-gray-500" x-text="p.cumulatif"></td>
+                        <td class="px-3 py-2 text-right tabular-nums text-gray-600" x-text="formatMontant(p.montant)"></td>
+                        <td class="px-4 py-2 text-right tabular-nums text-gray-500" x-text="formatPct(p.pct)"></td>
+                      </tr>
+                    </template>
+                    <tr class="bg-gray-50/60">
+                      <td class="px-4 py-2 text-gray-500">Hors périmètre (séquence de suivi)</td>
+                      <td class="px-3 py-2 text-right tabular-nums text-gray-500" x-text="data?.horsPerimetre?.suivi ?? 0"></td>
+                      <td class="px-3 py-2 text-right text-gray-300">—</td>
+                      <td class="px-3 py-2 text-right tabular-nums text-gray-500" x-text="formatMontant(data?.horsPerimetre?.montantSuivi)"></td>
+                      <td class="px-4 py-2 text-right text-gray-300">—</td>
+                    </tr>
+                    <tr class="bg-gray-50/60">
+                      <td class="px-4 py-2 text-gray-500">Hors périmètre (sans séquence)</td>
+                      <td class="px-3 py-2 text-right tabular-nums text-gray-500" x-text="data?.sansSequence?.count ?? 0"></td>
+                      <td class="px-3 py-2 text-right text-gray-300">—</td>
+                      <td class="px-3 py-2 text-right tabular-nums text-gray-500" x-text="formatMontant(data?.sansSequence?.montant)"></td>
+                      <td class="px-4 py-2 text-right text-gray-300">—</td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="border-t border-gray-200 bg-white">
+                    <tr class="font-semibold text-gray-900">
+                      <td class="px-4 py-2">Total actifs</td>
+                      <td class="px-3 py-2 text-right tabular-nums" x-text="data?.totaux?.actifs ?? 0"></td>
+                      <td class="px-3 py-2 text-right tabular-nums text-gray-400" x-text="data?.totaux?.dansSequenceRelance ?? 0"></td>
+                      <td class="px-3 py-2 text-right tabular-nums" x-text="formatMontant(data?.totaux?.montantActif)"></td>
+                      <td class="px-4 py-2 text-right">100 %</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ Détail par séquence ══ -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100">
+              <h2 class="text-base font-semibold text-gray-900">Détail par séquence</h2>
+              <p class="text-xs text-gray-500 mt-0.5">
+                Répartition des impayés actifs pour chaque séquence de type « relances ».
+              </p>
+            </div>
+            <div class="p-4 space-y-6">
+              <template x-for="seq in data?.sequences" :key="seq.id">
+                <div>
+                  <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-list text-sky-600 text-sm"></i>
+                      <span class="font-medium text-gray-800" x-text="seq.nom"></span>
+                      <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        <span x-text="seq.maxIndex"></span> étape<span x-show="seq.maxIndex > 1">s</span>
+                      </span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      <span x-text="seq.actifs"></span> impayés actifs · <span x-text="formatMontant(seq.montant)"></span>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <template x-for="p in seq.phases" :key="p.key">
+                      <div class="flex-1 min-w-[110px] rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2">
+                        <p class="text-[11px] text-gray-500 truncate" x-text="p.label"></p>
+                        <p class="text-lg font-semibold tabular-nums" :style="{ color: couleurPhase(p.key) }" x-text="p.count"></p>
+                        <p class="text-[11px] text-gray-400 tabular-nums" x-text="formatMontant(p.montant)"></p>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+              <p x-show="!(data?.sequences?.length)" class="text-sm text-gray-400">
+                Aucune séquence associée aux impayés actifs.
+              </p>
+            </div>
+          </div>
+
+          <!-- ══ Contexte ══ -->
+          <p class="text-xs text-gray-400">
+            <span x-text="data?.totaux?.impayesTotal ?? 0"></span> impayés au total (dont <span x-text="data?.totaux?.soldes ?? 0"></span> soldés) ·
+            <span x-text="data?.relances?.total ?? 0"></span> relances en base (<span x-text="data?.relances?.envoyees ?? 0"></span> envoyées) ·
+            <span x-text="data?.maxIndex ?? 0"></span> étapes maximum par séquence ·
+            audit limité aux séquences de type « relances » (<span x-text="data?.totaux?.dansSequenceSuivi ?? 0"></span> impayés en séquence de suivi exclus).
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

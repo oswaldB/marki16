@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relances manuelles — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <style>
+    .force-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .force-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+  </style>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="relancesManuellesPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-4 md:p-6 space-y-4">
+
+        <!-- ── Header ── -->
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Relances manuelles</h1>
+            <p class="text-sm text-gray-500">
+              Sélectionnez les contacts (payeurs / apporteurs d'affaires) à gauche, puis éditez,
+              planifiez et envoyez les emails de suivi à droite.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="btn-reload"
+              class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              :disabled="loading"
+              @click="chargerImpayes()"
+            >
+              <i class="fa-solid fa-rotate" :class="loading ? 'fa-spin' : ''"></i>
+              Recharger
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Two columns ── -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+          <!-- ═══ LEFT: Contact selection ═══ -->
+          <section class="flex flex-col gap-3 min-w-0">
+            <!-- Filter bar -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="relative flex-1 min-w-0">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input
+                  type="text"
+                  x-model="search"
+                  placeholder="Contact, email, n° facture, adresse…"
+                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              <select
+                x-model="smtpProfilId"
+                class="w-44 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white shrink-0"
+              >
+                <option value="">Profil SMTP</option>
+                <template x-for="p in smtpProfiles" :key="p.id">
+                  <option :value="p.id" x-text="p.label"></option>
+                </template>
+              </select>
+              <button
+                id="btn-toggle-filters"
+                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border rounded-md shrink-0"
+                :class="showFiltres ? 'bg-gray-100 border-gray-300 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
+                @click="showFiltres = !showFiltres"
+                :title="showFiltres ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'"
+              >
+                <i class="fa-solid fa-filter"></i>
+                Filtres
+                <span x-show="nbFiltresActifs" class="ml-1 bg-sky-600 text-white text-xs px-1.5 py-0.5 rounded-full" x-text="nbFiltresActifs"></span>
+              </button>
+            </div>
+
+            <!-- Advanced filters -->
+            <div x-show="showFiltres" x-cloak class="border border-gray-200 rounded-lg bg-white p-3 space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Destinataire</label>
+                  <select x-model="filtreRole" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+                    <option value="payeur">Payeur</option>
+                    <option value="apporteur">Apporteur d'affaire</option>
+                    <option value="both">Les deux</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Séquence</label>
+                  <select x-model="filtreSequence" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+                    <option value="all">Toutes les séquences</option>
+                    <option value="none">Sans séquence</option>
+                    <template x-for="s in sequences" :key="s.id">
+                      <option :value="s.id" x-text="s.nom"></option>
+                    </template>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Statut dossier</label>
+                  <select x-model="filtreStatutDossier" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+                    <option value="all">Tous les statuts</option>
+                    <template x-for="st in statutDossierValues" :key="st">
+                      <option :value="st" x-text="st"></option>
+                    </template>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Retard minimum (jours)</label>
+                  <input type="number" x-model="retardMin" placeholder="0" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Reste à payer min (€)</label>
+                  <input type="number" x-model="rapMin" placeholder="0" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Reste à payer max (€)</label>
+                  <input type="number" x-model="rapMax" placeholder="∞" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 pt-3 border-t border-gray-100">
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" x-model="includeBlacklist" class="rounded"> Blacklistés
+                </label>
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" x-model="includeSuspendus" class="rounded"> Suspendus
+                </label>
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" x-model="includeSansEmail" class="rounded"> Sans email
+                </label>
+                <button class="ml-auto inline-flex items-center gap-1 px-2 py-1 text-sm text-gray-500 hover:text-gray-700" @click="reinitialiser()">
+                  <i class="fa-solid fa-xmark"></i> Réinitialiser
+                </button>
+              </div>
+            </div>
+
+            <!-- SMTP warning -->
+            <div x-show="!smtpProfilId" x-cloak class="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-medium text-amber-800">Aucun profil SMTP sélectionné</p>
+                <p class="text-sm text-amber-700">Choisissez un profil SMTP en haut du panneau pour pouvoir générer les emails.</p>
+              </div>
+            </div>
+
+            <!-- Selection + generation bar -->
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button id="btn-select-all" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50" @click="toutSelectionner()">
+                  Tout sélectionner
+                </button>
+                <button x-show="selectedKeys.length" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700" @click="deselectionner()">
+                  Aucun
+                </button>
+                <span class="text-sm text-gray-500">
+                  <span x-text="groupes.length"></span> groupe(s) · <strong x-text="selectedKeys.length"></strong> sélectionné(s)
+                  <template x-if="selectedKeys.length">
+                    <span x-text="' — ' + formatMontant(totalSelection)"></span>
+                  </template>
+                </span>
+              </div>
+              <button
+                id="btn-generer"
+                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                :class="selectedKeys.length === 0 || !smtpProfilId ? 'bg-sky-400' : 'bg-sky-600 hover:bg-sky-700'"
+                :disabled="selectedKeys.length === 0 || !smtpProfilId"
+                @click="generer()"
+              >
+                <i class="fa-solid fa-wand-magic-sparkles" :class="generant ? 'fa-spin' : ''"></i>
+                Générer les emails
+              </button>
+            </div>
+
+            <!-- Contacts table -->
+            <div x-show="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+            <div x-show="!loading" class="max-h-[60vh] overflow-auto rounded-lg border border-gray-200 bg-white force-scrollbar">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-gray-50 sticky top-0 z-10">
+                  <tr class="border-b border-gray-200">
+                    <th class="p-3 w-10"></th>
+                    <th class="p-3">Contact</th>
+                    <th class="p-3">Factures</th>
+                    <th class="p-3">Reste dû</th>
+                    <th class="p-3 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="g in groupes" :key="g.key">
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                      <td class="p-3">
+                        <input type="checkbox" class="rounded" :checked="isSelected(g)" @change="toggleSelection(g)" />
+                      </td>
+                      <td class="p-3">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-2">
+                            <p class="font-medium text-gray-900 truncate" x-text="g.contactNom"></p>
+                            <span
+                              class="text-xs px-2 py-0.5 rounded-full"
+                              :class="g.role === 'apporteur' ? 'bg-purple-50 text-purple-700' : 'bg-sky-50 text-sky-700'"
+                              x-text="g.role === 'apporteur' ? 'Apporteur' : 'Payeur'"
+                            ></span>
+                          </div>
+                          <p class="text-xs text-gray-500 truncate" x-text="g.contact.email || '—'"></p>
+                        </div>
+                      </td>
+                      <td class="p-3">
+                        <div class="text-sm leading-tight">
+                          <p><span x-text="g.nbFactures"></span> facture(s)</p>
+                          <p
+                            class="text-xs"
+                            :class="g.retardMax > 30 ? 'text-red-600' : g.retardMax > 7 ? 'text-orange-500' : 'text-gray-400'"
+                            x-text="g.retardMax + 'j de retard'"
+                          ></p>
+                        </div>
+                      </td>
+                      <td class="p-3">
+                        <span class="text-sm font-medium whitespace-nowrap" x-text="formatMontant(g.totalRap)"></span>
+                      </td>
+                      <td class="p-3">
+                        <button class="p-1.5 text-gray-500 hover:text-gray-700 rounded" title="Voir les factures" @click="ouvrirFactures(g)">
+                          <i class="fa-solid fa-file-lines"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                  <tr x-show="groupes.length === 0">
+                    <td colspan="5" class="p-8 text-center text-gray-400">
+                      <i class="fa-solid fa-inbox text-2xl mb-2"></i>
+                      <p>Aucun impayé ne correspond aux filtres</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ═══ RIGHT: Generated emails ═══ -->
+          <section class="flex flex-col gap-3 min-w-0">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-base font-semibold text-gray-900">
+                Emails de suivi générés
+                <span class="text-sm font-normal text-gray-500">(<span x-text="file.length"></span>)</span>
+              </h2>
+              <select
+                x-model="filtreFileStatut"
+                @change="chargerFile()"
+                class="w-36 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
+              >
+                <option value="a_traiter">À traiter</option>
+                <option value="envoyes">Envoyés</option>
+                <option value="tous">Tous</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <input type="date" x-model="datePlanification" class="w-40 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              <button
+                id="btn-planifier-tous"
+                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                :disabled="!datePlanification"
+                @click="planifierTous()"
+              >
+                <i class="fa-solid fa-calendar-days" :class="planifGroupe ? 'fa-spin' : ''"></i>
+                Tout planifier
+              </button>
+              <button
+                id="btn-envoyer-tous"
+                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50"
+                :disabled="envoiGroupe"
+                @click="envoyerTous()"
+              >
+                <i class="fa-solid fa-paper-plane" :class="envoiGroupe ? 'fa-spin' : ''"></i>
+                Tout envoyer
+              </button>
+            </div>
+
+            <!-- File table -->
+            <div x-show="fileLoading" class="text-center py-8 text-gray-400">Chargement…</div>
+            <div x-show="!fileLoading" class="max-h-[60vh] overflow-auto rounded-lg border border-gray-200 bg-white force-scrollbar">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-gray-50 sticky top-0 z-10">
+                  <tr class="border-b border-gray-200">
+                    <th class="p-3">Statut</th>
+                    <th class="p-3">Destinataire</th>
+                    <th class="p-3">Prévu le</th>
+                    <th class="p-3 w-24"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="row in file" :key="row.id">
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                      <td class="p-3">
+                        <span
+                          class="text-xs px-2 py-0.5 rounded-full"
+                          :class="statutBadgeClass(row.statut)"
+                          x-text="statutLabel(row.statut)"
+                        ></span>
+                      </td>
+                      <td class="p-3">
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate" x-text="row.contactNom || '—'"></p>
+                          <p class="text-xs text-gray-500 truncate">
+                            <span x-text="row.email || '—'"></span> · <span x-text="row.impayes.length"></span> facture(s)
+                          </p>
+                          <p class="text-xs text-gray-400 truncate" x-text="row.objet || '(sans objet)'"></p>
+                        </div>
+                      </td>
+                      <td class="p-3">
+                        <span class="text-sm tabular-nums whitespace-nowrap" x-text="formatDate(row.dateEnvoi)"></span>
+                      </td>
+                      <td class="p-3">
+                        <div class="flex items-center gap-1">
+                          <button
+                            class="p-1.5 text-gray-500 hover:text-gray-700 rounded"
+                            :title="estEnvoyee(row) ? 'Voir' : 'Éditer / prévoir / envoyer'"
+                            @click="ouvrirSuivi(row)"
+                          >
+                            <i class="fa-solid" :class="estEnvoyee(row) ? 'fa-eye' : 'fa-pen-to-square'"></i>
+                          </button>
+                          <button
+                            x-show="!estEnvoyee(row)"
+                            class="p-1.5 text-red-500 hover:text-red-700 rounded"
+                            title="Supprimer cette relance non envoyée"
+                            @click="demanderSuppression(row)"
+                          >
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                  <tr x-show="file.length === 0">
+                    <td colspan="4" class="p-8 text-center text-gray-400">
+                      <i class="fa-solid fa-envelope text-2xl mb-2"></i>
+                      <p>Aucun email de suivi manuel</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── Slideover: Factures d'un groupe ── -->
+        <div x-show="showFactures" class="fixed inset-0 z-50 flex">
+          <div class="absolute inset-0 bg-black/50" @click="showFactures = false"></div>
+          <div class="relative ml-auto w-full md:w-1/3 max-w-none h-full bg-white shadow-2xl flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+              <span class="font-semibold">Factures — <span x-text="groupeFactures?.contactNom || ''"></span></span>
+              <button class="p-1.5 text-gray-500 hover:text-gray-700 rounded" @click="showFactures = false">
+                <i class="fa-solid fa-xmark text-lg"></i>
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2">
+              <template x-if="groupeFactures">
+                <template x-for="imp in groupeFactures.impayes" :key="imp.id">
+                  <div class="flex items-center justify-between border border-gray-100 rounded-lg px-3 py-2">
+                    <div class="min-w-0">
+                      <a :href="'../impayes-detail/index.html?id=' + imp.id" class="font-mono text-sm text-sky-700 hover:underline" x-text="imp.nfacture"></a>
+                      <p class="text-xs text-gray-500 truncate" x-text="imp.adresse_bien || '—'"></p>
+                    </div>
+                    <div class="text-right shrink-0 ml-3">
+                      <p class="text-sm font-medium" x-text="formatMontant(imp.reste_a_payer)"></p>
+                      <p class="text-xs text-gray-400" x-text="imp.retard + 'j'"></p>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Slideover: Édition suivi ── -->
+        <div x-show="showSuiviDrawer" class="fixed inset-0 z-50 flex">
+          <div class="absolute inset-0 bg-black/50" @click="showSuiviDrawer = false"></div>
+          <div class="relative ml-auto w-full md:w-1/2 max-w-none h-full bg-white shadow-2xl flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-lg">Email de suivi</span>
+                <span
+                  x-show="suiviSelectionne"
+                  class="text-xs px-2 py-0.5 rounded-full"
+                  :class="statutBadgeClass(suiviSelectionne?.statut)"
+                  x-text="statutLabel(suiviSelectionne?.statut)"
+                ></span>
+              </div>
+              <button class="p-1.5 text-gray-500 hover:text-gray-700 rounded" @click="showSuiviDrawer = false">
+                <i class="fa-solid fa-xmark text-lg"></i>
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+              <!-- Error alert -->
+              <div x-show="suiviSelectionne?.lastError" class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5"></i>
+                <div>
+                  <p class="text-sm font-medium text-red-800">Dernière erreur d'envoi</p>
+                  <p class="text-sm text-red-700" x-text="suiviSelectionne?.lastError"></p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Date d'envoi prévue</label>
+                  <input type="date" x-model="drawerDateEnvoi" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                  <p class="text-xs text-gray-400 mt-1">Date future = envoi automatique à échéance. Aujourd'hui = envoi manuel via le bouton ci-dessous.</p>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Destinataire (contact)</label>
+                  <input type="text" :value="suiviSelectionne?.email || ''" disabled class="w-full text-sm border border-gray-200 rounded-md px-3 py-2 bg-gray-100 text-gray-500" />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">CC</label>
+                <input type="text" x-model="drawerCc" placeholder="emails séparés par des virgules" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              </div>
+
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Objet</label>
+                <input type="text" x-model="drawerObjet" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              </div>
+
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Corps</label>
+                <textarea x-model="drawerCorps" rows="10" class="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"></textarea>
+              </div>
+
+              <!-- Factures concernées -->
+              <div x-show="suiviSelectionne?.impayes?.length" class="rounded-lg border border-gray-200 overflow-hidden">
+                <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-600">
+                  Factures concernées (<span x-text="suiviSelectionne?.impayes?.length || 0"></span>)
+                </div>
+                <template x-for="imp in suiviSelectionne?.impayes || []" :key="imp.id">
+                  <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 last:border-b-0">
+                    <div class="flex items-center gap-2 text-sm">
+                      <i class="fa-solid fa-file-lines text-gray-400"></i>
+                      <a :href="'../impayes-detail/index.html?id=' + imp.id" class="font-mono text-sky-700 hover:underline" x-text="imp.nfacture"></a>
+                    </div>
+                    <span class="text-sm text-gray-600" x-text="formatMontant(imp.reste_a_payer)"></span>
+                  </div>
+                </template>
+              </div>
+
+              <div class="bg-sky-50 border border-sky-200 rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-circle-info text-sky-500 mt-0.5"></i>
+                <p class="text-sm text-sky-700">Le corps de l'email contient les liens vers les factures et l'espace client. Aucune pièce jointe PDF n'est ajoutée automatiquement pour les suivis.</p>
+              </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 flex flex-wrap justify-end gap-2">
+              <button class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200" @click="showSuiviDrawer = false">Annuler</button>
+              <button
+                id="btn-enregistrer-suivi"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                :disabled="drawerSaving"
+                @click="enregistrerSuivi()"
+              >
+                <i class="fa-solid fa-calendar-days" :class="drawerSaving ? 'fa-spin' : ''"></i>
+                Enregistrer / Prévoir
+              </button>
+              <button
+                id="btn-envoyer-suivi"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50"
+                :disabled="drawerSending || drawerSaving"
+                @click="envoyerSuivi()"
+              >
+                <i class="fa-solid fa-paper-plane" :class="drawerSending ? 'fa-spin' : ''"></i>
+                Envoyer l'email
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Modal: Suppression ── -->
+        <div x-show="showSupprModal" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/50" @click="showSupprModal = false"></div>
+          <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Supprimer la relance</h3>
+            </div>
+            <div class="p-4 space-y-3">
+              <p>
+                Supprimer définitivement la relance prévue pour
+                <strong x-text="suiviASupprimer?.contactNom || suiviASupprimer?.email || 'ce contact'"></strong> ?
+              </p>
+              <p class="text-sm text-gray-500">
+                <span x-text="suiviASupprimer?.objet || '(sans objet)'"></span> ·
+                <span x-text="(suiviASupprimer?.impayes?.length || 0) + ' facture(s)'"></span>
+              </p>
+              <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-start gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5"></i>
+                <div>
+                  <p class="text-sm font-medium text-orange-800">Cette action est irréversible</p>
+                  <p class="text-sm text-orange-700">Aucun email n'a été envoyé pour cette relance : elle sera retirée de la file.</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
+              <button class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md" @click="showSupprModal = false">Annuler</button>
+              <button
+                id="btn-supprimer-suivi"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                :disabled="supprimant"
+                @click="supprimerSuivi()"
+              >
+                <i class="fa-solid fa-trash" :class="supprimant ? 'fa-spin' : ''"></i>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Toast ── -->
+        <div
+          x-show="toastMessage"
+          x-transition
+          class="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium"
+          :class="toastColor === 'red' ? 'bg-red-600' : toastColor === 'orange' ? 'bg-amber-600' : 'bg-green-600'"
+        >
+          <span x-text="toastMessage"></span>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

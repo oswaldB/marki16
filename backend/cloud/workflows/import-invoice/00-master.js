@@ -202,9 +202,12 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
             { step: 4 },
         );
         result = await fetchInterlocuteurs({ pieces });
-        const { interlocuteursByDossier } = result;
+        const { interlocuteursByDossier, contactsDefautInterlocuteur } = result;
         stats.etape4 = {
             interlocuteursCount: Object.keys(interlocuteursByDossier).length,
+            contactsDefautCount: Object.keys(
+                contactsDefautInterlocuteur || {},
+            ).length,
         };
         info(
             `✅ ÉTAPE 4 TERMINÉE: ${Object.keys(interlocuteursByDossier).length} dossiers avec interlocuteurs`,
@@ -237,6 +240,7 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
         const createContactsWithRelations = require("./04-createContactsWithRelations");
         const contactsResult = await createContactsWithRelations({
             interlocuteursByDossier,
+            contactsDefautInterlocuteur,
         });
 
         result = await processAndSaveImpayes({
@@ -325,62 +329,14 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
         );
 
         // ========== APPEL WORKFLOW GENERATE-RELANCES (étapes 8-9) ==========
+        // NOTE: generateRelances est désormais géré par le cron generate-relances-du-jour à 17h00.
+        // L'import se contente d'importer les factures et d'assigner les séquences.
         info(
-            "\n═════════════════════════════════════════════════════════════",
+            "🔄 generateRelances: DÉSACTIVÉ dans import-invoice — géré par cron à 17h00 (generate-relances-du-jour)",
             "import-invoice",
             "importInvoicesMaster",
         );
-        info(
-            `🔄 APPEL: generateRelances pour ${sansRelance.length} sans relance, ${avecRelance.length} avec relance...`,
-            "import-invoice",
-            "importInvoicesMaster",
-            {
-                sansRelanceCount: sansRelance.length,
-                avecRelanceCount: avecRelance.length,
-            },
-        );
-
-        // NOTE: generateRelances est maintenant en mode autonome exclusif (pas de params)
-        // Mais on garde l'appel pour compatibilité avec import-invoice
-        try {
-            const generateResult = await Parse.Cloud.run(
-                "generateRelances",
-                {
-                    sansRelanceIds: sansRelance.map((i) => i.id),
-                    avecRelance: avecRelance.map((r) => ({
-                        impayeId: r.impaye?.id || r.impaye,
-                        relanceId: r.relance?.id,
-                    })),
-                },
-                { useMasterKey: true },
-            );
-
-            stats.generateRelances = generateResult.stats;
-            info(
-                `✅ GENERATE-RELANCES TERMINÉ: ${generateResult.stats.etape1?.relancesCreated || 0} créées, ${generateResult.stats.etape2?.processed || 0} générées`,
-                "import-invoice",
-                "importInvoicesMaster",
-                {
-                    created: generateResult.stats.etape1?.relancesCreated || 0,
-                    generated: generateResult.stats.etape2?.processed || 0,
-                },
-            );
-        } catch (cloudErr) {
-            error(
-                `❌ Erreur lors de l'appel à generateRelances: ${cloudErr.message}`,
-                "import-invoice",
-                "importInvoicesMaster",
-                {
-                    error: cloudErr.message,
-                    stack: cloudErr.stack?.substring(0, 500),
-                },
-            );
-            stats.errors.push({
-                step: "generateRelances",
-                error: cloudErr.message,
-                stack: cloudErr.stack?.substring(0, 500),
-            });
-        }
+        stats.generateRelances = { disabled: true, reason: "Moved to generate-relances-du-jour cron at 17h00" };
         info(
             "═════════════════════════════════════════════════════════════",
             "import-invoice",
@@ -463,22 +419,28 @@ async function importInvoicesMaster({ trigger = "cron" } = {}) {
 module.exports = importInvoicesMaster;
 
 // Cloud Function pour déclencher l'importation via Parse
-Parse.Cloud.define("triggerImportInvoices", async (request) => {
-    info(
-        "🌐 Cloud Function triggerImportInvoices appelée",
-        "import-invoice",
-        "triggerImportInvoices",
-        { user: request.user?.id, master: request.master },
-    );
-
-    if (!request.master && !request.user) {
-        throw new Error(
-            "Non autorisé - cette fonction nécessite un utilisateur authentifié",
+if (
+    typeof Parse !== "undefined" &&
+    Parse.Cloud &&
+    typeof Parse.Cloud.define === "function"
+) {
+    Parse.Cloud.define("triggerImportInvoices", async (request) => {
+        info(
+            "🌐 Cloud Function triggerImportInvoices appelée",
+            "import-invoice",
+            "triggerImportInvoices",
+            { user: request.user?.id, master: request.master },
         );
-    }
 
-    return await importInvoicesMaster({ trigger: "cloud-function" });
-});
+        if (!request.master && !request.user) {
+            throw new Error(
+                "Non autorisé - cette fonction nécessite un utilisateur authentifié",
+            );
+        }
+
+        return await importInvoicesMaster({ trigger: "cloud-function" });
+    });
+}
 
 // Exécution directe si appelé en CLI
 if (require.main === module) {

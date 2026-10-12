@@ -106,6 +106,10 @@ function buildBrokerImpayesJson(brokerImpayes) {
 function determineScenarioType(contact, impayes, brokerImpayes) {
     const nombreImpayes = impayes.length;
     
+    // Si plusieurs impayés partagent la même nfacture → c'est une seule facture (single)
+    const uniqueNfactures = new Set(impayes.map(i => i.get("nfacture")).filter(Boolean));
+    const isSingleFacture = uniqueNfactures.size <= 1;
+    
     // Détecter si le contact est un apporteur d'affaires
     const contactType = contact.get("type_personne");
     const isBroker = contactType === "Apporteur d'affaire" || 
@@ -119,7 +123,7 @@ function determineScenarioType(contact, impayes, brokerImpayes) {
         return "both";
     } else if (isBroker) {
         return "broker";
-    } else if (nombreImpayes === 1) {
+    } else if (nombreImpayes === 1 || isSingleFacture) {
         return "single";
     } else {
         return "multiple";
@@ -247,36 +251,53 @@ async function callOllama(prompt, contactId, emailIndex) {
 }
 
 /**
+ * Vérifie qu'une valeur est un email plausible (chaîne non vide, @ encadré)
+ * @param {*} email - Valeur à tester
+ * @returns {boolean}
+ */
+function emailValide(email) {
+    if (typeof email !== "string") return false;
+    const trimmed = email.trim();
+    const atIndex = trimmed.indexOf("@");
+    return atIndex > 0 && atIndex < trimmed.length - 1;
+}
+
+/**
+ * Détermine le contact à relancer pour un impayé.
+ *
+ * Priorité :
+ *   1. contact_relance s'il est joignable (email valide)
+ *   2. payeur s'il est joignable
+ *   3. contact_relance puis payeur (contact non joignable)
+ *
+ * Évite de bloquer une relance quand contact_relance pointe sur un
+ * interlocuteur sans email alors que l'entité débitrice (payeur) en a un.
+ *
+ * @param {Parse.Object} impaye - L'impayé
+ * @returns {Parse.Object|null} - Le contact à utiliser
+ */
+function getContactRelance(impaye) {
+    const contactRelance = impaye.get("contact_relance");
+    const payeur = impaye.get("payeur");
+
+    if (contactRelance && emailValide(contactRelance.get("email"))) {
+        return contactRelance;
+    }
+    if (payeur && emailValide(payeur.get("email"))) {
+        return payeur;
+    }
+
+    return contactRelance || payeur || null;
+}
+
+/**
  * Vérifie si le contact dispose d'un email valide
  * @param {Parse.Object} impaye - L'impayé
  * @returns {boolean} - True si le contact a un email valide
  */
 function contactHasEmail(impaye) {
-    let contact = impaye.get("contact_relance");
-    if (!contact) {
-        contact = impaye.get("payeur");
-    }
-
-    if (!contact) {
-        return false;
-    }
-
-    const email = contact.get("email");
-    if (typeof email !== "string") {
-        return false;
-    }
-
-    const trimmedEmail = email.trim();
-    if (trimmedEmail.length === 0) {
-        return false;
-    }
-
-    const atIndex = trimmedEmail.indexOf("@");
-    if (atIndex <= 0 || atIndex === trimmedEmail.length - 1) {
-        return false;
-    }
-
-    return true;
+    const contact = getContactRelance(impaye);
+    return !!(contact && emailValide(contact.get("email")));
 }
 
 /**
@@ -477,10 +498,7 @@ async function generateRelances() {
 
         // Filtre 1.5 : exclusion des contacts blacklistés
         const impayesSansContactsBlacklistes = impayesAvecSequenceRelance.filter((impaye) => {
-            let contact = impaye.get("contact_relance");
-            if (!contact) {
-                contact = impaye.get("payeur");
-            }
+            const contact = getContactRelance(impaye);
             return !contact || contact.get("isBlacklisted") !== true;
         });
         log(
@@ -547,10 +565,7 @@ async function generateRelances() {
         const groupedByContactSequence = new Map();
 
         for (const impaye of impayesSansRelance) {
-            let contact = impaye.get("contact_relance");
-            if (!contact) {
-                contact = impaye.get("payeur");
-            }
+            const contact = getContactRelance(impaye);
             const sequence = impaye.get("sequence");
             const nfacture = impaye.get("nfacture");
 

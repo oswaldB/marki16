@@ -182,7 +182,8 @@ const props = defineProps({
   sequence: { type: Object, required: true },
   emails: { type: Array, required: true },
   groupesRegles: { type: Array, default: () => [] },
-  attributionAutomatique: { type: Boolean, default: false }
+  attributionAutomatique: { type: Boolean, default: false },
+  emailIndex: { type: Number, default: 0 }
 })
 
 const emit = defineEmits(['update:modelValue', 'test-sent'])
@@ -217,11 +218,11 @@ const hasReglesAttribution = computed(() => {
   )
 })
 
-// Informations sur l'email de suivi (prend le premier email actif)
+// Informations sur l'email de suivi (prend l'email correspondant à l'index)
 const emailSuiviInfo = computed(() => {
   if (!props.emails || props.emails.length === 0) return null
   
-  const email = props.emails[0]
+  const email = props.emails[props.emailIndex]
   if (!email) return null
   
   const scenarioActif = email.activeScenario || 'single'
@@ -528,7 +529,7 @@ function envoyerTest() {
     testEmail: testEmail.value,
     payeurId: selectedPayeur.value,
     payeurData: selectedPayeurData.value,
-    emailIndex: 0,
+    emailIndex: props.emailIndex,
     userId: currentUser ? currentUser.id : null,
     userEmail: currentUser ? currentUser.get('email') : null,
     userName: currentUser ? currentUser.get('username') : null

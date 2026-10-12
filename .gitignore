@@ -27,3 +27,6 @@ backend/logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Base SQLite runtime
+sync.db

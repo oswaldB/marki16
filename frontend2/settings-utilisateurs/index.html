@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des utilisateurs — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="settingsUtilisateursPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-4">
+
+        <!-- ── Header ── -->
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-semibold text-gray-900">Gestion des utilisateurs</h1>
+          <button
+            id="btn-create-user"
+            @click="ouvrirCreation"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
+          >
+            <i class="fas fa-plus text-xs"></i>
+            Nouvel utilisateur
+          </button>
+        </div>
+
+        <!-- ── Chargement ── -->
+        <div x-show="loading" class="text-center py-12 text-gray-400">
+          <i class="fas fa-circle-notch fa-spin mr-2"></i> Chargement…
+        </div>
+
+        <!-- ── Vide ── -->
+        <template x-if="!loading && users.length === 0">
+          <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-4 flex items-start gap-3">
+            <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+            <div>
+              <p class="text-sm font-semibold text-blue-800">Aucun utilisateur</p>
+              <p class="text-sm text-blue-700">Créez le premier compte administrateur.</p>
+            </div>
+          </div>
+        </template>
+
+        <!-- ── Tableau ── -->
+        <template x-if="!loading && users.length > 0">
+          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-4 py-3 font-medium">Identifiant</th>
+                    <th class="px-4 py-3 font-medium">Rôle</th>
+                    <th class="px-4 py-3 font-medium">Créé le</th>
+                    <th class="px-4 py-3 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <template x-for="row in rows" :key="row.id">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                      <td class="px-4 py-3 font-medium text-gray-900" x-text="row.identifiant"></td>
+                      <td class="px-4 py-3">
+                        <span
+                          class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+                          :class="row.isAdmin ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-700 border border-gray-200'"
+                        >
+                          <span x-text="row.isAdmin ? 'Admin' : 'Utilisateur'"></span>
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-600" x-text="row.createdAt"></td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center justify-end gap-1">
+                          <!-- Changer mot de passe -->
+                          <button
+                            :id="'btn-change-password-' + row.id"
+                            @click="ouvrirChangerMdp(row)"
+                            title="Changer le mot de passe"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            <i class="fas fa-key text-xs"></i>
+                          </button>
+                          <!-- Toggle admin -->
+                          <button
+                            :id="'btn-toggle-admin-' + row.id"
+                            @click="toggleAdmin(row)"
+                            :title="row.isAdmin ? 'Rétrograder' : 'Promouvoir admin'"
+                            :disabled="row.id === currentUserId && row.isAdmin"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            :class="row.isAdmin ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'"
+                          >
+                            <i class="fas text-xs" :class="row.isAdmin ? 'fa-shield-check' : 'fa-shield-halved'"></i>
+                          </button>
+                          <!-- Supprimer -->
+                          <button
+                            :id="'btn-delete-user-' + row.id"
+                            @click="confirmerSuppression(row)"
+                            :disabled="row.id === currentUserId"
+                            title="Supprimer"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <i class="fas fa-trash text-xs"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </template>
+
+        <!-- ── Toast ── -->
+        <div
+          x-show="toast.visible"
+          x-transition
+          class="fixed bottom-6 right-6 z-50 rounded-lg px-4 py-3 text-sm shadow-lg border"
+          :class="{
+            'bg-green-50 text-green-800 border-green-200': toast.type === 'success',
+            'bg-red-50 text-red-800 border-red-200': toast.type === 'error',
+            'bg-orange-50 text-orange-800 border-orange-200': toast.type === 'warning'
+          }"
+        >
+          <div class="font-semibold" x-text="toast.title"></div>
+          <div x-show="toast.description" x-text="toast.description"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══════════════════════════════════════
+         MODAL — Créer un utilisateur
+    ══════════════════════════════════════ -->
+    <div
+      x-show="showCreateModal"
+      x-transition.opacity
+      class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+      @click.self="showCreateModal = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-base font-semibold text-gray-900">Nouvel utilisateur</h3>
+          <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Email (identifiant de connexion) <span class="text-red-500">*</span>
+            </label>
+            <input
+              x-model="form.email"
+              type="email"
+              placeholder="prenom.nom@exemple.fr"
+              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+            >
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Mot de passe <span class="text-red-500">*</span>
+            </label>
+            <input
+              x-model="form.password"
+              type="password"
+              placeholder="Mot de passe temporaire"
+              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+            >
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              x-model="form.makeAdmin"
+              type="checkbox"
+              id="make-admin"
+              class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+            >
+            <label for="make-admin" class="text-sm text-gray-700">Administrateur</label>
+          </div>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            id="btn-cancel-create"
+            @click="showCreateModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          >Annuler</button>
+          <button
+            id="btn-confirm-create"
+            @click="creerUtilisateur"
+            :disabled="saving"
+            class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            <span x-show="saving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+            Créer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODAL — Changer mot de passe
+    ══════════════════════════════════════ -->
+    <div
+      x-show="showPasswordModal"
+      x-transition.opacity
+      class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+      @click.self="showPasswordModal = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-base font-semibold text-gray-900">Changer le mot de passe</h3>
+          <button @click="showPasswordModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-4">
+          <p class="text-sm text-gray-600">
+            Utilisateur : <strong x-text="userEnAction?.email || userEnAction?.username || '—'"></strong>
+          </p>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Nouveau mot de passe <span class="text-red-500">*</span>
+            </label>
+            <input
+              x-model="form.newPassword"
+              type="password"
+              placeholder="Nouveau mot de passe"
+              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+            >
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Confirmer</label>
+            <input
+              x-model="form.confirmPassword"
+              type="password"
+              placeholder="Confirmation"
+              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+            >
+          </div>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            id="btn-cancel-password"
+            @click="showPasswordModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          >Annuler</button>
+          <button
+            id="btn-confirm-password"
+            @click="changerMotDePasse"
+            :disabled="saving"
+            class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            <span x-show="saving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODAL — Confirmer suppression
+    ══════════════════════════════════════ -->
+    <div
+      x-show="showDeleteModal"
+      x-transition.opacity
+      class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+      @click.self="showDeleteModal = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-base font-semibold text-gray-900">Supprimer l'utilisateur</h3>
+          <button @click="showDeleteModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-gray-700">
+            Supprimer le compte <strong x-text="userEnAction?.email || userEnAction?.username || '—'"></strong> ? Cette action est irréversible.
+          </p>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            id="btn-cancel-delete"
+            @click="showDeleteModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          >Annuler</button>
+          <button
+            id="btn-confirm-delete"
+            @click="supprimerUtilisateur"
+            :disabled="saving"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            <span x-show="saving"><i class="fas fa-circle-notch fa-spin mr-1"></i></span>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

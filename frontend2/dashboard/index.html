@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="dashboardPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-6">
+
+        <!-- ── Header ── -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+            <p class="text-sm text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
+          </div>
+          <button id="btn-sync" @click="lancerSync" :disabled="syncing"
+            class="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <i class="fas fa-rotate" :class="{'fa-spin': syncing}"></i>
+            <span x-text="syncing ? 'Sync...' : 'Synchroniser'"></span>
+          </button>
+        </div>
+
+        <!-- ── Loading ── -->
+        <div x-show="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+
+        <!-- ── Content ── -->
+        <div x-show="!loading" class="space-y-6">
+
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+            <!-- Factures en attente -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-purple-50">
+                  <i class="fa-regular fa-copy text-purple-500 text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Factures en attente</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Nombre de factures uniques (nfacture) avec un reste à payer > 0"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.factures_en_attente"></p>
+                  <p class="text-xs text-gray-400">reste à payer > 0</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Impayés actifs -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-orange-50">
+                  <i class="fa-regular fa-file-lines text-orange-500 text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Impayés actifs</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Nombre de factures uniques (nfacture) avec un reste à payer > 0 et échéance dépassée"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.impayes_actifs"></p>
+                  <p class="text-xs text-gray-400">échéance dépassée, non payé</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Montant total impayé -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-red-50">
+                  <i class="fa-solid fa-money-bill text-red-500 text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Montant total impayé</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Somme du 'reste à payer' par facture unique (nfacture) avec reste > 0 et échéance dépassée"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="formatMontantCourt(kpi.montant_total)"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontant(kpi.montant_total)"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Relances du jour -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-blue-50">
+                  <i class="fa-regular fa-envelope text-blue-500 text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Relances du jour</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Nombre de relances avec statut 'pret pour envoi' dont la date d'envoi est aujourd'hui"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.relances_jour"></p>
+                  <p class="text-xs text-gray-400">à envoyer aujourd'hui</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Taux de recouvrement -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-green-50">
+                  <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Taux de recouvrement</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Pourcentage de factures uniques avec échéance dépassée et reste = 0 par rapport au total de factures uniques avec échéance dépassée"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.taux_recouvrement + '%'"></p>
+                  <p class="text-xs text-gray-400">des échus payés (12 mois)</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Ancienneté des impayés -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+            <!-- Moins de 7 jours -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-sky-50">
+                  <i class="fa-regular fa-clock text-sky-500 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Moins de 7 jours</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de moins de 7 jours"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="aging.j7.count"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(aging.j7.montant)"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 8 à 30 jours -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-yellow-50">
+                  <i class="fa-regular fa-clock text-yellow-500 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">8 à 30 jours</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 8 à 30 jours"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="aging.j30.count"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(aging.j30.montant)"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 31 à 60 jours -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-orange-50">
+                  <i class="fa-regular fa-clock text-orange-500 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">31 à 60 jours</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 31 à 60 jours"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="aging.j60.count"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(aging.j60.montant)"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 60 à 120 jours -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-violet-50">
+                  <i class="fa-regular fa-clock text-violet-500 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">60 à 120 jours</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de 60 à 120 jours"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="aging.j60_120.count"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(aging.j60_120.montant)"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plus de 120 jours -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-red-50">
+                  <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="text-xs text-gray-500 font-medium">Plus de 120 jours</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Factures uniques (nfacture) avec reste > 0 et échéance dépassée de plus de 120 jours"></i>
+                  </div>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="aging.j120.count"></p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(aging.j120.montant)"></p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── Graphiques ── -->
+          <div class="grid grid-cols-1 gap-4">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-1.5">
+                <p class="text-sm font-semibold text-gray-700">Montant facturé vs reste à payer par mois (12 mois + avant)</p>
+                <i class="fa-solid fa-circle-info text-gray-400 text-sm cursor-help" title="Montant payé (vert) = somme TTC des factures uniques avec reste=0. Reste à payer (orange) = somme des restes > 0. Ligne = nb factures impayées (reste > 0)"></i>
+              </div>
+              <div class="p-4 h-64">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Tableaux ── -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+            <!-- Relances du jour -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <p class="text-sm font-semibold text-gray-700">Relances du jour</p>
+                <a href="../relances/index.html" class="text-xs text-sky-600 hover:underline">Voir tout →</a>
+              </div>
+              <div class="p-4">
+                <template x-if="relancesJour.length === 0">
+                  <div class="text-sm text-gray-400 py-4 text-center">Aucune relance validée prévue aujourd'hui</div>
+                </template>
+                <template x-if="relancesJour.length > 0">
+                  <div class="divide-y divide-gray-100">
+                    <template x-for="rel in relancesJour" :key="rel.id">
+                      <div class="flex items-center justify-between py-2.5">
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate" x-text="'F°' + rel.nfacture + ' · D°' + rel.dossier"></p>
+                          <p class="text-xs text-gray-500" x-text="rel.payeur_nom"></p>
+                          <p class="text-xs text-gray-400" x-text="'relance ' + rel.numero"></p>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Contacts sans email -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <p class="text-sm font-semibold text-gray-700">Contacts sans email</p>
+                <a href="../contacts-sans-email/index.html" class="text-xs text-sky-600 hover:underline">Voir tout →</a>
+              </div>
+              <div class="p-4">
+                <template x-if="contactsSansEmail.length === 0">
+                  <div class="text-sm text-gray-400 py-4 text-center">Tous les contacts ont un email</div>
+                </template>
+                <template x-if="contactsSansEmail.length > 0">
+                  <div class="divide-y divide-gray-100">
+                    <template x-for="contact in contactsSansEmail" :key="contact.id">
+                      <div class="flex items-center justify-between py-2.5">
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate" x-text="contact.nom + (contact.prenom ? ' ' + contact.prenom : '')"></p>
+                          <p class="text-xs text-gray-500" x-text="contact.telephone || '—'"></p>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Impayés récents -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <p class="text-sm font-semibold text-gray-700">Impayés récents</p>
+                <a href="../impayes/index.html" class="text-xs text-sky-600 hover:underline">Voir tout →</a>
+              </div>
+              <div class="p-4">
+                <template x-if="impayes_recents.length === 0">
+                  <div class="text-sm text-gray-400 py-4 text-center">Aucun impayé</div>
+                </template>
+                <template x-if="impayes_recents.length > 0">
+                  <div class="divide-y divide-gray-100">
+                    <template x-for="imp in impayes_recents" :key="imp.id">
+                      <div class="flex items-center justify-between py-2.5">
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate">
+                            <span x-text="imp.payeur_nom"></span>
+                            <template x-if="getJoursEcheance(imp.date_echeance) !== null">
+                              <span class="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 ml-1"
+                                x-text="(getJoursEcheance(imp.date_echeance) > 0 ? '+' : '') + getJoursEcheance(imp.date_echeance) + 'j'">
+                              </span>
+                            </template>
+                          </p>
+                          <p class="text-xs text-gray-500 font-mono" x-text="imp.nfacture"></p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-2">
+                          <span class="text-sm font-medium text-gray-800" x-text="formatMontant(imp.reste_a_payer)"></span>
+                          <a :href="'../impayes-detail/index.html?id=' + imp.id">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-gray-400 hover:text-sky-600 text-sm cursor-pointer"></i>
+                          </a>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

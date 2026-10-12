@@ -47,7 +47,7 @@ async function batchSave(objects, options = {}, batchSize = 50) {
             `Sauvegarde batch ${i + 1}/${totalBatches} (${batch.length} objets)`,
             "import-invoice",
             "batchSave",
-            { batchNum: i + 1, totalBatches, batchSize: batch.length }
+            { batchNum: i + 1, totalBatches, batchSize: batch.length },
         );
 
         try {
@@ -57,7 +57,7 @@ async function batchSave(objects, options = {}, batchSize = 50) {
                 `Batch ${i + 1}/${totalBatches} sauvegardé avec succès`,
                 "import-invoice",
                 "batchSave",
-                { batchNum: i + 1, savedCount: saved.length }
+                { batchNum: i + 1, savedCount: saved.length },
             );
         } catch (err) {
             error(
@@ -68,7 +68,7 @@ async function batchSave(objects, options = {}, batchSize = 50) {
                     batchNum: i + 1,
                     error: err.message,
                     stack: err.stack?.substring(0, 500),
-                }
+                },
             );
             throw err;
         }
@@ -93,9 +93,9 @@ let MOIS_FR = [
     "decembre",
 ];
 
-function buildUrlPdf(refPiece, datePiece) {
-    if (!refPiece || !datePiece) return null;
-    let d = new Date(datePiece);
+function buildUrlPdf(refPiece, dateCre) {
+    if (!refPiece || !dateCre) return null;
+    let d = new Date(dateCre);
     if (isNaN(d.getTime())) return null;
     let year = d.getFullYear();
     let month = MOIS_FR[d.getMonth()];
@@ -184,9 +184,16 @@ function prepareContactUpsert({
  * Prépare un impayé pour upsert (sans save)
  * @returns {Parse.Object} L'impayé préparé
  */
-function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interlocuteurs) {
+function prepareImpayeUpsert(
+    pieceRow,
+    impaye,
+    statutsMap,
+    employesMap,
+    interlocuteurs,
+) {
     const externeId = Number(pieceRow.nfacture);
-    const dossierNum = pieceRow.numero || pieceRow.idDossier || pieceRow.dossier_id;
+    const dossierNum =
+        pieceRow.numero || pieceRow.idDossier || pieceRow.dossier_id;
 
     const employe = pieceRow.idEmployeIntervention
         ? employesMap[pieceRow.idEmployeIntervention]
@@ -195,7 +202,9 @@ function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interloc
         ? `${employe.prenom || ""} ${employe.nom || ""}`.trim()
         : "";
 
-    const statutIntitule = pieceRow.idStatut ? statutsMap[pieceRow.idStatut] : null;
+    const statutIntitule = pieceRow.idStatut
+        ? statutsMap[pieceRow.idStatut]
+        : null;
 
     let Impaye = Parse.Object.extend("Impaye");
     let isNewImpaye = !impaye;
@@ -208,17 +217,38 @@ function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interloc
 
     // Champs toujours mis à jour
     impaye.set("nfacture", Number(pieceRow.nfacture));
-    impaye.set("date_piece", pieceRow.datepiece ? new Date(pieceRow.datepiece) : null);
-    impaye.set("date_echeance", pieceRow.dateecheance ? new Date(pieceRow.dateecheance) : null);
-    impaye.set("date_debut_mission", pieceRow.dateDebutMission ? new Date(pieceRow.dateDebutMission) : null);
-    impaye.set("total_ht", pieceRow.totalhtnet != null ? Number(pieceRow.totalhtnet) : null);
-    impaye.set("total_ttc", pieceRow.totalttcnet != null ? Number(pieceRow.totalttcnet) : null);
-    impaye.set("reste_a_payer", pieceRow.resteapayer != null ? Number(pieceRow.resteapayer) : null);
+    impaye.set(
+        "date_piece",
+        pieceRow.datepiece ? new Date(pieceRow.datepiece) : null,
+    );
+    impaye.set(
+        "date_echeance",
+        pieceRow.dateecheance ? new Date(pieceRow.dateecheance) : null,
+    );
+    impaye.set(
+        "date_debut_mission",
+        pieceRow.dateDebutMission ? new Date(pieceRow.dateDebutMission) : null,
+    );
+    impaye.set(
+        "total_ht",
+        pieceRow.totalhtnet != null ? Number(pieceRow.totalhtnet) : null,
+    );
+    impaye.set(
+        "total_ttc",
+        pieceRow.totalttcnet != null ? Number(pieceRow.totalttcnet) : null,
+    );
+    impaye.set(
+        "reste_a_payer",
+        pieceRow.resteapayer != null ? Number(pieceRow.resteapayer) : null,
+    );
     impaye.set("facture_soldee", Boolean(pieceRow.facturesoldee));
     impaye.set("commentaire_piece", pieceRow.commentaire_piece || null);
     impaye.set("ref_piece", pieceRow.refpiece || null);
-    impaye.set("url_pdf", buildUrlPdf(pieceRow.refpiece, pieceRow.datepiece));
-    impaye.set("id_dossier", pieceRow.idDossier ? String(pieceRow.idDossier) : null);
+    impaye.set("url_pdf", buildUrlPdf(pieceRow.refpiece, pieceRow.datecre));
+    impaye.set(
+        "id_dossier",
+        pieceRow.idDossier ? String(pieceRow.idDossier) : null,
+    );
     impaye.set("numero_dossier", pieceRow.numero || null);
     impaye.set("reference", pieceRow.reference || null);
     impaye.set("reference_externe", pieceRow.referenceExterne || null);
@@ -243,7 +273,9 @@ function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interloc
         try {
             const parsed = JSON.parse(pieceRow.missions_json);
             // json_group_array retourne '[null]' si vide, on filtre
-            missions = Array.isArray(parsed) ? parsed.filter(m => m && m.idMission) : [];
+            missions = Array.isArray(parsed)
+                ? parsed.filter((m) => m && m.idMission)
+                : [];
         } catch (e) {
             missions = [];
         }
@@ -252,39 +284,88 @@ function prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interloc
 
     // Mapping des rôles vers les préfixes de champs Parse existants
     const roleToFieldPrefix = {
-        "Payeur": "payeur",
+        Payeur: "payeur",
         "Apporteur d'affaire": "apporteur",
-        "Acquéreur": "acquereur",
+        Acquéreur: "acquereur",
         "Donneur d'ordre": "donneur_ordre",
         "Locataire entrant": "locataire_entrant",
         "Locataire sortant": "locataire_sortant",
-        "Notaire": "notaire",
-        "Propriétaire": "proprietaire",
-        "Syndic": "syndic"
+        Notaire: "notaire",
+        Propriétaire: "proprietaire",
+        Syndic: "syndic",
     };
 
     for (const [role, prefix] of Object.entries(roleToFieldPrefix)) {
-        impaye.set(`${prefix}_nom`, getInterlocuteurField(interlocuteurs, role, "nom") || null);
-        impaye.set(`${prefix}_prenom`, getInterlocuteurField(interlocuteurs, role, "prenom") || null);
-        impaye.set(`${prefix}_email`, getInterlocuteurField(interlocuteurs, role, "email") || null);
-        impaye.set(`${prefix}_telephone`, getInterlocuteurField(interlocuteurs, role, "telephone") || null);
+        impaye.set(
+            `${prefix}_nom`,
+            getInterlocuteurField(interlocuteurs, role, "nom") || null,
+        );
+        impaye.set(
+            `${prefix}_prenom`,
+            getInterlocuteurField(interlocuteurs, role, "prenom") || null,
+        );
+        impaye.set(
+            `${prefix}_email`,
+            getInterlocuteurField(interlocuteurs, role, "email") || null,
+        );
+        impaye.set(
+            `${prefix}_telephone`,
+            getInterlocuteurField(interlocuteurs, role, "telephone") || null,
+        );
 
         if (role === "Propriétaire" || role === "Payeur") {
-            impaye.set(`${prefix}_type_personne`, getInterlocuteurField(interlocuteurs, role, "typePersonne") || null);
+            impaye.set(
+                `${prefix}_type_personne`,
+                getInterlocuteurField(interlocuteurs, role, "typePersonne") ||
+                    null,
+            );
         }
 
         // contact fields
-        if (role === "Payeur" || role === "Apporteur d'affaire" || role === "Propriétaire") {
-            impaye.set(`${prefix}_contact_nom`, getInterlocuteurContactField(interlocuteurs, role, "contact_nom") || null);
-            impaye.set(`${prefix}_contact_prenom`, getInterlocuteurContactField(interlocuteurs, role, "contact_prenom") || null);
-            impaye.set(`${prefix}_contact_email`, getInterlocuteurContactField(interlocuteurs, role, "contact_email") || null);
+        if (
+            role === "Payeur" ||
+            role === "Apporteur d'affaire" ||
+            role === "Propriétaire"
+        ) {
+            impaye.set(
+                `${prefix}_contact_nom`,
+                getInterlocuteurContactField(
+                    interlocuteurs,
+                    role,
+                    "contact_nom",
+                ) || null,
+            );
+            impaye.set(
+                `${prefix}_contact_prenom`,
+                getInterlocuteurContactField(
+                    interlocuteurs,
+                    role,
+                    "contact_prenom",
+                ) || null,
+            );
+            impaye.set(
+                `${prefix}_contact_email`,
+                getInterlocuteurContactField(
+                    interlocuteurs,
+                    role,
+                    "contact_email",
+                ) || null,
+            );
         }
     }
 
     // Calcul du type payeur
     const payeurNom = getInterlocuteurField(interlocuteurs, "Payeur", "nom");
-    const proprietaireNom = getInterlocuteurField(interlocuteurs, "Propriétaire", "nom");
-    const apporteurNom = getInterlocuteurField(interlocuteurs, "Apporteur d'affaire", "nom");
+    const proprietaireNom = getInterlocuteurField(
+        interlocuteurs,
+        "Propriétaire",
+        "nom",
+    );
+    const apporteurNom = getInterlocuteurField(
+        interlocuteurs,
+        "Apporteur d'affaire",
+        "nom",
+    );
     let payeurType = "Autre";
     if (payeurNom && proprietaireNom && payeurNom === proprietaireNom) {
         payeurType = "Propriétaire";
@@ -353,7 +434,7 @@ async function processAndSaveImpayes({
         "Étape 5: Début du traitement des impayés (mode BATCH)",
         "import-invoice",
         "processAndSaveImpayes",
-        { pieceCount: pieces.length }
+        { pieceCount: pieces.length },
     );
 
     // ========================================================================
@@ -365,19 +446,32 @@ async function processAndSaveImpayes({
         const dossierId = pieceRow.dossier_id || pieceRow.idDossier;
         const interlocuteurs = interlocuteursByDossier[dossierId] || [];
 
-        const payeurPersonneData = interlocuteurs.find(i => i.role === "Payeur" && i.contact_interlocuteur_id);
-        const payeurContactData = interlocuteurs.find(i => i.role === "Payeur" && i.idInterlocuteur);
-        const apporteurPersonneData = interlocuteurs.find(i => i.role === "Apporteur d'affaire" && i.contact_interlocuteur_id);
-        const apporteurContactData = interlocuteurs.find(i => i.role === "Apporteur d'affaire" && i.idInterlocuteur);
+        const payeurPersonneData = interlocuteurs.find(
+            (i) => i.role === "Payeur" && i.contact_interlocuteur_id,
+        );
+        const payeurContactData = interlocuteurs.find(
+            (i) => i.role === "Payeur" && i.idInterlocuteur,
+        );
+        const apporteurPersonneData = interlocuteurs.find(
+            (i) =>
+                i.role === "Apporteur d'affaire" && i.contact_interlocuteur_id,
+        );
+        const apporteurContactData = interlocuteurs.find(
+            (i) => i.role === "Apporteur d'affaire" && i.idInterlocuteur,
+        );
 
         if (payeurPersonneData?.contact_interlocuteur_id) {
-            contactIdsToCheck.add(String(payeurPersonneData.contact_interlocuteur_id));
+            contactIdsToCheck.add(
+                String(payeurPersonneData.contact_interlocuteur_id),
+            );
         }
         if (payeurContactData?.idInterlocuteur) {
             contactIdsToCheck.add(String(payeurContactData.idInterlocuteur));
         }
         if (apporteurPersonneData?.contact_interlocuteur_id) {
-            contactIdsToCheck.add(String(apporteurPersonneData.contact_interlocuteur_id));
+            contactIdsToCheck.add(
+                String(apporteurPersonneData.contact_interlocuteur_id),
+            );
         }
         if (apporteurContactData?.idInterlocuteur) {
             contactIdsToCheck.add(String(apporteurContactData.idInterlocuteur));
@@ -394,7 +488,7 @@ async function processAndSaveImpayes({
             `Récupération de ${contactIdsToCheck.size} contacts existants`,
             "import-invoice",
             "processAndSaveImpayes",
-            { contactCount: contactIdsToCheck.size }
+            { contactCount: contactIdsToCheck.size },
         );
 
         const Contact = Parse.Object.extend("Contact");
@@ -411,14 +505,14 @@ async function processAndSaveImpayes({
                 `${existingContacts.length} contacts existants trouvés`,
                 "import-invoice",
                 "processAndSaveImpayes",
-                { foundCount: existingContacts.length }
+                { foundCount: existingContacts.length },
             );
         } catch (err) {
             error(
                 `Erreur récupération contacts existants: ${err.message}`,
                 "import-invoice",
                 "processAndSaveImpayes",
-                { error: err.message, stack: err.stack?.substring(0, 500) }
+                { error: err.message, stack: err.stack?.substring(0, 500) },
             );
             // Continuer sans les contacts existants
         }
@@ -440,7 +534,7 @@ async function processAndSaveImpayes({
                 `Traitement de l'impayé nfacture=${pieceRow.nfacture}`,
                 "import-invoice",
                 "processAndSaveImpayes",
-                { nfacture: pieceRow.nfacture }
+                { nfacture: pieceRow.nfacture },
             );
 
             // Récupérer les interlocuteurs pour ce dossier
@@ -448,22 +542,43 @@ async function processAndSaveImpayes({
             const interlocuteurs = interlocuteursByDossier[dossierId] || [];
 
             // Récupérer le statut du dossier
-            const statutIntitule = pieceRow.idStatut ? statutsMap[pieceRow.idStatut] : null;
+            const statutIntitule = pieceRow.idStatut
+                ? statutsMap[pieceRow.idStatut]
+                : null;
 
             // Récupérer l'employé intervention
-            const employe = pieceRow.idEmployeIntervention ? employesMap[pieceRow.idEmployeIntervention] : null;
-            const employeIntervention = employe ? `${employe.prenom || ""} ${employe.nom || ""}`.trim() : "";
+            const employe = pieceRow.idEmployeIntervention
+                ? employesMap[pieceRow.idEmployeIntervention]
+                : null;
+            const employeIntervention = employe
+                ? `${employe.prenom || ""} ${employe.nom || ""}`.trim()
+                : "";
 
             // Extraire les interlocuteurs par rôle
-            const payeurPersonneData = interlocuteurs.find(i => i.role === "Payeur" && i.contact_interlocuteur_id);
-            const payeurContactData = interlocuteurs.find(i => i.role === "Payeur" && i.idInterlocuteur);
-            const apporteurPersonneData = interlocuteurs.find(i => i.role === "Apporteur d'affaire" && i.contact_interlocuteur_id);
-            const apporteurContactData = interlocuteurs.find(i => i.role === "Apporteur d'affaire" && i.idInterlocuteur);
+            const payeurPersonneData = interlocuteurs.find(
+                (i) => i.role === "Payeur" && i.contact_interlocuteur_id,
+            );
+            const payeurContactData = interlocuteurs.find(
+                (i) => i.role === "Payeur" && i.idInterlocuteur,
+            );
+            const apporteurPersonneData = interlocuteurs.find(
+                (i) =>
+                    i.role === "Apporteur d'affaire" &&
+                    i.contact_interlocuteur_id,
+            );
+            const apporteurContactData = interlocuteurs.find(
+                (i) => i.role === "Apporteur d'affaire" && i.idInterlocuteur,
+            );
 
             // ── 1. Préparer personne physique du payeur (si entreprise)
             let payeurPersonne = null;
-            if (payeurPersonneData?.contact_interlocuteur_id && payeurPersonneData.contact_nom) {
-                const externeId = String(payeurPersonneData.contact_interlocuteur_id);
+            if (
+                payeurPersonneData?.contact_interlocuteur_id &&
+                payeurPersonneData.contact_nom
+            ) {
+                const externeId = String(
+                    payeurPersonneData.contact_interlocuteur_id,
+                );
                 const existing = existingContactsMap.get(externeId);
                 payeurPersonne = prepareContactUpsert({
                     externeId,
@@ -502,8 +617,13 @@ async function processAndSaveImpayes({
 
             // ── 3. Préparer personne physique de l'apporteur
             let apporteurPersonne = null;
-            if (apporteurPersonneData?.contact_interlocuteur_id && apporteurPersonneData.contact_nom) {
-                const externeId = String(apporteurPersonneData.contact_interlocuteur_id);
+            if (
+                apporteurPersonneData?.contact_interlocuteur_id &&
+                apporteurPersonneData.contact_nom
+            ) {
+                const externeId = String(
+                    apporteurPersonneData.contact_interlocuteur_id,
+                );
                 const existing = existingContactsMap.get(externeId);
                 apporteurPersonne = prepareContactUpsert({
                     externeId,
@@ -541,7 +661,8 @@ async function processAndSaveImpayes({
 
             // ── 5. Préparer Impayé
             const externeId = Number(pieceRow.nfacture);
-            const dossierNum = pieceRow.numero || pieceRow.idDossier || pieceRow.dossier_id;
+            const dossierNum =
+                pieceRow.numero || pieceRow.idDossier || pieceRow.dossier_id;
 
             // Rechercher l'impayé existant
             const Impaye = Parse.Object.extend("Impaye");
@@ -551,7 +672,13 @@ async function processAndSaveImpayes({
             let impaye = await qi.first({ useMasterKey: true });
             let isNewImpaye = !impaye;
 
-            const result = prepareImpayeUpsert(pieceRow, impaye, statutsMap, employesMap, interlocuteurs);
+            const result = prepareImpayeUpsert(
+                pieceRow,
+                impaye,
+                statutsMap,
+                employesMap,
+                interlocuteurs,
+            );
             impaye = result.impaye;
             isNewImpaye = result.isNewImpaye;
 
@@ -562,7 +689,8 @@ async function processAndSaveImpayes({
             // contact_relance : défini uniquement à la création
             if (isNewImpaye) {
                 let defaultRelance = payeurPersonne || payeurContact;
-                if (defaultRelance) impaye.set("contact_relance", defaultRelance);
+                if (defaultRelance)
+                    impaye.set("contact_relance", defaultRelance);
             }
 
             impayesToSave.push(impaye);
@@ -575,36 +703,46 @@ async function processAndSaveImpayes({
             }
 
             // Préparer l'activité de log (à sauvegarder après les impayés)
-            const payeurNomValue = getInterlocuteurField(interlocuteurs, "Payeur", "nom");
-            const datePieceValue = pieceRow.datepiece ? new Date(pieceRow.datepiece) : null;
-            const montantValue = pieceRow.resteapayer != null ? Number(pieceRow.resteapayer) : null;
+            const payeurNomValue = getInterlocuteurField(
+                interlocuteurs,
+                "Payeur",
+                "nom",
+            );
+            const datePieceValue = pieceRow.datepiece
+                ? new Date(pieceRow.datepiece)
+                : null;
+            const montantValue =
+                pieceRow.resteapayer != null
+                    ? Number(pieceRow.resteapayer)
+                    : null;
 
-            activitesToSave.push(prepareActiviteLog({
-                operation: isNewImpaye ? "created" : "updated",
-                nfacture: pieceRow.nfacture,
-                impayeId: impaye.id,
-                montant: montantValue,
-                payeurNom: payeurNomValue,
-                datePiece: datePieceValue,
-            }));
-
-            info(
-                `Impayé préparé nfacture=${pieceRow.nfacture} (${isNewImpaye ? 'NOUVEAU' : 'MAJ'})`,
-                "import-invoice",
-                "processAndSaveImpayes",
-                { nfacture: pieceRow.nfacture, isNew: isNewImpaye }
+            activitesToSave.push(
+                prepareActiviteLog({
+                    operation: isNewImpaye ? "created" : "updated",
+                    nfacture: pieceRow.nfacture,
+                    impayeId: impaye.id,
+                    montant: montantValue,
+                    payeurNom: payeurNomValue,
+                    datePiece: datePieceValue,
+                }),
             );
 
+            info(
+                `Impayé préparé nfacture=${pieceRow.nfacture} (${isNewImpaye ? "NOUVEAU" : "MAJ"})`,
+                "import-invoice",
+                "processAndSaveImpayes",
+                { nfacture: pieceRow.nfacture, isNew: isNewImpaye },
+            );
         } catch (err) {
             error(
-                `Erreur traitement nfacture=${pieceRow?.nfacture || 'inconnu'}: ${err.message}`,
+                `Erreur traitement nfacture=${pieceRow?.nfacture || "inconnu"}: ${err.message}`,
                 "import-invoice",
                 "processAndSaveImpayes",
                 {
                     nfacture: pieceRow?.nfacture,
                     error: err.message,
                     stack: err.stack?.substring(0, 500),
-                }
+                },
             );
             stats.errors.push({
                 nfacture: pieceRow?.nfacture,
@@ -613,11 +751,13 @@ async function processAndSaveImpayes({
 
             // Préparer une activité d'erreur
             if (pieceRow?.nfacture) {
-                activitesToSave.push(prepareActiviteLog({
-                    operation: "error",
-                    nfacture: pieceRow.nfacture,
-                    errorMessage: err.message,
-                }));
+                activitesToSave.push(
+                    prepareActiviteLog({
+                        operation: "error",
+                        nfacture: pieceRow.nfacture,
+                        errorMessage: err.message,
+                    }),
+                );
             }
         }
     }
@@ -632,7 +772,7 @@ async function processAndSaveImpayes({
             `Sauvegarde de ${contactsToSave.length} contacts par batch`,
             "import-invoice",
             "processAndSaveImpayes",
-            { contactCount: contactsToSave.length }
+            { contactCount: contactsToSave.length },
         );
         await batchSave(contactsToSave, { useMasterKey: true }, 50);
     }
@@ -643,7 +783,7 @@ async function processAndSaveImpayes({
             `Sauvegarde de ${impayesToSave.length} impayés par batch`,
             "import-invoice",
             "processAndSaveImpayes",
-            { impayeCount: impayesToSave.length }
+            { impayeCount: impayesToSave.length },
         );
         await batchSave(impayesToSave, { useMasterKey: true }, 50);
     }
@@ -654,7 +794,7 @@ async function processAndSaveImpayes({
             `Sauvegarde de ${activitesToSave.length} activités par batch`,
             "import-invoice",
             "processAndSaveImpayes",
-            { activiteCount: activitesToSave.length }
+            { activiteCount: activitesToSave.length },
         );
         await batchSave(activitesToSave, { useMasterKey: true }, 50);
     }
@@ -673,7 +813,7 @@ async function processAndSaveImpayes({
             created: stats.impayes_created,
             updated: stats.impayes_updated,
             errors: stats.errors.length,
-        }
+        },
     );
 
     return {

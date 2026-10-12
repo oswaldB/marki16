@@ -133,7 +133,7 @@
         <div class="space-y-2">
           <UTabs
             :items="scenarioTabs"
-            :model-value="props.email?.activeScenario"
+            :model-value="props.email?.activeScenario || 'single'"
             class="px-2 pt-1"
             @update:modelValue="(s) => updateScenario(s)"
           />
@@ -310,6 +310,7 @@ function updateObjet(val) {
 
 function updateScenario(newScenario) {
   if (props.email) {
+    props.email.activeScenario = newScenario
     emit('update:scenario', newScenario)
   }
 }

@@ -68,18 +68,54 @@ async function getContactImpayesMaster(options = {}) {
         throw new Error("Lien invalide");
     }
 
-    // Récupérer les impayés du contact (uniquement en tant que payeur)
+    // Vérifier que le contact existe et récupérer son email
+    let contactEmail;
+    try {
+        const Contact = Parse.Object.extend("Contact");
+        const query = new Parse.Query(Contact);
+        const contact = await query.get(contactId, { useMasterKey: true });
+        contactEmail = contact.get("email");
+    } catch (err) {
+        throw new Error("Contact introuvable");
+    }
+
+    // Récupérer les impayés du contact ET de tous les contacts partageant le même email
     try {
         const Impaye = Parse.Object.extend("Impaye");
-        
-        // Query uniquement pour payeur avec reste à payer > 0
+
+        // 1. Trouver tous les contacts avec le même email
+        let contactIds = [contactId];
+        if (contactEmail) {
+            const Contact = Parse.Object.extend("Contact");
+            const emailQuery = new Parse.Query(Contact);
+            emailQuery.equalTo("email", contactEmail);
+            emailQuery.limit(1000);
+            const sameEmailContacts = await emailQuery.find({ useMasterKey: true });
+            contactIds = sameEmailContacts.map(c => c.id);
+            info(
+                `[get-contact-impayes/master] ${sameEmailContacts.length} contact(s) trouvé(s) avec email ${contactEmail}`,
+                "get-contact-impayes",
+                "getContactImpayesMaster",
+                { contactIds, email: contactEmail }
+            );
+        }
+
+        // 2. Récupérer les impayés de tous ces contacts (payeur)
+        // Parse ne supporte pas containedIn sur un pointeur directement avec une liste d'IDs,
+        // on utilise donc $in avec __type: Pointer
+        const pointerList = contactIds.map(id => ({
+            __type: "Pointer",
+            className: "Contact",
+            objectId: id
+        }));
+
         const query = new Parse.Query(Impaye);
-        query.equalTo("payeur", { __type: "Pointer", className: "Contact", objectId: contactId });
+        query.containedIn("payeur", pointerList);
         query.notEqualTo("facture_soldee", true);
         query.greaterThan("reste_a_payer", 0);
         query.descending("createdAt");
         query.limit(1000);
-        
+
         const impayes = await query.find({ useMasterKey: true });
         
         const result = impayes.map(impaye => ({

@@ -24,14 +24,6 @@
             <UIcon name="i-heroicons-calendar-days" class="size-4" />
             Calendrier
           </button>
-          <button
-            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5"
-            :class="vue === 'validation' ? 'bg-white text-sky-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-            @click="vue = 'validation'"
-          >
-            <UIcon name="i-heroicons-check-circle" class="size-4" />
-            Validation
-          </button>
         </div>
 
         <!-- Filtres -->
@@ -90,7 +82,6 @@
               <div class="flex items-center gap-2">
                 <span class="text-sm truncate max-w-xs">{{ row.original.objet || '(sans objet)' }}</span>
                 <span v-if="row.original.manuelle" title="Relance manuelle" class="text-xs">✋</span>
-                <span v-if="!row.original.valide" title="Relance non validée" class="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-medium">non validé</span>
               </div>
             </template>
 
@@ -148,9 +139,6 @@
             <span class="text-sm font-medium">{{ selection.length }} relance(s) sélectionnée(s)</span>
             <UButton color="red" size="sm" :loading="annulantGroupe" @click="annulerGroupe">
               🗑 Annuler
-            </UButton>
-            <UButton color="green" size="sm" :loading="validantGroupe" @click="validerGroupe" v-if="selection.some(r => !r.valide)">
-              ✓ Valider
             </UButton>
             <UButton color="neutral" variant="ghost" size="sm" class="text-white" @click="selection = []">
               Désélectionner
@@ -242,265 +230,7 @@
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════
-           VUE VALIDATION
-      ══════════════════════════════════════ -->
-      <div v-else-if="vue === 'validation'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Colonne de gauche - Liste des relances à valider -->
-        <div class="lg:col-span-1 space-y-4">
-          <UCard class="max-w-full">
-            <template #header>
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">Relances à valider</span>
-                <div class="flex items-center gap-2">
-                  <UInput
-                    v-model="validationSearch"
-                    icon="i-heroicons-magnifying-glass"
-                    placeholder="Rechercher..."
-                    size="xs"
-                    class="w-40"
-                  />
-                  <USelect
-                    v-model="modeTriValidation"
-                    :items="[
-                      { value: 'chronologique', label: 'Tri chronologique' },
-                      { value: 'destinataire', label: 'Tri par destinataire' }
-                    ]"
-                    size="xs"
-                    class="w-40"
-                  />
-                  <span class="text-sm text-gray-500">{{ relancesAValider.length }} relance(s)</span>
-                </div>
-              </div>
-              <div class="mt-2 flex items-center gap-2" v-if="selectedRelancesForBulk.length > 0">
-                <span class="text-sm text-gray-600">{{ selectedRelancesForBulk.length }} sélectionnée(s)</span>
-                <UButton
-                  color="primary"
-                  size="sm"
-                  :loading="bulkValidating"
-                  @click="validateAllSelected"
-                >
-                  Valider tout
-                </UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  size="sm"
-                  @click="selectedRelancesForBulk = []"
-                >
-                  Désélectionner
-                </UButton>
-              </div>
-            </template>
-            <div class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-              <div
-                v-for="(relance, index) in relancesAValider"
-                :key="relance.id"
-                class="p-3 border border-gray-100 rounded-lg transition-colors"
-                :class="{
-                  'bg-blue-50 border-blue-200': relance.id === relanceCourante?.id,
-                  'hover:bg-gray-50': relance.id !== relanceCourante?.id
-                }"
-              >
-                <div class="flex items-start gap-3" @click="selectionnerRelancePourValidation(relance)" style="cursor: pointer;">
-                  <div class="flex-1">
-                    <p class="font-medium text-sm truncate">{{ relance.objet || '(sans objet)' }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ relance.to }}</p>
-                    <p class="text-xs text-gray-400">{{ formatDate(relance.dateEnvoi) }}</p>
-                  </div>
-                </div>
-                <div class="mt-2 flex justify-end">
-                  <UCheckbox
-                    :model-value="isSelectedBulk(relance.id)"
-                    @update:model-value="(checked) => toggleBulkSelection(relance.id, checked)"
-                    @click.stop
-                  />
-                </div>
-              </div>
-              <div v-if="relancesAValider.length === 0" class="p-6 text-center text-gray-400">
-                <UIcon name="i-heroicons-check-circle" class="size-8 mx-auto mb-2 text-green-500" />
-                <p class="text-sm">Toutes les relances ont été validées !</p>
-              </div>
-            </div>
-          </UCard>
-        </div>
 
-        <!-- Colonne du milieu et droite - Détails de la relance (équivalent du drawer) -->
-        <div class="lg:col-span-2" v-if="relanceCourante">
-          <UCard class="max-w-full">
-            <template #header>
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">Validation de la relance</span>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-500">
-                    {{ positionRelanceCourante }} / {{ relancesAValider.length }}
-                  </span>
-                  <UButton
-                    color="neutral"
-                    variant="outline"
-                    icon="i-heroicons-document-arrow-down"
-                    :loading="saving"
-                    :disabled="!hasUnsavedChanges"
-                    @click="enregistrerRelance"
-                  >
-                    Enregistrer
-                  </UButton>
-                  <UButton
-                    color="primary"
-                    :loading="validantWorkflow"
-                    @click="validerRelanceWorkflow"
-                    :disabled="!relanceCourante"
-                  >
-                    Valider
-                  </UButton>
-                  <UDropdownMenu
-                    :items="[
-                      [
-                        { label: 'Passer', icon: 'i-heroicons-forward', click: passerRelanceWorkflow, disabled: !peutPasser },
-                        { label: 'Blacklister et supprimer relances', icon: 'i-heroicons-no-symbol', click: blacklistEtSupprimerRelances, disabled: !relanceCourante || blacklistStore.loading },
-                        { label: 'Supprimer relance', icon: 'i-heroicons-trash', click: supprimerRelance, disabled: !relanceCourante || supprimantRelance }
-                      ]
-                    ]"
-                  >
-                    <UButton
-                      color="neutral"
-                      variant="outline"
-                      trailing-icon="i-heroicons-chevron-down"
-                      :loading="blacklistStore.loading || supprimantRelance"
-                    >
-                      Actions
-                    </UButton>
-                  </UDropdownMenu>
-                </div>
-              </div>
-            </template>
-
-            <div class="space-y-6">
-              <!-- Infos de base -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="text-xs text-gray-500 mb-1 block">Date d'envoi</label>
-                  <UInput
-                    :model-value="dateEnvoiInput"
-                    @update:model-value="updateDateEnvoi"
-                    type="date"
-                    class="w-full"
-                  />
-                </div>
-                <div>
-                  <label class="text-xs text-gray-500 mb-1 block">À</label>
-                  <UInput
-                    :model-value="relanceCourante.to"
-                    readonly
-                    class="w-full"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label class="text-xs text-gray-500 mb-1 block">CC</label>
-                <UInput
-                  v-model="relanceCourante.cc"
-                  class="w-full"
-                />
-              </div>
-
-              <div>
-                <label class="text-xs text-gray-500 mb-1 block">Objet</label>
-                <UInput
-                  v-model="relanceCourante.objet"
-                  class="w-full"
-                />
-              </div>
-
-              <!-- Corps de l'email -->
-              <div>
-                <label class="text-xs text-gray-500 mb-1 block">Corps de l'email</label>
-                <div class="border border-gray-200 rounded-md overflow-hidden bg-white">
-                  <ToastuiEditor
-                    ref="editorValidationRef"
-                    :key="relanceCourante?.id"
-                    :initial-value="relanceCourante.corps"
-                    :options="{
-                      height: '400px',
-                      usageStatistics: false,
-                      hideModeSwitch: true,
-                    }"
-                    @change="(html) => { relanceCourante.corps = html; markAsModified() }"
-                  />
-                </div>
-              </div>
-
-              <!-- Callout pièce jointe -->
-              <UAlert
-                icon="i-heroicons-paper-clip"
-                color="info"
-                variant="subtle"
-                description="La facture sera automatiquement jointe en pièce jointe lors de l'envoi de cet email."
-              />
-
-              <!-- Factures liées -->
-              <div
-                v-for="imp in relanceCourante.impayes"
-                :key="imp.id"
-                class="rounded-lg border border-gray-200 overflow-hidden"
-              >
-                <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
-                  <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
-                    <UIcon name="i-heroicons-document-text" class="size-4 text-gray-400" />
-                    <span>Facture {{ imp.nfacture }}</span>
-                    <span v-if="imp.payeurNom" class="text-gray-400">· {{ imp.payeurNom }}</span>
-                  </div>
-                  <a v-if="pdfLinks[imp.id]" :href="pdfLinks[imp.id]" target="_blank">
-                    <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="ghost" size="xs">Télécharger</UButton>
-                  </a>
-                </div>
-                <div class="relative" style="height: 300px">
-                  <PdfIframe v-if="pdfLinks[imp.id]" :src="pdfLinks[imp.id]" />
-                </div>
-              </div>
-
-
-            </div>
-          </UCard>
-        </div>
-
-        <div v-else class="lg:col-span-2 flex items-center justify-center py-12">
-          <div class="text-center text-gray-400">
-            <UIcon name="i-heroicons-inbox" class="size-12 mx-auto mb-4" />
-            <p class="text-sm">Sélectionnez une relance à valider</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- F-009: Modal de confirmation pour modifications non sauvegardées -->
-      <UModal v-model:open="showUnsavedChangesModal" :ui="{ width: 'sm' }">
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-exclamation-triangle" class="size-5 text-yellow-500" />
-            <span class="font-semibold">Modifications non enregistrées</span>
-          </div>
-        </template>
-        <template #body>
-          <p class="text-sm text-gray-600">
-            Vous avez des modifications non sauvegardées sur cette relance. 
-            Voulez-vous les enregistrer avant de continuer ?
-          </p>
-        </template>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="ghost" @click="handleUnsavedChangesAction('cancel')">
-              Annuler
-            </UButton>
-            <UButton color="red" variant="outline" @click="handleUnsavedChangesAction('discard')">
-              Abandonner
-            </UButton>
-            <UButton color="primary" @click="handleUnsavedChangesAction('save')">
-              Enregistrer
-            </UButton>
-          </div>
-        </template>
-      </UModal>
 
     </template>
 
@@ -517,9 +247,6 @@
       <template #header>
         <div class="flex items-center justify-between w-full">
           <span class="font-semibold text-lg">{{ drawerReadonly ? 'Voir la relance' : 'Modifier la relance' }}</span>
-          <UButton v-if="!drawerReadonly && !relanceDrawer?.valide" color="primary" :loading="validantDrawer" @click="validerRelanceDrawer" size="sm">
-            Valider
-          </UButton>
         </div>
       </template>
       <template v-if="relanceDrawer" #body>
@@ -655,8 +382,10 @@ watch(
   () => route.query.vue,
   (newVue) => {
     const targetView = newVue || 'tableau'
-    if (targetView !== vue.value) {
-      vue.value = targetView
+    // Rediriger vers tableau si la vue validation (supprimée) est demandée
+    const safeView = targetView === 'validation' ? 'tableau' : targetView
+    if (safeView !== vue.value) {
+      vue.value = safeView
     }
   },
   { immediate: true },
@@ -668,7 +397,6 @@ const sequences = ref([])
 const selection = ref([])
 const pdfLinks = ref({}) // { impayeId: signedUrl }
 const annulantGroupe = ref(false)
-const validantGroupe = ref(false)
 const creatingRelances = ref(false)
 
 
@@ -690,126 +418,13 @@ const drawerCc = ref('')
 const drawerObjet = ref('')
 const drawerCorps = ref('')
 const savingDrawer = ref(false)
-const validantDrawer = ref(false)
 const editorDrawerRef = ref(null)
 const editorVisible = ref(false)
 const applyToAllFollowing = ref(false) // État de la case à cocher
 const originalToValue = ref('') // Valeur originale du champ To pour détecter les changements
 
-// Validation workflow
-const relanceCourante = ref(null)
-const validantWorkflow = ref(false)
-const saving = ref(false) // F-009: état de sauvegarde
-const modeTriValidation = ref('chronologique') // 'chronologique' ou 'destinataire'
-const validationSearch = ref('')
-const editorValidationRef = ref(null) // F-009: référence vers l'éditeur ToastUI
-const originalRelanceData = ref(null) // F-009: données originales pour comparaison
-const showUnsavedChangesModal = ref(false) // F-009: modal de confirmation
-const pendingRelanceSelection = ref(null) // F-009: relance en attente de sélection
-
-// Validation en masse
-const selectedRelancesForBulk = ref([])
-const bulkValidating = ref(false)
-
-// Suppression de relance
-const supprimantRelance = ref(false)
-
-function isSelectedBulk(relanceId) {
-  const id = String(relanceId)
-  return selectedRelancesForBulk.value?.some(existingId => String(existingId) === id) ?? false
-}
-
-function toggleBulkSelection(relanceId, checked) {
-  // S'assurer que checked est bien un booléen
-  const isChecked = checked === true || checked === 'true' || (checked && checked !== false)
-  
-  // S'assurer que relanceId est une chaîne
-  const id = String(relanceId)
-  
-  if (isChecked) {
-    // Vérifier si l'ID est déjà présent (comparaison en tant que chaînes)
-    const alreadyExists = selectedRelancesForBulk.value.some(existingId => String(existingId) === id)
-    if (!alreadyExists) {
-      selectedRelancesForBulk.value = [...selectedRelancesForBulk.value, id]
-    }
-  } else {
-    selectedRelancesForBulk.value = selectedRelancesForBulk.value.filter(existingId => String(existingId) !== id)
-  }
-}
-
 // Computed ref pour le drawer
 const relanceDrawer = computed(() => drawerRow.value)
-
-// Computed pour le workflow de validation
-const relancesAValider = computed(() => {
-  let relancesNonValidees = relances.value.filter(r => !r.valide && !r.manuelle)
-
-  // Filtre de recherche
-  if (validationSearch.value) {
-    const s = validationSearch.value.toLowerCase()
-    relancesNonValidees = relancesNonValidees.filter(r =>
-      (r.objet?.toLowerCase() || '').includes(s) ||
-      (r.to?.toLowerCase() || '').includes(s)
-    )
-  }
-
-  if (modeTriValidation.value === 'chronologique') {
-    return relancesNonValidees.sort((a, b) => {
-      return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
-    })
-  } else { // 'destinataire'
-    return relancesNonValidees.sort((a, b) => {
-      // 1. Grouper par destinataire (tri alphabétique)
-      const destinataireA = a.to?.toLowerCase() || ''
-      const destinataireB = b.to?.toLowerCase() || ''
-      if (destinataireA !== destinataireB) {
-        return destinataireA.localeCompare(destinataireB)
-      }
-      // 2. Dans chaque groupe, trier par date d'envoi croissante (du plus ancien au plus récent)
-      return new Date(a.dateEnvoi) - new Date(b.dateEnvoi)
-    })
-  }
-})
-
-const positionRelanceCourante = computed(() => {
-  if (!relanceCourante.value) return 0
-  const index = relancesAValider.value.findIndex(r => r.id === relanceCourante.value.id)
-  return index + 1
-})
-
-const peutPasser = computed(() => {
-  return relancesAValider.value.length > 1
-})
-
-// F-009: Computed pour détecter les modifications non sauvegardées
-const hasUnsavedChanges = computed(() => {
-  if (!relanceCourante.value || !originalRelanceData.value) return false
-  
-  const currentCorps = relanceCourante.value.corps || ''
-  const originalCorps = originalRelanceData.value.corps || ''
-  const currentDate = relanceCourante.value.dateEnvoi || ''
-  const originalDate = originalRelanceData.value.dateEnvoi || ''
-  
-  return relanceCourante.value.objet !== originalRelanceData.value.objet ||
-         currentCorps !== originalCorps ||
-         relanceCourante.value.cc !== originalRelanceData.value.cc ||
-         String(currentDate) !== String(originalDate)
-})
-
-// F-009: Marquer comme modifié (appelé par l'éditeur)
-function markAsModified() {
-  // Le computed hasUnsavedChanges se met à jour automatiquement
-}
-
-// Computed pour le champ date d'envoi (conversion Date <-> string YYYY-MM-DD)
-const dateEnvoiInput = computed(() => {
-  return toDateInput(relanceCourante.value?.dateEnvoi)
-})
-
-function updateDateEnvoi(value) {
-  if (!relanceCourante.value) return
-  relanceCourante.value.dateEnvoi = value ? new Date(value) : null
-}
 
 // ── Constants ──────────────────────────────────────────────────
 const STATUT_CONFIG = {
@@ -867,16 +482,6 @@ const colonnes = [
   },
   { accessorKey: 'statut',      header: sortableHeader('Statut') },
   {
-    accessorKey: 'valide',
-    header: sortableHeader('Validé'),
-    cell: ({ row }) => {
-      const isValide = row.original.valide
-      return h('span', {
-        class: isValide ? 'text-green-600 font-medium' : 'text-yellow-600 font-medium'
-      }, isValide ? 'Oui' : 'Non')
-    }
-  },
-  {
     id: 'actions',
     header: ' ',
     enableSorting: false,
@@ -905,7 +510,6 @@ const statutOptions = ref([
   { label: 'Envoyé',             value: 'envoyé' },
   { label: 'Échec',              value: 'échec' },
   { label: 'Annulé',             value: 'annulé' },
-  { label: 'Non validées',       value: 'non-validees' },
 ])
 
 // Charger les options dynamiques
@@ -940,9 +544,22 @@ const relancesFiltrees = computed(() => {
 const relancesJour = computed(() => {
   if (!jourSelectionne.value) return []
   const jour = new Date(jourSelectionne.value).toDateString()
-  return relancesFiltrees.value.filter(r => {
+  return relancesPourCalendrier.value.filter(r => {
     const d = r.dateEnvoi ? new Date(r.dateEnvoi).toDateString() : null
     return d === jour
+  })
+})
+
+// Filtre les relances pour le calendrier (exclure celles avec impayés suspendus ou blacklistés)
+const relancesPourCalendrier = computed(() => {
+  return relancesFiltrees.value.filter(r => {
+    // Exclure si au moins un impayé est suspendu ou blacklisté
+    const aImpayeSuspenduOuBlacklist = r.impayes?.some(imp => {
+      const estSuspendu = imp.statutDossier?.toLowerCase().includes('suspend')
+      const estBlacklist = imp.isBlacklisted === true
+      return estSuspendu || estBlacklist
+    })
+    return !aImpayeSuspenduOuBlacklist
   })
 })
 
@@ -953,7 +570,7 @@ const calendarOptions = computed(() => ({
   headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
   displayEventTime: false, // Masquer l'affichage de l'heure
   dayMaxEvents: false, // Désactiver la limite pour permettre l'overflow
-  events: relancesFiltrees.value.map(r => {
+  events: relancesPourCalendrier.value.map(r => {
     // Utiliser la date réelle de la relance sans heure spécifique
     const dateRelance = new Date(r.dateEnvoi)
     dateRelance.setHours(0, 0, 0, 0) // Réinitialiser l'heure à minuit
@@ -1011,6 +628,8 @@ function parseImpaye(i) {
     id:           i.id,
     nfacture:     getValue('nfacture') || '—',
     statut:       getValue('statut') || '',
+    statutDossier: getValue('statut_dossier') || '',
+    isBlacklisted: getValue('isBlacklisted') === true,
     resteAPayer:  getValue('reste_a_payer') ?? null,
     montantTotal: getValue('total_ttc') ?? null,
     adresseBien:  getValue('adresse_bien') || '',
@@ -1085,16 +704,8 @@ async function charger() {
     q.descending('date_envoi_prevue')
     q.limit(500)
 
-    if (filtreStatut.value !== 'tous' && filtreStatut.value !== 'non-validees') {
+    if (filtreStatut.value !== 'tous') {
       q.equalTo('statut', filtreStatut.value)
-    }
-
-    if (filtreStatut.value === 'non-validees') {
-      q.or(
-        q.equalTo('valide', false),
-        q.doesNotExist('valide')
-      )
-      q.notEqualTo('manuel', true)
     }
 
     if (filtreSequence.value && filtreSequence.value !== 'tous') {
@@ -1221,40 +832,6 @@ async function annulerGroupe() {
   }
 }
 
-async function validerGroupe() {
-  validantGroupe.value = true
-  try {
-    // Grouper les relances par ID pour éviter les doublons
-    const relancesParId = {}
-    selection.value.forEach(row => {
-      if (!relancesParId[row.id] && !row.valide) {
-        relancesParId[row.id] = row
-      }
-    })
-
-    const relancesAValider = Object.values(relancesParId)
-
-    if (relancesAValider.length === 0) {
-      toast.add({ title: 'Aucune relance à valider', color: 'yellow' })
-      return
-    }
-
-    // Appels individuels au lieu de saveAll (batch)
-    await Promise.all(relancesAValider.map(async (r) => {
-      r._parse.set('valide', true)
-      await r._parse.save()
-      r.valide = true
-    }))
-
-    toast.add({ title: `${relancesAValider.length} relance(s) validée(s)`, color: 'green' })
-    selection.value = []
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    validantGroupe.value = false
-  }
-}
-
 // ── Drawer ────────────────────────────────────────────────────
 function ouvrirDrawer(row, readonly) {
   // Gérer les deux cas: row.original (vue tableau) ou row direct (vue calendrier)
@@ -1338,360 +915,6 @@ async function appliquerToAuxRelancesSuivantes(relanceCourante, nouveauTo) {
     toast.add({ title: 'Erreur', description: 'Échec de la mise à jour des relances suivantes: ' + err.message, color: 'red' })
   }
 }
-
-async function validerRelanceDrawer() {
-  validantDrawer.value = true
-  try {
-    const row = drawerRow.value
-    const r = row._parse
-
-    r.set('valide', true)
-    row.valide = true
-
-    await r.save()
-    showDrawer.value = false
-    toast.add({ title: 'Relance validée', color: 'green' })
-    await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    validantDrawer.value = false
-  }
-}
-
-// ── Workflow de validation ────────────────────────────────────
-function selectionnerRelancePourValidation(relance) {
-  // F-009: Vérifier s'il y a des modifications non sauvegardées
-  if (hasUnsavedChanges.value) {
-    pendingRelanceSelection.value = relance
-    showUnsavedChangesModal.value = true
-    return
-  }
-  
-  setRelanceCourante(relance)
-}
-
-// F-009: Définir la relance courante et sauvegarder les données originales
-function setRelanceCourante(relance) {
-  relanceCourante.value = relance
-  // Sauvegarder les données originales pour détecter les modifications
-  if (relance) {
-    originalRelanceData.value = {
-      objet: relance.objet,
-      corps: relance.corps,
-      cc: relance.cc,
-      dateEnvoi: relance.dateEnvoi
-    }
-  } else {
-    originalRelanceData.value = null
-  }
-}
-
-// F-009: Enregistrer les modifications sans valider
-async function enregistrerRelance() {
-  if (!relanceCourante.value) return
-
-  console.log('[CHECKPOINT] enregistrer-relance:start', { relanceId: relanceCourante.value.id })
-  saving.value = true
-  
-  try {
-    const row = relanceCourante.value
-    const r = row._parse
-
-    // Récupérer le contenu HTML depuis l'éditeur si disponible
-    let corpsHtml = row.corps
-    if (editorValidationRef.value) {
-      try {
-        corpsHtml = editorValidationRef.value.getInstance().getHTML()
-        console.log('[CHECKPOINT] enregistrer-relance:editor-read', { length: corpsHtml.length })
-      } catch (e) {
-        console.warn('Impossible de lire le contenu de l\'éditeur:', e)
-      }
-    }
-
-    console.log('[CHECKPOINT] enregistrer-relance:parse-save', { 
-      sujet: row.objet, 
-      cc: row.cc, 
-      contenuLength: corpsHtml.length 
-    })
-
-    // Mise à jour des champs modifiables
-    r.set('sujet', row.objet)
-    r.set('contenu', corpsHtml)
-    r.set('cc', row.cc)
-    r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
-    // NOTE: on ne touche PAS à 'valide'
-
-    await r.save()
-
-    // Mettre à jour l'état local
-    row.corps = corpsHtml
-    
-    // Mettre à jour les données originales
-    originalRelanceData.value = {
-      objet: row.objet,
-      corps: corpsHtml,
-      cc: row.cc,
-      dateEnvoi: row.dateEnvoi
-    }
-
-    console.log('[CHECKPOINT] enregistrer-relance:success', { relanceId: row.id })
-
-    toast.add({
-      title: 'Modifications enregistrées',
-      color: 'green'
-    })
-
-  } catch (err) {
-    console.error('[CHECKPOINT] enregistrer-relance:error', { 
-      relanceId: relanceCourante.value?.id, 
-      error: err.message 
-    })
-    
-    toast.add({
-      title: 'Erreur',
-      description: err.message,
-      color: 'red'
-    })
-  } finally {
-    saving.value = false
-  }
-}
-
-// F-009: Gérer le modal de changements non sauvegardées
-async function handleUnsavedChangesAction(action) {
-  showUnsavedChangesModal.value = false
-  
-  if (action === 'save') {
-    await enregistrerRelance()
-    if (pendingRelanceSelection.value) {
-      setRelanceCourante(pendingRelanceSelection.value)
-      pendingRelanceSelection.value = null
-    }
-  } else if (action === 'discard') {
-    // Abandonner les modifications et changer de relance
-    if (pendingRelanceSelection.value) {
-      setRelanceCourante(pendingRelanceSelection.value)
-      pendingRelanceSelection.value = null
-    }
-  }
-  // Si 'cancel', ne rien faire (rester sur la relance actuelle)
-}
-
-async function validerRelanceWorkflow() {
-  if (!relanceCourante.value) return
-
-  validantWorkflow.value = true
-  try {
-    const row = relanceCourante.value
-    const r = row._parse
-
-    // F-009: Sauvegarder d'abord les modifications si présentes
-    if (hasUnsavedChanges.value) {
-      let corpsHtml = row.corps
-      if (editorValidationRef.value) {
-        try { corpsHtml = editorValidationRef.value.getInstance().getHTML() } catch {}
-      }
-      r.set('sujet', row.objet)
-      r.set('contenu', corpsHtml)
-      r.set('cc', row.cc)
-      r.set('date_envoi_prevue', row.dateEnvoi ? new Date(row.dateEnvoi) : null)
-    }
-
-    r.set('valide', true)
-    row.valide = true
-
-    await r.save()
-    
-    // F-009: Mettre à jour les données originales
-    originalRelanceData.value = {
-      objet: row.objet,
-      corps: row.corps,
-      cc: row.cc,
-      dateEnvoi: row.dateEnvoi
-    }
-
-    toast.add({ title: 'Relance validée !', color: 'green' })
-
-    // Passer à la relance suivante
-    await charger()
-    passerARelanceSuivante()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    validantWorkflow.value = false
-  }
-}
-
-// Validation en masse (appels unitaires)
-async function validateAllSelected() {
-  if (selectedRelancesForBulk.value.length === 0) {
-    toast.add({ title: 'Aucune relance sélectionnée', color: 'yellow' })
-    return
-  }
-
-  bulkValidating.value = true
-  let successCount = 0
-  let errorCount = 0
-
-  try {
-    // Convertir les IDs sélectionnés en chaînes pour comparaison
-    const selectedIds = selectedRelancesForBulk.value.map(id => String(id))
-
-    // Filtrer les relances qui ne sont pas encore validées
-    const relancesToValidate = relancesAValider.value
-      .filter(r => selectedIds.includes(String(r.id)) && !r.valide)
-
-    if (relancesToValidate.length === 0) {
-      toast.add({ title: 'Toutes les relances sélectionnées sont déjà validées', color: 'yellow' })
-      return
-    }
-
-    // Boucle d'appels unitaires
-    for (const r of relancesToValidate) {
-      try {
-        r._parse.set('valide', true)
-        await r._parse.save()
-        r.valide = true
-        successCount++
-      } catch (saveErr) {
-        console.error(`Erreur validation relance ${r.id}:`, saveErr)
-        errorCount++
-      }
-    }
-
-    // Toast de résultat
-    if (successCount > 0 && errorCount === 0) {
-      toast.add({
-        title: `${successCount} relance(s) validée(s)`,
-        color: 'green'
-      })
-    } else if (successCount > 0 && errorCount > 0) {
-      toast.add({
-        title: `${successCount} validée(s), ${errorCount} échec(s)`,
-        color: 'yellow'
-      })
-    } else {
-      toast.add({
-        title: 'Erreur',
-        description: `Aucune relance validée (${errorCount} échec(s))`,
-        color: 'red'
-      })
-    }
-
-    // Réinitialiser la sélection
-    selectedRelancesForBulk.value = []
-
-    // Recharger les données
-    await charger()
-
-    // Si la relance courante a été validée, passer à la première non validée
-    if (relanceCourante.value?.valide) {
-      relanceCourante.value = relancesAValider.value[0] || null
-    }
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  } finally {
-    bulkValidating.value = false
-  }
-}
-
-function passerRelanceWorkflow() {
-  passerARelanceSuivante()
-}
-
-function passerARelanceSuivante() {
-  if (relancesAValider.value.length === 0) {
-    relanceCourante.value = null
-    return
-  }
-
-  // Trouver l'index courant
-  const indexCourant = relancesAValider.value.findIndex(r => r.id === relanceCourante.value?.id)
-
-  // Si on est au dernier élément ou si aucune relance n'est sélectionnée, prendre la première
-  const indexSuivant = indexCourant === relancesAValider.value.length - 1 || indexCourant === -1
-    ? 0
-    : indexCourant + 1
-
-  relanceCourante.value = relancesAValider.value[indexSuivant]
-}
-
-/**
- * Met le contact de la relance courante à la blacklist et supprime toutes ses relances
- */
-async function blacklistEtSupprimerRelances() {
-  if (!relanceCourante.value) return
-
-  // Récupérer le contact de la relance courante
-  const contact = relanceCourante.value._parse.get('contact')
-  if (!contact?.id) {
-    toast.add({ title: 'Erreur', description: 'Contact introuvable pour cette relance', color: 'red' })
-    return
-  }
-
-  try {
-    const result = await blacklistStore.addToBlacklistWithOptions(
-      [contact.id],
-      true // deleteRelances: true
-    )
-
-    toast.add({
-      title: 'Succès',
-      description: `${result.contactsAdded} contact(s) blacklisté(s), ${result.relancesDeleted} relance(s) supprimée(s)`,
-      color: 'green'
-    })
-
-    // Rafraîchir la liste des relances
-    await charger()
-
-    // Si la relance courante a été supprimée, passer à la première disponible
-    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
-      relanceCourante.value = relancesAValider.value[0] || null
-    }
-  } catch (error) {
-    toast.add({ title: 'Erreur', description: error.message || 'Impossible de blacklister le contact', color: 'red' })
-  }
-}
-
-async function supprimerRelance() {
-  if (!relanceCourante.value) return
-
-  supprimantRelance.value = true
-  try {
-    await relanceCourante.value._parse.destroy()
-    toast.add({ title: 'Succès', description: 'Relance supprimée avec succès', color: 'green' })
-
-    // Rafraîchir la liste des relances
-    await charger()
-
-    // Si la relance courante a été supprimée, passer à la première disponible
-    if (!relancesAValider.value.some(r => r.id === relanceCourante.value?.id)) {
-      relanceCourante.value = relancesAValider.value[0] || null
-    }
-  } catch (error) {
-    toast.add({ title: 'Erreur', description: error.message || 'Impossible de supprimer la relance', color: 'red' })
-  } finally {
-    supprimantRelance.value = false
-  }
-}
-
-// Auto-sélectionner la première relance quand on arrive sur la vue validation
-watch(vue, (newVue) => {
-  if (newVue === 'validation' && relancesAValider.value.length > 0) {
-    setRelanceCourante(relancesAValider.value[0])
-  }
-})
-
-// Générer les liens PDF quand on change de relance courante
-watch(relanceCourante, async (newRelance) => {
-  if (newRelance?.impayes?.length > 0) {
-    const impayeIds = newRelance.impayes.map(imp => imp.id).filter(Boolean)
-    if (impayeIds.length > 0) {
-      await generatePdfLinks(impayeIds)
-    }
-  }
-})
 
 // Watcher pour détecter les changements dans le champ To
 watch(drawerTo, (newVal, oldVal) => {

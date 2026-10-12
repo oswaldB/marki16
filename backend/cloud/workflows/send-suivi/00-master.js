@@ -7,7 +7,9 @@ require("dotenv").config({ path: "/home/ubuntu/prod/adti/.env" });
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
+const Imap = require("imap");
 const { info, warn, error } = require("../../utils/logger");
+const { createActivite } = require("../../utils/activite");
 
 // Chemin du répertoire logs
 const LOGS_DIR = path.join(__dirname, "logs");
@@ -267,11 +269,11 @@ async function sendSuivisMaster({
 
                 // Préparer les données de l'email
                 const from =
-                    smtpProfil.get("fromEmail") || smtpProfil.get("username");
+                    smtpProfil.get("email_from") || smtpProfil.get("username");
                 const to = contactEmail;
                 const subject = suivi.get("objet") || "Suivi de dossiers";
                 const baseHtml = suivi.get("corps") || "<p>Contenu du suivi...</p>";
-                const replyTo = smtpProfil.get("replyToEmail") || null;
+                const replyTo = smtpProfil.get("email_from") || null;
 
                 // Récupérer le champ CC spécifique aux suivis
                 const cc = suivi.get("cc");
@@ -334,7 +336,7 @@ async function sendSuivisMaster({
                 const transporter = nodemailer.createTransport({
                     host: smtpProfil.get("host"),
                     port: smtpProfil.get("port"),
-                    secure: smtpProfil.get("secure") === true,
+                    secure: smtpProfil.get("port") === 465,
                     auth: {
                         user: smtpProfil.get("username"),
                         pass: smtpProfil.get("password"),
@@ -450,6 +452,17 @@ async function sendSuivisMaster({
                 );
 
                 result.suivisEnvoyes++;
+
+                // Trace d'activité pour les suivis manuels
+                if (suivi.get("manuelle") === true) {
+                    await createActivite(
+                        "suivi",
+                        "envoi_manuel",
+                        `Suivi manuel ${suiviId} envoyé à ${to}`,
+                        impayes[0],
+                        { trigger: "sendSuivis", suivi_id: suiviId },
+                    );
+                }
                 info(
                     `✅ [${suiviId}] SUIVI TERMINÉ - Envoyé avec succès (${result.suivisEnvoyes} total)`,
                     "send-suivi",
@@ -490,6 +503,22 @@ async function sendSuivisMaster({
                     "sendSuivisMaster",
                     { suiviId },
                 );
+
+                // Trace d'activité pour les suivis manuels en erreur
+                if (suivi.get("manuelle") === true) {
+                    const impayesSuivi = suivi.get("impayes") || [];
+                    await createActivite(
+                        "suivi",
+                        "envoi_manuel_erreur",
+                        `Échec envoi suivi manuel ${suivi.id}: ${emailError.message}`,
+                        impayesSuivi[0] || null,
+                        {
+                            trigger: "sendSuivis",
+                            suivi_id: suivi.id,
+                            error_message: emailError.message,
+                        },
+                    );
+                }
 
                 result.erreurs.push({
                     suiviId: suivi.id,
@@ -596,37 +625,132 @@ async function sendSuivisMaster({
  * @returns {Promise<void>}
  */
 async function copyToSentFolder(smtpProfil, emailOptions, emailInfo) {
-    // TODO: Implémenter la copie IMAP vers le dossier Sent
-    // Cette fonction est obligatoire pour les suivis
-    
-    // Pour l'instant, on vérifie si les informations IMAP sont disponibles
-    const imapHost = smtpProfil.get("imapHost");
-    const imapPort = smtpProfil.get("imapPort");
+    // Récupérer les informations IMAP du profil SMTP
+    let imapHost = smtpProfil.get("imapHost");
+    let imapPort = smtpProfil.get("imapPort");
     const imapUsername = smtpProfil.get("imapUsername") || smtpProfil.get("username");
     const imapPassword = smtpProfil.get("imapPassword") || smtpProfil.get("password");
-    
+    const imapSecure = smtpProfil.get("imapSecure") !== false;
+
+    // Si pas de config IMAP explicite, essayer de deviner à partir du host SMTP
     if (!imapHost || !imapPort) {
-        // Si pas de config IMAP, on log un warning mais on considère que c'est OK
-        // (le serveur SMTP peut gérer automatiquement le dossier Sent)
+        const smtpHost = smtpProfil.get("host") || "";
+
+        // Règles de conversion SMTP -> IMAP courantes
+        if (smtpHost.includes("smtp.")) {
+            imapHost = smtpHost.replace("smtp.", "imap.");
+            imapPort = 993;
+        } else if (smtpHost.includes("ionos")) {
+            imapHost = "imap.ionos.fr";
+            imapPort = 993;
+        } else if (smtpHost.includes("gmail")) {
+            imapHost = "imap.gmail.com";
+            imapPort = 993;
+        } else if (smtpHost.includes("outlook") || smtpHost.includes("office365")) {
+            imapHost = "outlook.office365.com";
+            imapPort = 993;
+        } else if (smtpHost) {
+            // Fallback: utiliser le même host que SMTP pour IMAP (port 993)
+            imapHost = smtpHost;
+            imapPort = 993;
+        } else {
+            info(
+                `IMAP non configuré et impossible à deviner pour ${smtpProfil.id} (host: ${smtpHost}), copie Sent ignorée`,
+                "send-suivi",
+                "copyToSentFolder",
+            );
+            return;
+        }
+
         info(
-            `IMAP non configuré pour ${smtpProfil.id}, copie Sent ignorée (SMTP gère peut-être automatiquement)`,
+            `IMAP deviné à partir du SMTP: ${imapHost}:${imapPort}`,
             "send-suivi",
             "copyToSentFolder",
+            { smtpHost, imapHost, imapPort },
         );
-        return;
     }
-    
-    // Implémentation future avec node-imap ou imap-simple:
-    // 1. Se connecter au serveur IMAP
-    // 2. Ouvrir le dossier Sent (ou créer s'il n'existe pas)
-    // 3. Ajouter le message avec les flags \Seen
-    
-    // Pour l'instant, on simule le succès
-    info(
-        `Copie IMAP configurée mais implémentation en attente pour ${smtpProfil.id}`,
-        "send-suivi",
-        "copyToSentFolder",
-    );
+
+    return new Promise((resolve, reject) => {
+        const imap = new Imap({
+            host: imapHost,
+            port: imapPort,
+            tls: imapSecure,
+            user: imapUsername,
+            password: imapPassword,
+            tlsOptions: {
+                rejectUnauthorized: process.env.NODE_ENV === "production",
+            },
+        });
+
+        function openSentFolder(cb) {
+            const sentFolders = ["Sent", "Sent Items", "Sent Messages", "Envoyés", "&BB4EQgQ,BEAEMAQyBDsENQQ9BD0-"];
+
+            function tryNextFolder(index) {
+                if (index >= sentFolders.length) {
+                    return cb(new Error("Dossier Sent introuvable"));
+                }
+
+                const folderName = sentFolders[index];
+                imap.openBox(folderName, false, (err, box) => {
+                    if (err) {
+                        info(
+                            `Dossier '${folderName}' non trouvé, essai suivant...`,
+                            "send-suivi",
+                            "copyToSentFolder",
+                        );
+                        return tryNextFolder(index + 1);
+                    }
+                    info(
+                        `Dossier Sent trouvé: '${folderName}'`,
+                        "send-suivi",
+                        "copyToSentFolder",
+                    );
+                    cb(null, box);
+                });
+            }
+
+            tryNextFolder(0);
+        }
+
+        imap.once("ready", () => {
+            openSentFolder((err, box) => {
+                if (err) {
+                    imap.end();
+                    return reject(err);
+                }
+
+                const date = new Date().toUTCString();
+                const messageId = emailInfo.messageId || `<${Date.now()}@adti.fr>`;
+
+                const fullMessage = [
+                    `Date: ${date}`,
+                    `Message-Id: ${messageId}`,
+                    `From: ${emailOptions.from}`,
+                    `To: ${emailOptions.to}`,
+                    emailOptions.cc ? `Cc: ${Array.isArray(emailOptions.cc) ? emailOptions.cc.join(", ") : emailOptions.cc}` : "",
+                    `Subject: ${emailOptions.subject}`,
+                    `Content-Type: text/html; charset=utf-8`,
+                    `Mime-Version: 1.0`,
+                    `\n`,
+                    emailOptions.html,
+                ].filter(Boolean).join("\r\n");
+
+                imap.append(fullMessage, { mailbox: box.name, flags: ["\\Seen"] }, (appendErr) => {
+                    imap.end();
+                    if (appendErr) {
+                        return reject(appendErr);
+                    }
+                    resolve();
+                });
+            });
+        });
+
+        imap.once("error", (err) => {
+            reject(new Error(`Erreur IMAP: ${err.message}`));
+        });
+
+        imap.connect();
+    });
 }
 
 /**

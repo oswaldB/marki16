@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relances — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css">
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="relancesPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-4">
+
+        <!-- ── Barre du haut ── -->
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <h1 class="text-2xl font-semibold text-gray-900">Relances</h1>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- Toggle vue -->
+            <div class="flex rounded-lg border border-gray-200 bg-gray-50 p-1 gap-1">
+              <button
+                id="btn-vue-tableau"
+                class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5"
+                :class="vue === 'tableau' ? 'bg-white text-sky-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                @click="vue = 'tableau'"
+              >
+                <i class="fa-solid fa-table-cells text-xs"></i>
+                Tableau
+              </button>
+              <button
+                id="btn-vue-calendrier"
+                class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5"
+                :class="vue === 'calendrier' ? 'bg-white text-sky-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                @click="vue = 'calendrier'"
+              >
+                <i class="fa-solid fa-calendar-days text-xs"></i>
+                Calendrier
+              </button>
+            </div>
+
+            <!-- Filtres -->
+            <select
+              id="filtre-statut"
+              x-model="filtreStatut"
+              @change="charger"
+              class="w-36 border border-gray-300 rounded-md px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              <template x-for="opt in statutOptions" :key="opt.value">
+                <option :value="opt.value" x-text="opt.label"></option>
+              </template>
+            </select>
+
+            <select
+              id="filtre-sequence"
+              x-model="filtreSequence"
+              @change="charger"
+              class="w-44 border border-gray-300 rounded-md px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              <option value="tous">Toutes les séquences</option>
+              <template x-for="opt in sequenceOptions" :key="opt.value">
+                <option :value="opt.value" x-text="opt.label"></option>
+              </template>
+            </select>
+
+            <div class="relative w-52">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input
+                id="search-relances"
+                x-model="search"
+                type="text"
+                placeholder="Rechercher..."
+                class="w-full border border-gray-300 rounded-md pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            <!-- Bouton créer -->
+            <button
+              id="btn-create-relances"
+              @click="createRelancesForAllActiveSequences"
+              :disabled="creatingRelances"
+              class="inline-flex items-center gap-1.5 px-3 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white text-sm font-medium rounded-md transition-colors"
+            >
+              <i class="fa-solid fa-plus-circle text-xs" :class="creatingRelances ? 'fa-spin' : ''"></i>
+              <span x-show="!creatingRelances">Créer des relances</span>
+              <span x-show="creatingRelances">Création…</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Toast -->
+        <div
+          x-show="toastMessage"
+          x-transition
+          class="fixed top-4 right-4 z-[60] px-4 py-3 rounded-lg shadow-lg text-sm font-medium"
+          :class="toastColor === 'green' ? 'bg-green-100 text-green-800 border border-green-200' : toastColor === 'red' ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-blue-100 text-blue-800 border border-blue-200'"
+        >
+          <span x-text="toastMessage"></span>
+          <button @click="toastMessage = ''" class="ml-2 text-current opacity-60 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Loading -->
+        <div x-show="loading" class="text-center py-12 text-gray-400">
+          <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Chargement…
+        </div>
+
+        <!-- Content -->
+        <div x-show="!loading">
+
+          <!-- ══════════════════════════════════════
+               VUE TABLEAU
+          ══════════════════════════════════════ -->
+          <div x-show="vue === 'tableau'" class="space-y-3">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-3 py-2">
+                        <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" class="rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" @click="sortBy('dateEnvoi')">
+                        <span class="flex items-center gap-1">Date envoi prévue <i class="fa-solid" :class="sortIcon('dateEnvoi')"></i></span>
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" @click="sortBy('objet')">
+                        <span class="flex items-center gap-1">Objet <i class="fa-solid" :class="sortIcon('objet')"></i></span>
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" @click="sortBy('to')">
+                        <span class="flex items-center gap-1">Destinataire <i class="fa-solid" :class="sortIcon('to')"></i></span>
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" @click="sortBy('nfacture')">
+                        <span class="flex items-center gap-1">Facture <i class="fa-solid" :class="sortIcon('nfacture')"></i></span>
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" @click="sortBy('statut')">
+                        <span class="flex items-center gap-1">Statut <i class="fa-solid" :class="sortIcon('statut')"></i></span>
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="row in sortedRelances" :key="row.id">
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2">
+                          <input type="checkbox" :value="row.id" x-model="selection" class="rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm tabular-nums text-gray-700" x-text="formatDate(row.dateEnvoi)"></td>
+                        <td class="px-3 py-2 text-sm text-gray-900">
+                          <div class="flex items-center gap-2">
+                            <span class="truncate max-w-xs" x-text="row.objet || '(sans objet)'"></span>
+                            <span x-show="row.manuelle" title="Relance manuelle" class="text-xs">✋</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-600 truncate max-w-40" x-text="row.to"></td>
+                        <td class="px-3 py-2 text-sm font-mono text-gray-700">
+                          <template x-if="row.impayes && row.impayes.length > 1">
+                            <div class="flex flex-wrap gap-1">
+                              <template x-for="(imp, index) in row.impayes" :key="imp.id">
+                                <span>
+                                  <a :href="'../impayes-detail/index.html?id=' + imp.id" class="text-sky-700 hover:underline" x-text="imp.nfacture"></a>
+                                  <span x-show="index < row.impayes.length - 1">, </span>
+                                </span>
+                              </template>
+                            </div>
+                          </template>
+                          <template x-if="!(row.impayes && row.impayes.length > 1)">
+                            <span>
+                              <a x-show="row.impayelId && row.impayelId.length" :href="'../impayes-detail/index.html?id=' + row.impayelId[0]" class="text-sky-700 hover:underline" x-text="row.nfacture"></a>
+                              <span x-show="!(row.impayelId && row.impayelId.length)" class="text-gray-400" x-text="row.nfacture"></span>
+                            </span>
+                          </template>
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                          <div class="flex items-center gap-2">
+                            <span
+                              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                              :class="!row.valide ? 'bg-orange-100 text-orange-700' : (row.statut === 'envoyé' ? 'bg-green-100 text-green-700' : row.statut === 'échec' ? 'bg-red-100 text-red-700' : row.statut === 'annulé' ? 'bg-gray-100 text-gray-600' : row.statut === 'optimisee' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600')"
+                              x-text="statutLabel(row.statut)"
+                            ></span>
+                            <button
+                              x-show="row.statut === 'pending' || row.statut === 'échec' || row.statut === 'optimisee'"
+                              @click="ouvrirDrawer(row, false)"
+                              class="text-gray-400 hover:text-gray-600"
+                              title="Modifier"
+                            >
+                              <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                          </div>
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                          <div class="flex items-center gap-1">
+                            <button
+                              x-show="row.statut === 'pending'"
+                              @click="annulerRelance(row)"
+                              class="text-red-400 hover:text-red-600"
+                              title="Annuler"
+                            >
+                              <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                            <button
+                              x-show="row.statut === 'envoyé'"
+                              @click="ouvrirDrawer(row, true)"
+                              class="text-gray-400 hover:text-gray-600"
+                              title="Voir"
+                            >
+                              <i class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                            <button
+                              x-show="row.statut === 'échec'"
+                              @click="reessayerRelance(row)"
+                              class="text-sky-400 hover:text-sky-600"
+                              title="Réessayer"
+                            >
+                              <i class="fa-solid fa-arrow-rotate-right text-xs"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Barre sélection groupée -->
+            <div
+              x-show="selection.length > 0"
+              x-transition
+              class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+            >
+              <div class="flex items-center gap-3 bg-gray-900 text-white rounded-xl px-5 py-3 shadow-xl">
+                <span class="text-sm font-medium"><span x-text="selection.length"></span> relance(s) sélectionnée(s)</span>
+                <button
+                  id="btn-annuler-groupe"
+                  @click="annulerGroupe"
+                  :disabled="annulantGroupe"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <i class="fa-solid fa-trash text-xs" :class="annulantGroupe ? 'fa-spin' : ''"></i>
+                  <span x-show="!annulantGroupe">🗑 Annuler</span>
+                  <span x-show="annulantGroupe">Annulation…</span>
+                </button>
+                <button
+                  @click="selection = []"
+                  class="text-sm text-white/80 hover:text-white px-2 py-1.5"
+                >
+                  Désélectionner
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════
+               VUE CALENDRIER
+          ══════════════════════════════════════ -->
+          <div x-show="vue === 'calendrier'" class="flex gap-4">
+            <div class="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+              <!-- Légende -->
+              <div class="flex flex-wrap gap-3 mb-4">
+                <template x-for="(cfg, key) in STATUT_CONFIG" :key="key">
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: statutCalColor(key) }"></div>
+                    <span class="text-xs text-gray-600" x-text="cfg.label"></span>
+                  </div>
+                </template>
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span class="text-xs text-gray-600">Non validée</span>
+                </div>
+              </div>
+              <div x-ref="calendarEl"></div>
+            </div>
+
+            <!-- Panneau latéral jour sélectionné -->
+            <div
+              x-show="jourSelectionne"
+              x-transition:enter="transition ease-out duration-200"
+              x-transition:enter-start="opacity-0 translate-x-4"
+              x-transition:enter-end="opacity-100 translate-x-0"
+              x-transition:leave="transition ease-in duration-150"
+              x-transition:leave-start="opacity-100 translate-x-0"
+              x-transition:leave-end="opacity-0 translate-x-4"
+              class="w-80 shrink-0"
+            >
+              <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                  <span class="font-semibold text-sm" x-text="formatDate(jourSelectionne)"></span>
+                  <button @click="jourSelectionne = null" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <div class="p-4 space-y-2 max-h-[70vh] overflow-y-auto">
+                  <template x-for="row in relancesJour" :key="row.id">
+                    <div class="border border-gray-100 rounded-lg p-2 space-y-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          :class="!row.valide ? 'bg-orange-100 text-orange-700' : (row.statut === 'envoyé' ? 'bg-green-100 text-green-700' : row.statut === 'échec' ? 'bg-red-100 text-red-700' : row.statut === 'annulé' ? 'bg-gray-100 text-gray-600' : row.statut === 'optimisee' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600')"
+                          x-text="statutLabel(row.statut)"
+                        ></span>
+                        <div class="flex items-center gap-1">
+                          <span x-show="!row.valide" class="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-medium">non validé</span>
+                          <span x-show="row.manuelle" class="text-xs">✋</span>
+                        </div>
+                      </div>
+                      <p class="text-sm font-medium truncate" x-text="row.objet || '(sans objet)'"></p>
+                      <p class="text-xs text-gray-500 truncate" x-text="row.to"></p>
+                      <div class="flex gap-1 pt-1">
+                        <button
+                          x-show="row.statut === 'pending' || row.statut === 'échec' || row.statut === 'optimisee'"
+                          @click="ouvrirDrawer(row, false)"
+                          class="text-gray-400 hover:text-gray-600 px-1"
+                          title="Modifier"
+                        >
+                          <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </button>
+                        <button
+                          x-show="row.statut === 'envoyé'"
+                          @click="ouvrirDrawer(row, true)"
+                          class="text-gray-400 hover:text-gray-600 px-1"
+                          title="Voir"
+                        >
+                          <i class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                        <button
+                          x-show="row.statut === 'échec'"
+                          @click="reessayerRelance(row)"
+                          class="text-sky-400 hover:text-sky-600 px-1"
+                          title="Réessayer"
+                        >
+                          <i class="fa-solid fa-arrow-rotate-right text-xs"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                  <p x-show="relancesJour.length === 0" class="text-sm text-gray-400 italic">Aucune relance ce jour.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ══════════════════════════════════════
+         SLIDEOVER — Modifier / Voir une relance
+    ══════════════════════════════════════ -->
+    <div x-show="showDrawer" class="fixed inset-0 z-50" x-cloak>
+      <!-- Backdrop -->
+      <div
+        x-show="showDrawer"
+        x-transition:enter="transition-opacity ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-black/30"
+        @click="showDrawer = false"
+      ></div>
+
+      <!-- Panel -->
+      <div
+        x-show="showDrawer"
+        x-transition:enter="transform transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transform transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="fixed inset-y-0 right-0 w-1/2 max-w-none bg-white shadow-xl z-50 flex flex-col"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <span class="font-semibold text-lg" x-text="drawerReadonly ? 'Voir la relance' : 'Modifier la relance'"></span>
+          <button @click="showDrawer = false" class="text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <template x-if="relanceDrawer">
+            <div class="space-y-4">
+              <!-- Email fields -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">Date d'envoi</label>
+                  <input
+                    x-model="drawerDateEnvoi"
+                    type="date"
+                    :disabled="drawerReadonly"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 mb-1 block">À</label>
+                  <input
+                    x-model="drawerTo"
+                    :disabled="drawerReadonly"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              <div x-show="!drawerReadonly" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                <input
+                  id="apply-all-following"
+                  x-model="applyToAllFollowing"
+                  type="checkbox"
+                  class="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                />
+                <label for="apply-all-following" class="text-sm text-gray-600">Appliquer ce destinataire à tous les emails suivants</label>
+              </div>
+
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">CC</label>
+                <input
+                  x-model="drawerCc"
+                  :disabled="drawerReadonly"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-50"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Objet</label>
+                <input
+                  x-model="drawerObjet"
+                  :disabled="drawerReadonly"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-50"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Corps</label>
+                <div class="border border-gray-200 rounded-md overflow-hidden">
+                  <div x-show="!drawerReadonly" x-ref="editorEl"></div>
+                  <div x-show="drawerReadonly" class="p-3 text-sm text-gray-700 bg-gray-50" x-html="drawerCorps || '<em class=\'text-gray-400\'>(vide)</em>'"></div>
+                </div>
+              </div>
+
+              <!-- Pièce jointe -->
+              <div class="flex items-start gap-3 p-3 bg-sky-50 border border-sky-100 rounded-lg">
+                <i class="fa-solid fa-paper-clip text-sky-500 mt-0.5"></i>
+                <p class="text-sm text-sky-700">La facture sera automatiquement jointe en pièce jointe lors de l'envoi de cet email.</p>
+              </div>
+
+              <!-- PDFs -->
+              <template x-for="imp in relanceDrawer.impayes" :key="imp.id">
+                <div class="rounded-lg border border-gray-200 overflow-hidden">
+                  <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
+                      <i class="fa-solid fa-file-invoice text-gray-400"></i>
+                      <span>Facture <span x-text="imp.nfacture"></span></span>
+                      <span x-show="imp.payeurNom" class="text-gray-400">· <span x-text="imp.payeurNom"></span></span>
+                    </div>
+                    <a x-show="pdfLinks[imp.id]" :href="pdfLinks[imp.id]" target="_blank" class="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900">
+                      <i class="fa-solid fa-arrow-down"></i> Télécharger
+                    </a>
+                  </div>
+                  <div class="relative" style="height: 420px">
+                    <iframe
+                      x-show="pdfLinks[imp.id]"
+                      :src="pdfLinks[imp.id]"
+                      class="w-full h-full border-0"
+                    ></iframe>
+                    <div x-show="!pdfLinks[imp.id]" class="flex items-center justify-center h-full text-sm text-gray-400">
+                      PDF introuvable ou inaccessible.
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <div x-show="!relanceDrawer.impayes || relanceDrawer.impayes.length === 0" class="text-center py-4 text-gray-400 text-sm">
+                Aucun PDF disponible pour cette relance
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+          <button
+            @click="showDrawer = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            x-show="!drawerReadonly"
+            id="btn-enregistrer-drawer"
+            @click="enregistrerDrawer"
+            :disabled="savingDrawer"
+            class="inline-flex items-center gap-1 px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white text-sm font-medium rounded-md transition-colors"
+          >
+            <span x-show="!savingDrawer">Enregistrer</span>
+            <span x-show="savingDrawer">Enregistrement…</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

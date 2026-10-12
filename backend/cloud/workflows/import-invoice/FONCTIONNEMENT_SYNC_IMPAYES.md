@@ -406,7 +406,7 @@ impaye.set('reste_a_payer',     pieceRow.resteapayer != null ? Number(pieceRow.r
 impaye.set('facture_soldee',    Boolean(pieceRow.facturesoldee));
 impaye.set('commentaire_piece', pieceRow.commentaire_piece || null);
 impaye.set('ref_piece',         pieceRow.refpiece || null);
-impaye.set('url_pdf',           buildUrlPdf(pieceRow.refpiece, pieceRow.datepiece));
+impaye.set('url_pdf',           buildUrlPdf(pieceRow.refpiece, pieceRow.datecre));
 ```
 
 #### Champs du dossier

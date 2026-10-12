@@ -1,107 +1,136 @@
 <template>
   <div class="p-6 space-y-4">
     <h1 class="text-2xl font-semibold text-gray-900">Clients récalcitrants</h1>
-    
-    <!-- Barre de recherche et filtres -->
+
+    <!-- Description -->
+    <p class="text-sm text-gray-500">
+      Un récalcitrant est un contact dont tous les impayés sont non réglés et qui a reçu
+      l'intégralité de sa séquence de relances. Les impayés suspendus et les contacts
+      suspendus sont exclus.
+    </p>
+
+    <!-- Barre de recherche -->
     <div class="flex items-center justify-between gap-4 flex-wrap">
       <div class="flex items-center gap-3 flex-wrap">
-        <!-- Recherche -->
         <UInput
           v-model="search"
           icon="i-heroicons-magnifying-glass"
-          placeholder="Rechercher (payeur, facture, référence, adresse...)"
-          class="w-64"
-          @input="onSearchInput"
+          placeholder="Rechercher (nom, email, n° facture, adresse...)"
+          class="w-80"
         />
-        
-        <!-- Filtre séquence -->
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-700">Séquence:</span>
-          <USelect
-            v-model="filtreSequence"
-            :items="sequenceOptions"
-            class="w-44"
-            @change="charger"
-            :loading="sequencesLoading"
-            placeholder="Toutes les séquences"
-          />
-        </div>
+      </div>
+      <div class="text-sm text-gray-500">
+        {{ recalcitrants.length }} récalcitrant{{ recalcitrants.length > 1 ? 's' : '' }}
       </div>
     </div>
 
-    <!-- Tableau des clients récalcitrants -->
-    <div class="space-y-3">
-      <div v-if="loading" class="text-center py-8 text-gray-400">Chargement...</div>
-      <div v-else-if="recalcitrants.length === 0" class="text-center py-8 text-gray-400">Aucun client récalcitrant trouvé</div>
-      <template v-else>
-        <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[65vh] !overflow-x-auto !overflow-y-auto">
-          <UTable
-            :data="recalcitrants"
-            :columns="colonnes"
-            :loading="loading"
-            class="[&_td]:!whitespace-normal [&_td]:!break-words"
-          >
-            <!-- Payeur -->
-            <template #payeur_nom-cell="{ row }">
-              <span class="font-medium">{{ row.payeur_nom || '—' }}</span>
-            </template>
-
-            <!-- N° Facture -->
-            <template #nfacture-cell="{ row }">
-              <span class="font-mono text-sm">{{ row.nfacture || '—' }}</span>
-            </template>
-
-            <!-- Date pièce -->
-            <template #date_piece-cell="{ row }">{{ formatDate(row.date_piece) }}</template>
-
-            <!-- Retard -->
-            <template #retard-cell="{ row }">
-              <span
-                class="font-medium text-sm"
-                :class="row.retard > 30 ? 'text-red-600' : row.retard > 7 ? 'text-orange-500' : 'text-gray-600'"
-              >
-                {{ row.retard }}j
+    <!-- Tableau -->
+    <div v-if="loading" class="text-center py-8 text-gray-400">Chargement…</div>
+    <div v-else-if="recalcitrants.length === 0" class="text-center py-8 text-gray-400">
+      Aucun client récalcitrant trouvé
+    </div>
+    <template v-else>
+      <UCard :ui="{ body: { padding: 'p-0' } }" class="max-h-[70vh] !overflow-x-auto !overflow-y-auto force-scrollbar">
+        <UTable
+          :data="flatData"
+          :columns="colonnes"
+          :grouping="['contact_nom']"
+          :grouping-options="groupingOptions"
+          :global-filter="search"
+          :ui="{ td: 'empty:p-0' }"
+        >
+          <!-- Ligne groupée (contact) -->
+          <template #title-cell="{ row }">
+            <div v-if="row.getIsGrouped()" class="flex items-center gap-2 max-w-lg">
+              <UButton
+                variant="ghost"
+                color="neutral"
+                size="xs"
+                :icon="row.getIsExpanded() ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-right'"
+                @click="row.toggleExpanded()"
+              />
+              <span class="font-semibold text-gray-900 truncate">
+                {{ row.getValue('contact_nom') || '(inconnu)' }}
               </span>
-            </template>
+              <span v-if="getContactEmail(row)" class="text-xs text-gray-400 truncate max-w-[200px]">
+                {{ getContactEmail(row) }}
+              </span>
+              <UBadge color="neutral" variant="subtle">
+                {{ row.getLeafRows().length }} facture{{ row.getLeafRows().length > 1 ? 's' : '' }}
+              </UBadge>
+            </div>
+          </template>
 
-            <!-- Reste à payer -->
-            <template #reste_a_payer-cell="{ row }">
-              <span class="font-medium">{{ formatMontant(row.reste_a_payer) }}</span>
-            </template>
+          <template #nfacture-cell="{ row }">
+            <span v-if="!row.getIsGrouped()" class="font-mono text-sm">{{ row.original.nfacture }}</span>
+          </template>
 
-            <!-- Séquence -->
-            <template #sequence-cell="{ row }">
-              <span v-if="row.sequenceNom" class="text-sm text-sky-700">{{ row.sequenceNom }}</span>
+          <template #date_piece-cell="{ row }">
+            <span v-if="!row.getIsGrouped()">{{ formatDate(row.original.date_piece) }}</span>
+          </template>
+
+          <template #date_echeance-cell="{ row }">
+            <span v-if="!row.getIsGrouped()">{{ formatDate(row.original.date_echeance) }}</span>
+          </template>
+
+          <template #reste_a_payer-cell="{ row }">
+            <span :class="row.getIsGrouped() ? 'font-bold text-gray-900' : 'font-medium'">
+              {{ formatMontant(row.getValue('reste_a_payer')) }}
+            </span>
+          </template>
+
+          <template #adresse_bien-cell="{ row }">
+            <span v-if="!row.getIsGrouped()" class="text-sm">{{ row.original.adresse_bien || '—' }}</span>
+          </template>
+
+          <template #sequenceNom-cell="{ row }">
+            <template v-if="!row.getIsGrouped()">
+              <span v-if="row.original.sequenceNom" class="text-sm text-sky-700">{{ row.original.sequenceNom }}</span>
               <span v-else class="text-gray-400 text-sm">—</span>
             </template>
-
-            <!-- Dernière relance -->
-            <template #derniere_relance-cell="{ row }">{{ formatDate(row.derniere_relance) }}</template>
-
-            <!-- Actions -->
-            <template #actions-cell="{ row }">
-              <div class="flex items-center gap-1">
-                <UButton
-                  icon="i-heroicons-document"
-                  color="neutral"
-                  variant="ghost"
-                  size="xs"
-                  title="Voir PDF"
-                  @click="ouvrirPdf(row)"
-                />
-                <UDropdownMenu :items="menuItems(row)">
-                  <UButton icon="i-heroicons-ellipsis-vertical" color="neutral" variant="ghost" size="xs" />
-                </UDropdownMenu>
-              </div>
+            <template v-else>
+              <span class="text-sm text-sky-700">{{ getUniqueSequencesForGroup(row) }}</span>
             </template>
-          </UTable>
-        </UCard>
-        
-        <div class="flex justify-end text-sm text-gray-500">
-          {{ recalcitrants.length }} clients récalcitrants
-        </div>
-      </template>
-    </div>
+          </template>
+
+          <template #derniere_relance-cell="{ row }">
+            <span v-if="row.getIsGrouped()" class="text-sm text-gray-500">
+              {{ formatDate(getDerniereRelance(row)) }}
+            </span>
+            <span v-else class="text-sm text-gray-500">
+              {{ formatDate(row.original.contact_derniere_relance) }}
+            </span>
+          </template>
+
+          <template #actions-cell="{ row }">
+            <div v-if="!row.getIsGrouped()" class="flex items-center gap-1">
+              <UButton
+                icon="i-heroicons-document"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                title="Voir PDF"
+                @click="ouvrirPdf(row.original)"
+              />
+              <UDropdownMenu :items="menuItems(row.original)">
+                <UButton icon="i-heroicons-ellipsis-vertical" color="neutral" variant="ghost" size="xs" />
+              </UDropdownMenu>
+            </div>
+            <div v-else class="flex items-center gap-1">
+              <UButton
+                size="xs"
+                variant="soft"
+                color="green"
+                icon="i-heroicons-check-circle"
+                @click.stop="marquerPayeGroupe(row)"
+              >
+                Tout marquer payé
+              </UButton>
+            </div>
+          </template>
+        </UTable>
+      </UCard>
+    </template>
 
     <!-- Modal PDF -->
     <ImpayeDrawerPdf v-model="pdfOuvert" :impayelId="pdfImpayelId" />
@@ -110,152 +139,66 @@
 
 <script setup>
 import { getGroupedRowModel } from '@tanstack/vue-table'
+
 const { $parse } = useNuxtApp()
 const toast = useToast()
 const router = useRouter()
 
-// Import manuel des composants
 import ImpayeDrawerPdf from '~/components/ImpayeDrawerPdf.vue'
 
 // ── État ──
 const search = ref('')
-const filtreSequence = ref('all')
 const loading = ref(false)
 const recalcitrants = ref([])
-const sequences = ref([])
-const sequencesLoading = ref(false)
 
 // PDF
 const pdfOuvert = ref(false)
 const pdfImpayelId = ref(null)
 
-// Colonnes du tableau
+// ── Options TanStack Table ──
+const groupingOptions = ref({
+  groupedColumnMode: 'remove',
+  getGroupedRowModel: getGroupedRowModel(),
+})
+
+// ── Colonnes ──
 const colonnes = [
-  { accessorKey: 'payeur_nom',        header: 'Payeur' },
-  { accessorKey: 'nfacture',          header: 'N° Facture' },
-  { accessorKey: 'date_piece',        header: 'Date pièce' },
-  { accessorKey: 'retard',            header: 'Retard' },
-  { accessorKey: 'reste_a_payer',     header: 'Reste à payer' },
-  { accessorKey: 'sequenceNom',       header: 'Séquence' },
-  { accessorKey: 'derniere_relance',  header: 'Dernière relance' },
-  { id: 'actions',                    header: ' ' },
+  { id: 'title' },
+  { accessorKey: 'contact_nom' },
+  { accessorKey: 'nfacture', header: 'N° Facture', cell: ({ row }) => row.getIsGrouped() ? null : undefined },
+  { accessorKey: 'date_piece', header: 'Date pièce', cell: ({ row }) => row.getIsGrouped() ? null : undefined },
+  { accessorKey: 'date_echeance', header: 'Échéance', cell: ({ row }) => row.getIsGrouped() ? null : undefined },
+  { accessorKey: 'reste_a_payer', header: 'Reste à payer', aggregationFn: 'sum' },
+  { accessorKey: 'adresse_bien', header: 'Adresse du bien', cell: ({ row }) => row.getIsGrouped() ? null : undefined },
+  { accessorKey: 'sequenceNom', header: 'Séquence' },
+  { accessorKey: 'derniere_relance', header: 'Dernière relance' },
+  { id: 'actions', header: ' ' },
 ]
 
-// Options de filtre séquence
-const sequenceOptions = computed(() => [
-  { label: 'Toutes les séquences', value: 'all' },
-  ...sequences.value.map(s => ({ label: s.get('nom'), value: s.id })),
-])
+// ── Données aplaties pour le groupement ──
+const flatData = computed(() => {
+  return recalcitrants.value.flatMap((r) => {
+    const contactLabel = `${r.contact.nom} ${r.contact.prenom}`.trim() || '(inconnu)'
+    return r.impayes.map((imp) => ({
+      ...imp,
+      contact_nom: contactLabel,
+      contact_email: r.contact.email,
+      contact_id: r.contact.id,
+      contact_total_reste: r.totalResteAPayer,
+      contact_nombre_impayes: r.nombreImpayes,
+      contact_derniere_relance: r.derniereRelanceDate,
+      // Champ numérique pour l'agrégation TanStack
+      reste_a_payer: imp.reste_a_payer,
+    }))
+  })
+})
 
-// Helpers
-const today = new Date()
-
-function calcRetard(datePiece) {
-  if (!datePiece) return 0
-  const d = datePiece instanceof Date ? datePiece : new Date(datePiece)
-  return Math.floor((today - d) / 86_400_000)
-}
-
-function formatDate(val) {
-  if (!val) return '—'
-  const d = val instanceof Date ? val : new Date(val)
-  return d.toLocaleDateString('fr-FR', { dateStyle: 'short' })
-}
-
-function formatMontant(val) {
-  if (val == null) return '—'
-  return Number(val).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
-}
-
-function rowToPlain(r) {
-  const seq = r.get('sequence')
-  return {
-    _parse: r,
-    objectId: r.id,
-    nfacture:           r.get('nfacture') || '—',
-    payeur_nom:         r.get('payeur_nom') || '—',
-    retard:             calcRetard(r.get('date_piece')),
-    reste_a_payer:      r.get('reste_a_payer'),
-    date_piece:         r.get('date_piece'),
-    sequenceNom:        seq ? seq.get('nom') : null,
-    sequenceId:         seq ? seq.id : null,
-    url_pdf:            r.get('url_pdf'),
-    derniere_relance:   r.get('derniere_relance'),
-  }
-}
-
-// Recherche
-let searchTimer = null
-function onSearchInput() {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => charger(), 400)
-}
-
-// Charger les clients récalcitrants
+// ── Charger les récalcitrants ──
 async function charger() {
   loading.value = true
   try {
-    // 1. Trouver tous les impayés avec une séquence
-    const q = new $parse.Query('Impaye')
-    q.include('sequence')
-    q.exists('sequence')
-    
-    // 2. Filtrer ceux qui n'ont pas de règlement (statut != 'payé')
-    q.notEqualTo('statut', 'payé')
-    
-    // 3. Appliquer les filtres
-    if (search.value) {
-      const queries = []
-      const fieldsToSearch = ['payeur_nom', 'nfacture', 'reference', 'reference_externe', 'adresse_bien', 'apporteur_nom', 'commentaire_piece', 'numero_dossier', 'numero_lot']
-      const searchLower = search.value.toLowerCase()
-      
-      fieldsToSearch.forEach(field => {
-        const q = new $parse.Query('Impaye')
-        q.exists('sequence')
-        q.notEqualTo('statut', 'payé')
-        q.matches(field, searchLower, 'i')
-        queries.push(q)
-      })
-      
-      const combined = $parse.Query.or(...queries)
-      combined.include('sequence')
-      
-      if (filtreSequence.value !== 'all') {
-        const seqPtr = $parse.Object.extend('Sequence').createWithoutData(filtreSequence.value)
-        combined.equalTo('sequence', seqPtr)
-      }
-      
-      const results = await combined.find()
-      
-      // 4. Filtrer ceux qui n'ont plus de relances à faire
-      const recalcitrantsData = []
-      for (const impaye of results) {
-        const hasMoreRelances = await aDesRelancesRestantes(impaye)
-        if (!hasMoreRelances) {
-          recalcitrantsData.push(rowToPlain(impaye))
-        }
-      }
-      
-      recalcitrants.value = recalcitrantsData
-    } else {
-      if (filtreSequence.value !== 'all') {
-        const seqPtr = $parse.Object.extend('Sequence').createWithoutData(filtreSequence.value)
-        q.equalTo('sequence', seqPtr)
-      }
-      
-      const results = await q.find()
-      
-      // 4. Filtrer ceux qui n'ont plus de relances à faire
-      const recalcitrantsData = []
-      for (const impaye of results) {
-        const hasMoreRelances = await aDesRelancesRestantes(impaye)
-        if (!hasMoreRelances) {
-          recalcitrantsData.push(rowToPlain(impaye))
-        }
-      }
-      
-      recalcitrants.value = recalcitrantsData
-    }
+    const result = await $parse.Cloud.run('getRecalcitrants')
+    recalcitrants.value = result.recalcitrants || []
   } catch (err) {
     toast.add({ title: 'Erreur chargement', description: err.message, color: 'red' })
   } finally {
@@ -263,54 +206,78 @@ async function charger() {
   }
 }
 
-// Vérifier si un impayé a encore des relances à faire
-async function aDesRelancesRestantes(impaye) {
-  try {
-    // 1. Vérifier s'il y a une séquence associée
-    const sequence = impaye.get('sequence')
-    if (!sequence) return false
-    
-    // 2. Charger la séquence complète
-    const seqQuery = new $parse.Query('Sequence')
-    const fullSequence = await seqQuery.get(sequence.id)
-    
-    // 3. Compter le nombre d'emails dans la séquence
-    const emails = fullSequence.get('emails') || []
-    const totalEmails = emails.length
-    
-    // 4. Compter le nombre de relances déjà envoyées pour cet impayé
-    const relanceQuery = new $parse.Query('Relance')
-    const impayePtr = $parse.Object.extend('Impaye').createWithoutData(impaye.id)
-    relanceQuery.equalTo('impaye', impayePtr)
-    relanceQuery.notEqualTo('statut', 'annulé')
-    const relancesEnvoyees = await relanceQuery.count()
-    
-    // 5. Retourner true si toutes les relances ont été envoyées
-    return relancesEnvoyees >= totalEmails
-  } catch (err) {
-    console.error('Erreur vérification relances restantes:', err)
-    return false
-  }
+// ── Helpers ──
+function formatDate(val) {
+  if (!val) return '—'
+  const d = val instanceof Date ? val : new Date(val)
+  return isNaN(d) ? '—' : d.toLocaleDateString('fr-FR', { dateStyle: 'short' })
 }
 
-// Charger les séquences
-async function chargerSequences() {
-  try {
-    sequencesLoading.value = true
-    const q = new $parse.Query('Sequence')
-    q.limit(200)
-    sequences.value = await q.find()
-  } catch {
-    console.error('Failed to load sequences')
-  } finally {
-    sequencesLoading.value = false
-  }
+function formatMontant(val) {
+  if (val == null) return '—'
+  return Number(val).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
 }
 
-// Actions
+function getUniqueSequencesForGroup(row) {
+  const seqs = new Set()
+  row.getLeafRows().forEach((leafRow) => {
+    if (leafRow.original.sequenceNom) seqs.add(leafRow.original.sequenceNom)
+  })
+  if (seqs.size === 0) return '—'
+  return [...seqs].join(', ')
+}
+
+function getContactEmail(row) {
+  const first = row.getLeafRows()[0]?.original
+  return first?.contact_email || null
+}
+
+function getDerniereRelance(row) {
+  const first = row.getLeafRows()[0]?.original
+  return first?.contact_derniere_relance || null
+}
+
+// ── Actions ──
 function ouvrirPdf(row) {
-  pdfImpayelId.value = row.objectId
+  pdfImpayelId.value = row.id
   pdfOuvert.value = true
+}
+
+async function marquerPayeGroupe(row) {
+  const impayeIds = row.getLeafRows().map((r) => r.original.id)
+  if (!impayeIds.length) return
+
+  try {
+    const Impaye = $parse.Object.extend('Impaye')
+    const objs = impayeIds.map((id) => {
+      const o = Impaye.createWithoutData(id)
+      o.set('statut', 'payé')
+      o.set('facture_soldee', true)
+      o.set('reste_a_payer', 0)
+      return o
+    })
+
+    await $parse.Object.saveAll(objs)
+    toast.add({ title: `${impayeIds.length} facture(s) marquée(s) comme payée(s)`, color: 'green' })
+    await charger()
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  }
+}
+
+async function marquerPaye(row) {
+  try {
+    const Impaye = $parse.Object.extend('Impaye')
+    const o = Impaye.createWithoutData(row.id)
+    o.set('statut', 'payé')
+    o.set('facture_soldee', true)
+    o.set('reste_a_payer', 0)
+    await o.save()
+    toast.add({ title: 'Facture marquée comme payée', color: 'green' })
+    await charger()
+  } catch (err) {
+    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
+  }
 }
 
 function menuItems(row) {
@@ -318,7 +285,7 @@ function menuItems(row) {
     {
       label: 'Voir le détail',
       icon: 'i-heroicons-eye',
-      onSelect: () => router.push(`/impayes/${row.objectId}`),
+      onSelect: () => router.push(`/impayes/${row.id}`),
     },
     {
       label: 'Marquer payé',
@@ -328,25 +295,18 @@ function menuItems(row) {
   ]
 }
 
-async function marquerPaye(row) {
-  try {
-    row._parse.set('statut', 'payé')
-    await row._parse.save()
-    row.statut = 'payé'
-    toast.add({ title: 'Facture marquée comme payée', color: 'green' })
-    await charger()
-  } catch (err) {
-    toast.add({ title: 'Erreur', description: err.message, color: 'red' })
-  }
-}
-
-// Charger au montage
 onMounted(() => {
   charger()
-  chargerSequences()
 })
 </script>
 
-<style scoped>
-/* Ajoutez ici des styles spécifiques si nécessaire */
+<style>
+.force-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.force-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
 </style>

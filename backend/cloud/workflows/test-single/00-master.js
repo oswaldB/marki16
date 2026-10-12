@@ -30,8 +30,20 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral-large-3:675b-cloud";
 const USE_OLLAMA = process.env.USE_OLLAMA !== "false" && !!OLLAMA_API_KEY;
 const MAX_RETRIES = 3;
 
-// Chemin du fichier de prompt
-const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt"
+// Chemin des prompts par scénario
+const PROMPT_BASE_PATH = "/home/ubuntu/prod/adti/configuration/prompts/scenarios";
+
+// Fichier de prompt legacy (fallback)
+const PROMPT_FILE = "/home/ubuntu/prod/adti/configuration/prompts/relance-email-prompt.txt";
+
+/**
+ * Récupère le chemin du fichier de prompt selon le scénario
+ * @param {string} scenarioType - Type de scénario (single, multiple, broker, both)
+ * @returns {string} - Chemin du fichier de prompt
+ */
+function getPromptFile(scenarioType) {
+    return path.join(PROMPT_BASE_PATH, `relance-${scenarioType}-prompt.txt`);
+}
 
 // URL Frontend
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://adti.markidiags.com";
@@ -154,8 +166,15 @@ function buildPrompt(
     const objetTemplate = scenarioActif?.objet || emailConfig.objet || "";
     const corpsTemplate = scenarioActif?.corps || emailConfig.corps || "";
 
-    // Charger le prompt depuis le fichier de configuration
-    let promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+    // Charger le prompt spécifique au scénario avec fallback
+    let promptTemplate;
+    try {
+        const promptFile = getPromptFile(scenarioType);
+        promptTemplate = fs.readFileSync(promptFile, "utf-8");
+    } catch (e) {
+        // Fallback sur le prompt legacy
+        promptTemplate = fs.readFileSync(PROMPT_FILE, "utf-8");
+    }
 
     // Remplacer les variables dans le template
     return promptTemplate

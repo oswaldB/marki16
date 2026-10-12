@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blacklist — Marki</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/parse/dist/parse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/2/assets/css/shared.css">
+  <script>
+    Parse.initialize('adti-marki', 'c8d7e205725c6a06dfb3771a2f739fe861664fc6ef90fbda');
+    Parse.serverURL = 'https://adti.markidiags.com/api/parse';
+  </script>
+  <script type="module" src="/2/assets/js/components/sidebar.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <marki-sidebar></marki-sidebar>
+  <div id="app" x-data="blacklistPage" x-cloak class="min-h-screen md:pl-64 pb-16 md:pb-0">
+    <main class="min-h-screen">
+      <div class="p-6 space-y-4">
+
+        <!-- ── Header ── -->
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <h1 class="text-2xl font-semibold text-gray-900">Blacklist</h1>
+          <button
+            id="btn-add"
+            @click="showAddSlideover = true"
+            :disabled="loading"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <i class="fas fa-plus text-xs"></i>
+            Ajouter à la blacklist
+          </button>
+        </div>
+
+        <!-- ── Filtres ── -->
+        <div class="flex items-center gap-3 flex-wrap mb-4">
+          <div class="relative w-64">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+            <input
+              x-model="searchQuery"
+              type="text"
+              placeholder="Rechercher dans les contacts blacklistés..."
+              class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+          </div>
+          <select
+            x-model="sourceFilter"
+            class="w-40 py-2 px-3 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+          >
+            <option value="">Toutes les sources</option>
+            <option value="db_externe">BD externe</option>
+            <option value="upload">Upload</option>
+          </select>
+        </div>
+
+        <!-- ── Actions groupées ── -->
+        <div
+          x-show="selected.length > 0"
+          x-transition
+          class="flex items-center gap-2 p-4 bg-gray-50 rounded-lg"
+        >
+          <span class="text-sm text-gray-600">
+            <span x-text="selected.length"></span> contact(s) sélectionné(s)
+          </span>
+          <button
+            id="btn-remove-selected"
+            @click="removeSelectedFromBlacklist"
+            :disabled="loading"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <i class="fas fa-check-circle text-xs"></i>
+            Retirer de la blacklist
+          </button>
+        </div>
+
+        <!-- ── Tableau ── -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0">
+                <tr>
+                  <th class="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      :checked="selectAllChecked"
+                      @change="toggleSelectAll"
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    >
+                  </th>
+                  <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('nom')">
+                    <div class="flex items-center gap-1">
+                      Nom
+                      <i class="fas text-gray-400 text-xs" :class="sortColumn === 'nom' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 font-medium">Email</th>
+                  <th class="px-4 py-3 font-medium">Téléphone</th>
+                  <th class="px-4 py-3 font-medium">Source</th>
+                  <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('nb_impayes')">
+                    <div class="flex items-center gap-1">
+                      Impayés
+                      <i class="fas text-gray-400 text-xs" :class="sortColumn === 'nb_impayes' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 font-medium cursor-pointer select-none" @click="setSort('blacklistedAt')">
+                    <div class="flex items-center gap-1">
+                      Date Blacklist
+                      <i class="fas text-gray-400 text-xs" :class="sortColumn === 'blacklistedAt' ? (sortDirection === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down') : 'fa-sort'"></i>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-if="loading">
+                  <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+                      <i class="fas fa-circle-notch fa-spin mr-2"></i> Chargement...
+                    </td>
+                  </tr>
+                </template>
+                <template x-if="!loading && filteredRows.length === 0">
+                  <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">Aucun contact blacklisté trouvé</td>
+                  </tr>
+                </template>
+                <template x-for="row in filteredRows" :key="row.id">
+                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        :value="row.id"
+                        :checked="selected.includes(row.id)"
+                        @change="toggleSelection(row.id)"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      >
+                    </td>
+                    <td class="px-4 py-3 font-medium text-gray-900" x-text="row.nom"></td>
+                    <td class="px-4 py-3">
+                      <span x-show="row.email" x-text="row.email" class="text-gray-700"></span>
+                      <span x-show="!row.email" class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Manquant</span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-700" x-text="row.telephone"></td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+                        :class="row.source === 'db_externe' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'"
+                        x-text="row.source === 'db_externe' ? 'BD externe' : 'Upload'"
+                      ></span>
+                    </td>
+                    <td class="px-4 py-3" :class="row.nb_impayes > 0 ? 'font-semibold text-gray-900' : 'text-gray-400'" x-text="row.nb_impayes"></td>
+                    <td class="px-4 py-3">
+                      <span x-show="row.blacklistedAt" class="text-gray-700 text-sm" x-text="formatDate(row.blacklistedAt)"></span>
+                      <span x-show="!row.blacklistedAt" class="text-gray-400 italic text-sm">—</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button
+                        id="btn-remove"
+                        @click="removeSingleFromBlacklist(row.id)"
+                        :disabled="loading"
+                        title="Retirer de la blacklist"
+                        class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                      >
+                        <i class="fas fa-x-circle text-xs"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ── Slideover Ajouter ── -->
+    <div
+      x-show="showAddSlideover"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      class="fixed inset-0 z-50"
+    >
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/40" @click="showAddSlideover = false"></div>
+      <!-- Panel -->
+      <div
+        x-show="showAddSlideover"
+        x-transition:enter="transform transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transform transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col"
+      >
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between w-full">
+            <span class="font-semibold text-lg text-gray-900">Ajouter à la blacklist</span>
+            <button
+              @click="showAddSlideover = false"
+              :disabled="loading"
+              class="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+          <!-- Recherche -->
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+            <input
+              x-model="addSearchQuery"
+              @input="debounceAddSearch"
+              type="text"
+              placeholder="Rechercher un contact à blacklister..."
+              class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+          </div>
+
+          <!-- Option supprimer relances -->
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              x-model="deleteRelances"
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              :disabled="loading"
+            >
+            <span class="text-sm text-gray-600">Supprimer toutes les relances associées à ces contacts</span>
+          </label>
+
+          <!-- Message de progression -->
+          <div
+            x-show="loading || progressMessage"
+            x-transition
+            class="rounded-lg px-4 py-3 text-sm bg-blue-50 text-blue-800 border border-blue-200"
+          >
+            <div class="font-semibold flex items-center gap-2">
+              <i class="fas fa-circle-notch fa-spin"></i>
+              <span x-text="progressMessage || 'Traitement en cours...'"></span>
+            </div>
+            <p class="text-sm mt-1">Merci de ne pas fermer cette page pendant l'opération.</p>
+          </div>
+
+          <!-- Résultats -->
+          <div x-show="searchResults.length > 0" class="space-y-2">
+            <p class="text-sm text-gray-600">
+              <span x-text="searchResults.length"></span> résultat(s) trouvé(s)
+            </p>
+            <div class="max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg">
+              <template x-for="contact in searchResults" :key="contact.id">
+                <div
+                  class="p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 cursor-pointer"
+                  :class="selectedForAdd.includes(contact.id) ? 'bg-sky-50' : ''"
+                  @click="toggleSelectionForAdd(contact.id)"
+                >
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      :checked="selectedForAdd.includes(contact.id)"
+                      @click.stop="toggleSelectionForAdd(contact.id)"
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    >
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-gray-900" x-text="contact.nom + ' ' + (contact.prenom || '')"></p>
+                      <p class="text-sm text-gray-500" x-text="contact.email || contact.telephone || '—'"></p>
+                    </div>
+                    <span
+                      x-show="contact.isBlacklisted"
+                      class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"
+                    >Déjà blacklisté</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 mt-4">
+              <button
+                @click="showAddSlideover = false"
+                class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                id="btn-add-selected"
+                @click="addSelectedToBlacklist"
+                :disabled="selectedForAdd.length === 0 || loading"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <i class="fas fa-plus text-xs"></i>
+                Ajouter <span x-text="selectedForAdd.length"></span> contact(s) à la blacklist
+              </button>
+            </div>
+          </div>
+
+          <!-- Pas de résultats -->
+          <div x-show="addSearchQuery && !searching && searchResults.length === 0" class="text-center py-8 text-gray-500">
+            Aucun contact trouvé
+          </div>
+
+          <!-- Chargement -->
+          <div x-show="addSearchQuery && searching" class="text-center py-4">
+            <div class="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          <!-- Instructions -->
+          <div x-show="!addSearchQuery" class="text-center py-8 text-gray-500">
+            <p>Commencez à taper pour rechercher des contacts</p>
+            <p class="text-sm mt-2">La recherche s'effectue sur tous les contacts (nom, email, téléphone)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Toast container ── -->
+    <div class="fixed bottom-4 right-4 z-50 space-y-2" x-data="{ toasts: [], toastId: 0 }" @toast.window="toasts.push($event.detail); setTimeout(() => { toasts = toasts.filter(t => t.id !== $event.detail.id) }, 4000)">
+      <template x-for="toast in toasts" :key="toast.id">
+        <div
+          x-transition
+          class="px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm"
+          :class="toast.color === 'red' ? 'bg-red-50 text-red-800 border border-red-200' : toast.color === 'yellow' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' : toast.color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-green-50 text-green-800 border border-green-200'"
+        >
+          <div class="font-semibold" x-text="toast.title"></div>
+          <div x-text="toast.description"></div>
+        </div>
+      </template>
+    </div>
+
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

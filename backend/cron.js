@@ -21,10 +21,14 @@ if (typeof Parse === "undefined") {
 // Charger les masters des workflows
 const importInvoicesMaster = require("./cloud/workflows/import-invoice/00-master");
 const sendEmailsMaster = require("./cloud/workflows/send-emails/00-master");
-const sendSuivisMaster = require("./cloud/workflows/send-suivi/00-master").sendSuivisMaster;
+// DÉSACTIVÉ — envoi des suivis
+// const sendSuivisMaster =
+//     require("./cloud/workflows/send-suivi/00-master").sendSuivisMaster;
 const verifyPaidInvoicesMaster = require("./cloud/workflows/verify-paid-invoices/00-master");
 const generateSuivisMaster = require("./cloud/workflows/generate-suivi/index");
-const cleanupRelancesBlacklistMaster = require("./cloud/workflows/cleanup-relances-contact-blackliste/index");
+const syncContactsMaster = require("./cloud/workflows/sync-contacts/index");
+const generateRelancesDuJourMaster = require("./cloud/workflows/generate-relances-du-jour/index");
+const generateSuivisDuJourMaster = require("./cloud/workflows/generate-suivis-du-jour/index");
 
 // Utilitaires pour le nettoyage des fichiers temporaires
 const fs = require("fs");
@@ -88,9 +92,9 @@ cron.schedule(
 
 // 2. SEND EMAILS : Tous les jours à 19h
 cron.schedule(
-    "0 19 * * *",
+    "0 18 * * *",
     () => {
-        console.log("⏰ [CRON] Déclenchement: send-emails (19h)");
+        console.log("⏰ [CRON] Déclenchement: send-emails (18h Paris)");
         sendEmailsMaster({ trigger: "cron" })
             .then(() => console.log("✅ [CRON] send-emails terminé"))
             .catch((error) =>
@@ -100,7 +104,8 @@ cron.schedule(
     { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// 2b. SEND SUIVIS : Tous les jours à 19h30 (après send-emails)
+// 2b. SEND SUIVIS : Tous les jours à 19h30 (DÉSACTIVÉ)
+/*
 cron.schedule(
     "30 19 * * *",
     () => {
@@ -113,6 +118,7 @@ cron.schedule(
     },
     { scheduled: true, timezone: "Europe/Paris" },
 );
+*/
 
 // 3. VERIFY PAID INVOICES : Toutes les heures à hh:50
 cron.schedule(
@@ -148,20 +154,16 @@ cron.schedule(
     { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// 5. CLEANUP RELANCES BLACKLIST : Toutes les heures au début de l'heure
+// 5. GENERATE RELANCES DU JOUR : Tous les jours à 17h10
 cron.schedule(
-    "0 * * * *",
+    "10 17 * * *",
     () => {
-        console.log("⏰ [CRON] Déclenchement: cleanup-relances-contact-blackliste (toutes les heures)");
-        cleanupRelancesBlacklistMaster({ trigger: "cron" })
-            .then((result) =>
-                console.log(
-                    `✅ [CRON] cleanup-relances-contact-blackliste terminé: ${result.deletedCount} relances supprimées`,
-                ),
-            )
+        console.log("⏰ [CRON] Déclenchement: generate-relances-du-jour (17h10)");
+        generateRelancesDuJourMaster()
+            .then((result) => console.log("✅ [CRON] generate-relances-du-jour terminé:", result.message))
             .catch((error) =>
                 console.error(
-                    "❌ [CRON] Erreur cleanup-relances-contact-blackliste:",
+                    "❌ [CRON] Erreur generate-relances-du-jour:",
                     error.message,
                 ),
             );
@@ -169,12 +171,47 @@ cron.schedule(
     { scheduled: true, timezone: "Europe/Paris" },
 );
 
-// 6. CLEANUP TEMP FILES : Tous les jours à 2h
+// 5b. GENERATE SUIVIS DU JOUR : Tous les jours à 17h20
+cron.schedule(
+    "20 17 * * *",
+    () => {
+        console.log("⏰ [CRON] Déclenchement: generate-suivis-du-jour (17h20)");
+        generateSuivisDuJourMaster()
+            .then((result) => console.log("✅ [CRON] generate-suivis-du-jour terminé:", result.message))
+            .catch((error) =>
+                console.error(
+                    "❌ [CRON] Erreur generate-suivis-du-jour:",
+                    error.message,
+                ),
+            );
+    },
+    { scheduled: true, timezone: "Europe/Paris" },
+);
+
+// 5. CLEANUP RELANCES BLACKLIST : Toutes les heures au début de l'heure
 cron.schedule(
     "0 2 * * *",
     () => {
         console.log("⏰ [CRON] Déclenchement: cleanup-temp-files (2h)");
         cleanupTempFiles();
+    },
+    { scheduled: true, timezone: "Europe/Paris" },
+);
+
+// SYNC CONTACTS : Tous les jours à 4h
+cron.schedule(
+    "0 4 * * *",
+    () => {
+        console.log("⏰ [CRON] Déclenchement: sync-contacts (4h)");
+        syncContactsMaster({ trigger: "cron" })
+            .then((result) =>
+                console.log(
+                    `✅ [CRON] sync-contacts terminé: ${result.stats?.updatedInDb || 0} contacts synchronisés`,
+                ),
+            )
+            .catch((error) =>
+                console.error("❌ [CRON] Erreur sync-contacts:", error.message),
+            );
     },
     { scheduled: true, timezone: "Europe/Paris" },
 );

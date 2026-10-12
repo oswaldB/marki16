@@ -93,7 +93,7 @@
           @update:scenario="(newScenario) => switchScenario(email, newScenario, editorRefs)"
           @delete="supprimerEmail(email._key)"
           @toggle="toggleEmailVisibility(email._key)"
-          @test="showSuiviTestSlideover = true"
+          @test="testEmailIndex = idx; showSuiviTestSlideover = true"
         >
           <template #editor>
             <ToastuiEditor
@@ -145,6 +145,7 @@
       :emails="emails"
       :groupes-regles="groupesRegles"
       :attribution-automatique="attributionAutomatique"
+      :email-index="testEmailIndex"
       @test-sent="onTestSent"
     />
 
@@ -233,6 +234,7 @@ const {
 
 // ── State local ────────────────────────────────────────────────
 const showSuiviTestSlideover = ref(false)
+const testEmailIndex = ref(0)
 
 // Fonction pour ajouter un email de suivi (sans délai)
 function ajouterEmailSuivi() {
