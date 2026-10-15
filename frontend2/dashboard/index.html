@@ -94,19 +94,19 @@
               </div>
             </div>
 
-            <!-- Relances du jour -->
+            <!-- Récalcitrants -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div class="flex items-start gap-3">
-                <div class="p-2 rounded-lg bg-blue-50">
-                  <i class="fa-regular fa-envelope text-blue-500 text-lg"></i>
+                <div class="p-2 rounded-lg bg-rose-50">
+                  <i class="fa-solid fa-user-minus text-rose-500 text-lg"></i>
                 </div>
                 <div>
                   <div class="flex items-center gap-1">
-                    <p class="text-xs text-gray-500 font-medium">Relances du jour</p>
-                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Nombre de relances avec statut 'pret pour envoi' dont la date d'envoi est aujourd'hui"></i>
+                    <p class="text-xs text-gray-500 font-medium">Récalcitrants</p>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus)"></i>
                   </div>
-                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.relances_jour"></p>
-                  <p class="text-xs text-gray-400">à envoyer aujourd'hui</p>
+                  <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.recalcitrants"></p>
+                  <p class="text-xs text-gray-400">séquence de relances épuisée</p>
                 </div>
               </div>
             </div>

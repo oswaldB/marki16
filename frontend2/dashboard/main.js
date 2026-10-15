@@ -17,7 +17,7 @@ Alpine.data('dashboardPage', () => ({
     factures_en_attente: 0,
     impayes_actifs: 0,
     montant_total: 0,
-    relances_jour: 0,
+    recalcitrants: 0,
     taux_recouvrement: 0,
   },
 

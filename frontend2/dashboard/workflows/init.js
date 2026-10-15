@@ -12,6 +12,16 @@ function endOfDay() {
   return d;
 }
 
+async function chargerNombreRecalcitrants() {
+  try {
+    const res = await Parse.Cloud.run('getRecalcitrants');
+    return res?.total ?? (res?.recalcitrants?.length || 0);
+  } catch (err) {
+    console.error('Erreur chargement récalcitrants:', err);
+    return 0;
+  }
+}
+
 async function chargerKpi() {
   const today = endOfDay();
 
@@ -43,21 +53,13 @@ async function chargerKpi() {
     .select('nfacture', 'reste_a_payer')
     .limit(10000);
 
-  const tomorrow = new Date(startOfDay());
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const [enAttenteResult, actifsResult, echusResults, payeResults, impayes_actifs, relances] = await Promise.all([
+  const [enAttenteResult, actifsResult, echusResults, payeResults, impayes_actifs, recalcitrants] = await Promise.all([
     qEnAttente.find(),
     qEchusActifs.find(),
     qEchus.find(),
     qEchusPayes.find(),
     qMontant.find(),
-    new Parse.Query('Relance')
-      .equalTo('statut', 'pret pour envoi')
-      .greaterThanOrEqualTo('dateEnvoi', startOfDay())
-      .equalTo('valide', true)
-      .lessThan('dateEnvoi', tomorrow)
-      .count(),
+    chargerNombreRecalcitrants(),
   ]);
 
   const en_attente = [...new Set(enAttenteResult.map(i => i.get('nfacture')))].length;
@@ -78,7 +80,7 @@ async function chargerKpi() {
     factures_en_attente: en_attente,
     impayes_actifs: actifs,
     montant_total: montant,
-    relances_jour: relances,
+    recalcitrants: recalcitrants,
     taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
   };
 }

@@ -73,18 +73,18 @@
 
         <UCard>
           <div class="flex items-start gap-3">
-            <div class="p-2 rounded-lg bg-blue-50">
-              <UIcon name="i-heroicons-envelope" class="size-5 text-blue-500" />
+            <div class="p-2 rounded-lg bg-rose-50">
+              <UIcon name="i-heroicons-user-minus" class="size-5 text-rose-500" />
             </div>
             <div>
               <div class="flex items-center gap-1">
-                <p class="text-xs text-gray-500 font-medium">Relances du jour</p>
-                <UTooltip text="Nombre de relances avec statut 'pret pour envoi' dont la date d'envoi est aujourd'hui">
+                <p class="text-xs text-gray-500 font-medium">Récalcitrants</p>
+                <UTooltip text="Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus)">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
-              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.relances_jour }}</p>
-              <p class="text-xs text-gray-400">à envoyer aujourd'hui</p>
+              <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.recalcitrants }}</p>
+              <p class="text-xs text-gray-400">séquence de relances épuisée</p>
             </div>
           </div>
         </UCard>
@@ -327,7 +327,7 @@ const kpi = ref({
   factures_en_attente: 0,
   impayes_actifs:    0,
   montant_total:     0,
-  relances_jour:     0,
+  recalcitrants:     0,
   taux_recouvrement: 0,
 })
 
@@ -398,18 +398,10 @@ async function chargerKpi() {
   const actifsResult = await qEchusActifs.find()
   const actifs = [...new Set(actifsResult.map(i => i.get('nfacture')))].length
 
-  const tomorrow = new Date(startOfDay())
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  const [echusResults, payeResults, relances] = await Promise.all([
+  const [echusResults, payeResults, recalcitrants] = await Promise.all([
     qEchus.find(),
     qEchusPayes.find(),
-    new $parse.Query('Relance')
-      .equalTo('statut', 'pret pour envoi')
-      .greaterThanOrEqualTo('dateEnvoi', startOfDay())
-      .equalTo('valide', true)
-      .lessThan('dateEnvoi', tomorrow)
-      .count(),
+    chargerNombreRecalcitrants(),
   ])
 
   // Compter nfacture uniques
@@ -437,8 +429,19 @@ async function chargerKpi() {
     factures_en_attente: en_attente,
     impayes_actifs:    actifs,
     montant_total:     montant,
-    relances_jour:     relances,
+    recalcitrants:     recalcitrants,
     taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
+  }
+}
+
+async function chargerNombreRecalcitrants() {
+  if (!$parse.User.current()) return 0
+  try {
+    const res = await $parse.Cloud.run('getRecalcitrants')
+    return res?.total ?? (res?.recalcitrants?.length || 0)
+  } catch (err) {
+    console.error('Erreur chargement récalcitrants:', err)
+    return 0
   }
 }
 
