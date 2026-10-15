@@ -205,18 +205,6 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-          <UInput v-model="datePlanification" type="date" size="sm" class="w-40" />
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="sm"
-            icon="i-heroicons-calendar-days"
-            :loading="planifGroupe"
-            :disabled="!datePlanification"
-            @click="planifierTous"
-          >
-            Tout planifier
-          </UButton>
           <UButton
             size="sm"
             icon="i-heroicons-paper-airplane"
@@ -252,10 +240,6 @@
               </div>
             </template>
 
-            <template #dateEnvoi-cell="{ row }">
-              <span class="text-sm tabular-nums whitespace-nowrap">{{ formatDate(row.original.dateEnvoi) }}</span>
-            </template>
-
             <template #fileActions-cell="{ row }">
               <div class="flex items-center gap-1">
                 <UButton
@@ -263,7 +247,7 @@
                   color="neutral"
                   variant="ghost"
                   size="xs"
-                  :title="estEnvoyee(row.original) ? 'Voir' : 'Éditer / prévoir / envoyer'"
+                  :title="estEnvoyee(row.original) ? 'Voir' : 'Éditer / envoyer'"
                   @click="ouvrirSuivi(row.original)"
                 />
                 <UButton
@@ -382,8 +366,6 @@ const file = ref([])
 const fileLoading = ref(false)
 const filtreFileStatut = ref('a_traiter')
 const envoiGroupe = ref(false)
-const planifGroupe = ref(false)
-const datePlanification = ref(new Date().toISOString().slice(0, 10))
 
 const showSuiviDrawer = ref(false)
 const suiviSelectionne = ref(null)
@@ -441,7 +423,6 @@ const colonnes = [
 const fileColonnes = [
   { accessorKey: 'statut', header: 'Statut' },
   { accessorKey: 'destinataire', header: 'Destinataire' },
-  { accessorKey: 'dateEnvoi', header: 'Prévu le' },
   { id: 'fileActions', header: ' ' },
 ]
 
@@ -872,37 +853,6 @@ async function envoyerTous() {
     toast.add({ title: "Erreur d'envoi groupé", description: err.message, color: 'red' })
   } finally {
     envoiGroupe.value = false
-  }
-}
-
-async function planifierTous() {
-  const rows = suivisATraiter()
-  if (rows.length === 0) {
-    toast.add({ title: 'Aucun email à planifier', color: 'orange' })
-    return
-  }
-  if (!datePlanification.value) {
-    toast.add({ title: 'Choisissez une date', color: 'orange' })
-    return
-  }
-
-  planifGroupe.value = true
-  try {
-    const d = new Date(datePlanification.value)
-    await Promise.all(
-      rows.map((r) => {
-        r._parse.set('dateEnvoi', d)
-        // Bascule en "pret pour envoi" : le cron se chargera de l'envoi à échéance.
-        r._parse.set('statut', 'pret pour envoi')
-        return r._parse.save()
-      }),
-    )
-    toast.add({ title: `${rows.length} email(s) planifié(s)`, color: 'green' })
-    await chargerFile()
-  } catch (err) {
-    toast.add({ title: 'Erreur planification', description: err.message, color: 'red' })
-  } finally {
-    planifGroupe.value = false
   }
 }
 

@@ -26,18 +26,9 @@
           :description="suivi.lastError"
         />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs text-gray-500 mb-1 block">Date d'envoi prévue</label>
-            <UInput v-model="dateEnvoi" type="date" class="w-full" />
-            <p class="text-xs text-gray-400 mt-1">
-              Date future = envoi automatique à échéance. Aujourd'hui = envoi manuel via le bouton ci-dessous.
-            </p>
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 mb-1 block">Destinataire (contact)</label>
-            <UInput :model-value="suivi.email" disabled class="w-full" />
-          </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">Destinataire (contact)</label>
+          <UInput :model-value="suivi.email" disabled class="w-full" />
         </div>
 
         <div>
@@ -103,11 +94,11 @@
         <UButton
           color="neutral"
           variant="outline"
-          icon="i-heroicons-calendar-days"
+          icon="i-heroicons-check"
           :loading="saving"
           @click="enregistrer()"
         >
-          Enregistrer / Prévoir
+          Enregistrer
         </UButton>
         <UButton
           icon="i-heroicons-paper-airplane"
@@ -141,7 +132,6 @@ const localOpen = computed({
   set: (v) => emit('update:open', v),
 })
 
-const dateEnvoi = ref('')
 const cc = ref('')
 const objet = ref('')
 const corps = ref('')
@@ -149,12 +139,6 @@ const editorVisible = ref(false)
 const editorRef = ref(null)
 const saving = ref(false)
 const sending = ref(false)
-
-function toDateInput(val) {
-  if (!val) return ''
-  const d = val instanceof Date ? val : new Date(val)
-  return isNaN(d) ? '' : d.toISOString().slice(0, 10)
-}
 
 function formatMontant(val) {
   if (val == null) return '—'
@@ -179,7 +163,6 @@ watch(
   () => [props.open, props.suivi?.id],
   () => {
     if (!props.open || !props.suivi) return
-    dateEnvoi.value = toDateInput(props.suivi.dateEnvoi)
     cc.value = props.suivi.cc || ''
     objet.value = props.suivi.objet || ''
     corps.value = props.suivi.corps || ''
@@ -195,43 +178,18 @@ async function enregistrer({ silent = false } = {}) {
   try {
     const s = props.suivi._parse
     const html = editorRef.value?.getInstance?.().getHTML?.()
-    const nouvelleDate = dateEnvoi.value ? new Date(dateEnvoi.value) : s.get('dateEnvoi')
-    s.set('dateEnvoi', nouvelleDate)
     s.set('cc', cc.value)
     s.set('objet', objet.value)
     if (html != null) s.set('corps', html)
-
-    // Planification : une date dans le futur bascule le suivi en
-    // "pret pour envoi" pour qu'il soit envoyé automatiquement par le cron.
-    // Une date aujourd'hui (ou passée) laisse le suivi sous contrôle manuel.
-    let statutMaj = null
-    if (nouvelleDate) {
-      const jour = new Date(nouvelleDate)
-      jour.setHours(0, 0, 0, 0)
-      const aujourdHui = new Date()
-      aujourdHui.setHours(0, 0, 0, 0)
-      if (jour.getTime() > aujourdHui.getTime()) {
-        statutMaj = 'pret pour envoi'
-      } else if (s.get('statut') === 'pret pour envoi') {
-        // Re-daté à aujourd'hui : on repasse en brouillon
-        statutMaj = 'brouillon'
-      }
-    }
-    if (statutMaj) s.set('statut', statutMaj)
 
     await s.save()
 
     props.suivi.cc = cc.value
     props.suivi.objet = objet.value
     if (html != null) props.suivi.corps = html
-    props.suivi.dateEnvoi = nouvelleDate
-    if (statutMaj) props.suivi.statut = statutMaj
 
     if (!silent) {
-      toast.add({
-        title: statutMaj === 'pret pour envoi' ? 'Suivi planifié' : 'Suivi enregistré',
-        color: 'green',
-      })
+      toast.add({ title: 'Suivi enregistré', color: 'green' })
     }
     emit('saved')
     return true

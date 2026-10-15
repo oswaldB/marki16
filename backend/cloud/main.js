@@ -6,6 +6,7 @@ require("./workflows/import-invoice/00-master");
 require("./workflows/generate-relances/index");
 require("./workflows/generate-suivi/index");
 require("./workflows/generate-suivis-du-jour/index");
+require("./workflows/send-suivi/00-master");
 require("./workflows/generate-relances-manuelles/index");
 require("./workflows/test-single/00-master.js");
 require("./workflows/test-single-suivi/00-master.js");
@@ -36,7 +37,8 @@ global.generateSuivisMaster = require("./workflows/generate-suivi/index");
 global.sendEmailsMaster = require("./workflows/send-emails/00-master");
 global.updateDynamicOptionsMaster = require("./workflows/update-dynamic-options/00-master");
 global.verifyPaidInvoicesMaster = require("./workflows/verify-paid-invoices/00-master");
+global.sendSuivisMaster = require("./workflows/send-suivi/00-master").sendSuivisMaster;
 
 console.log(
-    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes, get-recalcitrants, get-audit-phases, cleanup-relances-contact-blackliste, cleanup-all-relances-contact-blackliste, cleanup-all-relances-paid-impayes, regenerate-relances-with-status)",
+    "✅ Cloud Functions Marki16 chargées (incluant users, sync-contacts, generate-relances, generate-suivi, send-suivi, generate-pdf-links, generate-contact-token, get-contact-impayes, get-recalcitrants, get-audit-phases, cleanup-relances-contact-blackliste, cleanup-all-relances-contact-blackliste, cleanup-all-relances-paid-impayes, regenerate-relances-with-status)",
 );
