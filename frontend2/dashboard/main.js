@@ -18,6 +18,7 @@ Alpine.data('dashboardPage', () => ({
     impayes_actifs: 0,
     montant_total: 0,
     recalcitrants: 0,
+    recalcitrants_montant: 0,
     taux_recouvrement: 0,
   },
 

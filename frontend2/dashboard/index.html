@@ -103,10 +103,10 @@
                 <div>
                   <div class="flex items-center gap-1">
                     <p class="text-xs text-gray-500 font-medium">Récalcitrants</p>
-                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" title="Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus)"></i>
+                    <i class="fa-solid fa-circle-info text-gray-400 text-xs cursor-help" :title="`Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus) — reste à payer total : ${formatMontant(kpi.recalcitrants_montant)}`"></i>
                   </div>
                   <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="kpi.recalcitrants"></p>
-                  <p class="text-xs text-gray-400">séquence de relances épuisée</p>
+                  <p class="text-xs text-gray-400" x-text="formatMontantCourt(kpi.recalcitrants_montant) + ' de reste à payer'"></p>
                 </div>
               </div>
             </div>

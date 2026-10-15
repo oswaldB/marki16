@@ -79,12 +79,12 @@
             <div>
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-500 font-medium">Récalcitrants</p>
-                <UTooltip text="Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus)">
+                <UTooltip :text="`Contacts dont tous les impayés sont non soldés et qui ont reçu l'intégralité de leur séquence de relances (impayés et contacts suspendus exclus) — reste à payer total : ${formatMontant(kpi.recalcitrants_montant)}`">
                   <UIcon name="i-heroicons-information-circle" class="size-3.5 text-gray-400" />
                 </UTooltip>
               </div>
               <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ kpi.recalcitrants }}</p>
-              <p class="text-xs text-gray-400">séquence de relances épuisée</p>
+              <p class="text-xs text-gray-400">{{ formatMontantCourt(kpi.recalcitrants_montant) }} de reste à payer</p>
             </div>
           </div>
         </UCard>
@@ -328,6 +328,7 @@ const kpi = ref({
   impayes_actifs:    0,
   montant_total:     0,
   recalcitrants:     0,
+  recalcitrants_montant: 0,
   taux_recouvrement: 0,
 })
 
@@ -429,19 +430,40 @@ async function chargerKpi() {
     factures_en_attente: en_attente,
     impayes_actifs:    actifs,
     montant_total:     montant,
-    recalcitrants:     recalcitrants,
+    recalcitrants:     recalcitrants.count,
+    recalcitrants_montant: recalcitrants.montant,
     taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
   }
 }
 
 async function chargerNombreRecalcitrants() {
-  if (!$parse.User.current()) return 0
+  if (!$parse.User.current()) return { count: 0, montant: 0 }
   try {
     const res = await $parse.Cloud.run('getRecalcitrants')
-    return res?.total ?? (res?.recalcitrants?.length || 0)
+    const list = res?.recalcitrants || []
+    const count = res?.total ?? list.length
+
+    // Somme des restes à payer, dédupliquée par nfacture (une même facture
+    // peut apparaître sur plusieurs lignes d'impayés)
+    const seen = new Set()
+    let montant = 0
+    for (const r of list) {
+      if (Array.isArray(r.impayes) && r.impayes.length) {
+        for (const imp of r.impayes) {
+          const key = imp.nfacture || imp.id
+          if (key && seen.has(key)) continue
+          if (key) seen.add(key)
+          montant += imp.reste_a_payer || 0
+        }
+      } else {
+        montant += r.totalResteAPayer || 0
+      }
+    }
+
+    return { count, montant }
   } catch (err) {
     console.error('Erreur chargement récalcitrants:', err)
-    return 0
+    return { count: 0, montant: 0 }
   }
 }
 

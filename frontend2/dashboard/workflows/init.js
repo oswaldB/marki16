@@ -15,10 +15,30 @@ function endOfDay() {
 async function chargerNombreRecalcitrants() {
   try {
     const res = await Parse.Cloud.run('getRecalcitrants');
-    return res?.total ?? (res?.recalcitrants?.length || 0);
+    const list = res?.recalcitrants || [];
+    const count = res?.total ?? list.length;
+
+    // Somme des restes à payer, dédupliquée par nfacture (une même facture
+    // peut apparaître sur plusieurs lignes d'impayés)
+    const seen = new Set();
+    let montant = 0;
+    for (const r of list) {
+      if (Array.isArray(r.impayes) && r.impayes.length) {
+        for (const imp of r.impayes) {
+          const key = imp.nfacture || imp.id;
+          if (key && seen.has(key)) continue;
+          if (key) seen.add(key);
+          montant += imp.reste_a_payer || 0;
+        }
+      } else {
+        montant += r.totalResteAPayer || 0;
+      }
+    }
+
+    return { count, montant };
   } catch (err) {
     console.error('Erreur chargement récalcitrants:', err);
-    return 0;
+    return { count: 0, montant: 0 };
   }
 }
 
@@ -80,7 +100,8 @@ async function chargerKpi() {
     factures_en_attente: en_attente,
     impayes_actifs: actifs,
     montant_total: montant,
-    recalcitrants: recalcitrants,
+    recalcitrants: recalcitrants.count,
+    recalcitrants_montant: recalcitrants.montant,
     taux_recouvrement: total_echus > 0 ? Math.round((paye_count / total_echus) * 100) : 0,
   };
 }
