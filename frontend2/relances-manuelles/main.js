@@ -231,8 +231,8 @@ Alpine.data('relancesManuellesPage', () => ({
           g.contact.email.toLowerCase().includes(s) ||
           g.impayes.some(
             (i) =>
-              (i.nfacture || '').toLowerCase().includes(s) ||
-              (i.adresse_bien || '').toLowerCase().includes(s),
+              String(i.nfacture ?? '').toLowerCase().includes(s) ||
+              String(i.adresse_bien ?? '').toLowerCase().includes(s),
           ),
       );
     }

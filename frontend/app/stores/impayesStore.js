@@ -96,8 +96,7 @@ export const useImpayesStore = defineStore("impayes", {
                     (i) =>
                         (i.payeur_nom &&
                             i.payeur_nom.toLowerCase().includes(searchLower)) ||
-                        (i.nfacture &&
-                            i.nfacture.toLowerCase().includes(searchLower)) ||
+                        (String(i.nfacture ?? '').toLowerCase().includes(searchLower)) ||
                         (i.reference &&
                             i.reference.toLowerCase().includes(searchLower)) ||
                         (i.adresse_bien &&

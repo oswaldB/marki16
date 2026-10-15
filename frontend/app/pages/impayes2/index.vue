@@ -578,10 +578,10 @@ const filteredImpayes = computed(() => {
   const query = globalFilter.value.toLowerCase()
   return impayes.value.filter(i =>
     (i.payeur_nom && i.payeur_nom.toLowerCase().includes(query)) ||
-    (i.nfacture && i.nfacture.toLowerCase().includes(query)) ||
+    String(i.nfacture ?? '').toLowerCase().includes(query) ||
     (i.reference && i.reference.toLowerCase().includes(query)) ||
     (i.adresse_bien && i.adresse_bien.toLowerCase().includes(query)) ||
-    (i.numero_dossier && i.numero_dossier.toLowerCase().includes(query)) ||
+    String(i.numero_dossier ?? '').toLowerCase().includes(query) ||
     (i.reference_externe && i.reference_externe.toLowerCase().includes(query)) ||
     (i.apporteur_nom && i.apporteur_nom.toLowerCase().includes(query))
   )

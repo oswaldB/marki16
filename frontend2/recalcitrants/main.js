@@ -95,7 +95,7 @@ Alpine.data('recalcitrantsPage', () => ({
       if (searchLower) {
         const matchesContact = contactNom.toLowerCase().includes(searchLower) || contactEmail.toLowerCase().includes(searchLower);
         const matchingImpayes = impayes.filter((imp) =>
-          (imp.nfacture && imp.nfacture.toLowerCase().includes(searchLower)) ||
+          String(imp.nfacture ?? '').toLowerCase().includes(searchLower) ||
           (imp.adresse_bien && imp.adresse_bien.toLowerCase().includes(searchLower))
         );
         if (!matchesContact && matchingImpayes.length === 0) {

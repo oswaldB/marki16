@@ -80,7 +80,7 @@ Alpine.data('impayesSuspendusPage', () => ({
     if (this.searchQuery) {
       const searchLower = this.searchQuery.toLowerCase();
       data = data.filter(i => {
-        const nfacture = (i.nfacture || '').toLowerCase();
+        const nfacture = String(i.nfacture ?? '').toLowerCase();
         const payeurNom = (i.payeurNom || '').toLowerCase();
         const reference = (i.reference || '').toLowerCase();
         const motif = (i.blacklistMotif || '').toLowerCase();

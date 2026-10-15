@@ -307,7 +307,7 @@ export const useBlacklistImpayeStore = defineStore('blacklistImpaye', {
             if (searchQuery) {
                 const searchLower = searchQuery.toLowerCase()
                 data = data.filter(impaye => {
-                    const nfacture = (impaye.get('nfacture') || '').toLowerCase()
+                    const nfacture = String(impaye.get('nfacture') ?? '').toLowerCase()
                     const payeurNom = (impaye.get('payeur_nom') || '').toLowerCase()
                     const reference = (impaye.get('reference') || '').toLowerCase()
                     const motif = (impaye.get('blacklistMotif') || '').toLowerCase()
